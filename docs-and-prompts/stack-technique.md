@@ -150,5 +150,3 @@ src/
 ├── styles/                 # Styles globaux Tailwind
 └── types/                  # Types TypeScript partagés
 ```
-
-
