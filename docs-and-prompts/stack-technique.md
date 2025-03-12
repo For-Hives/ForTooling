@@ -1,0 +1,152 @@
+# Stack Technique Finale - Plateforme SaaS de Gestion d'Équipements NFC/QR
+
+## 1. Vue d'ensemble
+
+Cette plateforme SaaS de gestion d'équipements avec tracking NFC/QR combine les technologies modernes du web pour offrir une solution robuste, performante et évolutive. L'architecture est conçue pour être hautement optimisée, sécurisée et facile à maintenir.
+
+## 2. Frontend
+
+### Framework & UI
+
+- **Next.js 15+** - Framework React avec App Router et Server Components
+- **React 19+** - Bibliothèque UI pour construire des interfaces interactives
+- **Tailwind CSS 4+** - Framework CSS utility-first pour le styling
+- **shadcn/ui** - Composants UI réutilisables basés sur Radix UI
+- **Lucide React** - Bibliothèque d'icônes SVG
+- **Framer Motion** - Animations et transitions fluides
+- **Rive** - Animations complexes et interactives
+
+### Gestion d'état client
+
+- **Zustand** - Gestion d'état global légère et simple
+    - Utilisé pour éviter le prop drilling
+    - Stockage des préférences utilisateur, thèmes, filtres
+    - État partagé entre composants distants
+
+### PWA & Mobile
+
+- **next-pwa** - Transforme l'application en Progressive Web App
+- **WebNFC API** - Accès aux fonctionnalités NFC pour les appareils compatibles
+- **QR Code fallback** - Solution alternative pour les appareils sans NFC
+
+### Qualité & Tests
+
+- **TypeScript** - Typage statique pour une meilleure qualité de code
+- **ESLint/Prettier** - Linting et formatage de code
+- **Vitest** - Tests unitaires rapides
+- **Playwright** - Tests end-to-end
+
+## 3. Backend & API
+
+### API & Validation
+
+- **Next.js Server Actions** - Actions serveur typées et sécurisées
+    - Pattern de protection centralisé (HOF withProtection)
+    - Isolation multi-tenant intégrée
+- **Zod** - Validation de schémas pour les données d'entrée
+- **React Hook Form** - Gestion de formulaires avec validation côté client
+
+### ORM & Base de données
+
+- **Prisma** - ORM moderne pour TypeScript
+- **PostgreSQL** - Base de données relationnelle robuste et évolutive
+- **Neon** - Base de données PostgreSQL serverless pour l'environnement de développement
+
+### Sécurité API
+
+- **Rate limiting** - Protection contre les abus
+- **CORS** - Sécurité pour les requêtes cross-origin
+- **Helmet** - Sécurisation des headers HTTP
+
+## 4. Services & Intégrations
+
+### Authentification & Paiements
+
+- **Clerk 6+** - Authentification complète et gestion des utilisateurs
+- **Stripe** - Traitement des paiements et gestion des abonnements
+
+### Recherche & Stockage
+
+- **Algolia** - Recherche rapide et pertinente
+- **Cloudflare R2** - Stockage d'objets compatible S3
+
+### Communication & Notifications
+
+- **Resend** - Service d'emails transactionnels
+- **Twilio** - SMS et notifications mobiles
+- **Socket.io** - Communication temps réel pour le monitoring
+
+### Fonctionnalités spécifiques
+
+- **OpenStreetMap + Leaflet.js** - Cartographie et géolocalisation
+- **React-PDF** - Génération de rapports PDF
+- **SheetJS** - Export de données en format Excel
+- **Temporal.io** - Orchestration de workflows et tâches asynchrones
+
+## 5. Infrastructure & DevOps
+
+### Déploiement & CI/CD
+
+- **Coolify** - Plateforme self-hosted pour le déploiement
+- **Docker** - Conteneurisation des services
+- **GitHub Actions** - Automatisation CI/CD
+
+### Monitoring & Observabilité
+
+- **Prometheus + Grafana** - Collecte et visualisation de métriques
+- **Loki** - Agrégation et exploration de logs
+- **Glitchtip** - Suivi des erreurs (compatible avec l'API Sentry)
+- **Umami** - Analytics respectueux de la vie privée
+
+### Sauvegarde & Restauration
+
+- **pgbackrest** - Solution de backup robuste pour PostgreSQL
+- **pg_dump automatisé** - Sauvegardes programmées
+
+## 6. Architecture multi-tenant
+
+- Architecture à schéma unique avec discrimination par tenant_id
+- Isolation des données par organisation au niveau des Server Actions
+- Middleware de protection centralisé pour les vérifications d'accès
+- Optimisation des requêtes grâce aux index sur tenant_id
+
+## 7. Intégration NFC/QR
+
+- Approche hybride WebNFC + QR Code
+- Points de scan fixes (entrées/sorties)
+- Options pour scanners Bluetooth dans les zones de forte utilisation
+
+## 8. Optimisations & Performance
+
+- **SEO** - Optimisation pour la partie publique (landing)
+    - Screaming Frog pour l'audit
+    - Lighthouse pour les bonnes pratiques
+- **Web Vitals** - Suivi continu des métriques de performance
+- **Unlighthouse/IBM checker** - Outils d'analyse supplémentaires
+
+## 9. Documentation
+
+- **Swagger/OpenAPI** - Documentation d'API auto-générée
+- **Docusaurus** - Documentation utilisateur et technique
+
+## 10. Structure du projet
+
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── (auth)/             # Routes authentifiées
+│   ├── (marketing)/        # Routes publiques (landing)
+│   └── api/                # Routes API REST si nécessaire
+├── components/             # Composants React partagés
+│   ├── ui/                 # Composants UI de base (shadcn)
+│   └── [feature]/          # Composants spécifiques aux fonctionnalités
+├── lib/                    # Code utilitaire partagé
+├── server/                 # Code serveur
+│   ├── actions/            # Next.js Server Actions protégées
+│   │   └── middleware.ts   # Wrapper de protection HOF
+│   ├── db/                 # Prisma et utilitaires DB
+│   └── services/           # Logique métier
+├── stores/                 # Stores Zustand
+├── styles/                 # Styles globaux Tailwind
+└── types/                  # Types TypeScript partagés
+```

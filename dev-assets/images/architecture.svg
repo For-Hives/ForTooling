@@ -1,0 +1,191 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 800">
+  <!-- Background -->
+  <rect width="1000" height="800" fill="#f9fafb" />
+  
+  <!-- Title -->
+  <text x="500" y="40" font-family="Arial" font-size="24" text-anchor="middle" font-weight="bold" fill="#111827">Architecture SaaS - Plateforme de Gestion d'Équipements NFC/QR</text>
+  
+  <!-- Sections Backgrounds -->
+  <rect x="30" y="70" width="940" height="220" rx="10" fill="#f3f4f6" stroke="#d1d5db" stroke-width="2" />
+  <rect x="30" y="310" width="940" height="230" rx="10" fill="#f3f4f6" stroke="#d1d5db" stroke-width="2" />
+  <rect x="30" y="560" width="940" height="210" rx="10" fill="#f3f4f6" stroke="#d1d5db" stroke-width="2" />
+  
+  <!-- Section Titles -->
+  <text x="50" y="95" font-family="Arial" font-size="18" font-weight="bold" fill="#1f2937">Frontend (Next.js + React)</text>
+  <text x="50" y="335" font-family="Arial" font-size="18" font-weight="bold" fill="#1f2937">Backend (Server Actions + Prisma)</text>
+  <text x="50" y="585" font-family="Arial" font-size="18" font-weight="bold" fill="#1f2937">Infrastructure & Services</text>
+  
+  <!-- Frontend Components -->
+  <!-- UI Layer -->
+  <rect x="70" y="110" width="200" height="160" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" />
+  <text x="170" y="130" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#1e40af">UI Layer</text>
+  <text x="170" y="150" font-family="Arial" font-size="12" text-anchor="middle" fill="#1e40af">Composants React</text>
+  <text x="170" y="170" font-family="Arial" font-size="12" text-anchor="middle" fill="#1e40af">shadcn/ui</text>
+  <text x="170" y="190" font-family="Arial" font-size="12" text-anchor="middle" fill="#1e40af">Tailwind CSS</text>
+  <text x="170" y="210" font-family="Arial" font-size="12" text-anchor="middle" fill="#1e40af">Framer Motion / Rive</text>
+  <text x="170" y="230" font-family="Arial" font-size="12" text-anchor="middle" fill="#1e40af">Lucide React</text>
+  <text x="170" y="250" font-family="Arial" font-size="12" text-anchor="middle" fill="#1e40af">React-PDF / SheetJS</text>
+  
+  <!-- Zustand Store -->
+  <rect x="300" y="110" width="170" height="100" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="2" />
+  <text x="385" y="130" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#92400e">Zustand Store</text>
+  <text x="385" y="150" font-family="Arial" font-size="12" text-anchor="middle" fill="#92400e">État global partagé</text>
+  <text x="385" y="170" font-family="Arial" font-size="12" text-anchor="middle" fill="#92400e">Préférences utilisateur</text>
+  <text x="385" y="190" font-family="Arial" font-size="12" text-anchor="middle" fill="#92400e">État UI transversal</text>
+  
+  <!-- Form Handling -->
+  <rect x="300" y="220" width="170" height="50" rx="5" fill="#e0e7ff" stroke="#6366f1" stroke-width="2" />
+  <text x="385" y="250" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#3730a3">React Hook Form</text>
+  
+  <!-- PWA / Mobile Access -->
+  <rect x="500" y="110" width="170" height="100" rx="5" fill="#dcfce7" stroke="#10b981" stroke-width="2" />
+  <text x="585" y="130" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#047857">PWA / Mobile</text>
+  <text x="585" y="150" font-family="Arial" font-size="12" text-anchor="middle" fill="#047857">next-pwa</text>
+  <text x="585" y="170" font-family="Arial" font-size="12" text-anchor="middle" fill="#047857">WebNFC API</text>
+  <text x="585" y="190" font-family="Arial" font-size="12" text-anchor="middle" fill="#047857">QR Code scanner</text>
+  
+  <!-- SEO & Analytics -->
+  <rect x="500" y="220" width="170" height="50" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" />
+  <text x="585" y="250" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#1e40af">SEO & Analytics</text>
+  
+  <!-- Tests -->
+  <rect x="700" y="110" width="200" height="160" rx="5" fill="#ede9fe" stroke="#8b5cf6" stroke-width="2" />
+  <text x="800" y="130" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#5b21b6">Tests & Qualité</text>
+  <text x="800" y="150" font-family="Arial" font-size="12" text-anchor="middle" fill="#5b21b6">TypeScript</text>
+  <text x="800" y="170" font-family="Arial" font-size="12" text-anchor="middle" fill="#5b21b6">ESLint / Prettier</text>
+  <text x="800" y="190" font-family="Arial" font-size="12" text-anchor="middle" fill="#5b21b6">Vitest (unitaires)</text>
+  <text x="800" y="210" font-family="Arial" font-size="12" text-anchor="middle" fill="#5b21b6">Playwright (e2e)</text>
+  <text x="800" y="230" font-family="Arial" font-size="12" text-anchor="middle" fill="#5b21b6">Lighthouse / Web Vitals</text>
+  <text x="800" y="250" font-family="Arial" font-size="12" text-anchor="middle" fill="#5b21b6">Unlighthouse</text>
+  
+  <!-- Backend Components -->
+  <!-- Server Actions -->
+  <rect x="70" y="350" width="200" height="170" rx="5" fill="#e0e7ff" stroke="#6366f1" stroke-width="2" />
+  <text x="170" y="370" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#3730a3">Server Actions</text>
+  <text x="170" y="390" font-family="Arial" font-size="12" text-anchor="middle" fill="#3730a3">Actions serveur typées</text>
+  <text x="170" y="410" font-family="Arial" font-size="12" text-anchor="middle" fill="#3730a3">Validation (Zod)</text>
+  <text x="170" y="430" font-family="Arial" font-size="12" text-anchor="middle" fill="#3730a3">Protection centralisée</text>
+  <text x="170" y="450" font-family="Arial" font-size="12" text-anchor="middle" fill="#3730a3">Authentification (Clerk)</text>
+  <text x="170" y="470" font-family="Arial" font-size="12" text-anchor="middle" fill="#3730a3">Rate limiting</text>
+  <text x="170" y="490" font-family="Arial" font-size="12" text-anchor="middle" fill="#3730a3">CORS / Helmet</text>
+  
+  <!-- Business Logic -->
+  <rect x="300" y="350" width="170" height="170" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" />
+  <text x="385" y="370" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#1e40af">Business Logic</text>
+  <text x="385" y="390" font-family="Arial" font-size="12" text-anchor="middle" fill="#1e40af">Gestion Equipements</text>
+  <text x="385" y="410" font-family="Arial" font-size="12" text-anchor="middle" fill="#1e40af">Suivi NFC/QR</text>
+  <text x="385" y="430" font-family="Arial" font-size="12" text-anchor="middle" fill="#1e40af">Affectations</text>
+  <text x="385" y="450" font-family="Arial" font-size="12" text-anchor="middle" fill="#1e40af">Projects/Locations</text>
+  <text x="385" y="470" font-family="Arial" font-size="12" text-anchor="middle" fill="#1e40af">Analytics</text>
+  <text x="385" y="490" font-family="Arial" font-size="12" text-anchor="middle" fill="#1e40af">Multi-tenant</text>
+  
+  <!-- Prisma ORM -->
+  <rect x="500" y="350" width="170" height="70" rx="5" fill="#fee2e2" stroke="#ef4444" stroke-width="2" />
+  <text x="585" y="370" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#b91c1c">Prisma ORM</text>
+  <text x="585" y="390" font-family="Arial" font-size="12" text-anchor="middle" fill="#b91c1c">Schema définition</text>
+  <text x="585" y="410" font-family="Arial" font-size="12" text-anchor="middle" fill="#b91c1c">Migrations</text>
+  
+  <!-- Database -->
+  <rect x="500" y="430" width="170" height="90" rx="5" fill="#fee2e2" stroke="#ef4444" stroke-width="2" />
+  <text x="585" y="450" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#b91c1c">Database</text>
+  <text x="585" y="470" font-family="Arial" font-size="12" text-anchor="middle" fill="#b91c1c">PostgreSQL (prod)</text>
+  <text x="585" y="490" font-family="Arial" font-size="12" text-anchor="middle" fill="#b91c1c">Neon (dev)</text>
+  <text x="585" y="510" font-family="Arial" font-size="12" text-anchor="middle" fill="#b91c1c">pgbackrest (backup)</text>
+  
+  <!-- Async Tasks -->
+  <rect x="700" y="350" width="200" height="170" rx="5" fill="#dcfce7" stroke="#10b981" stroke-width="2" />
+  <text x="800" y="370" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#047857">Tasks & Jobs</text>
+  <text x="800" y="390" font-family="Arial" font-size="12" text-anchor="middle" fill="#047857">Temporal.io</text>
+  <text x="800" y="410" font-family="Arial" font-size="12" text-anchor="middle" fill="#047857">Workflows</text>
+  <text x="800" y="430" font-family="Arial" font-size="12" text-anchor="middle" fill="#047857">Alertes automatiques</text>
+  <text x="800" y="450" font-family="Arial" font-size="12" text-anchor="middle" fill="#047857">Reports génération</text>
+  <text x="800" y="470" font-family="Arial" font-size="12" text-anchor="middle" fill="#047857">Maintenance planifiée</text>
+  <text x="800" y="490" font-family="Arial" font-size="12" text-anchor="middle" fill="#047857">Tâches récurrentes</text>
+  
+  <!-- Infrastructure Components -->
+  <!-- Authentication & Payments -->
+  <rect x="70" y="600" width="170" height="150" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" />
+  <text x="155" y="620" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#1e40af">Auth & Payments</text>
+  <text x="155" y="640" font-family="Arial" font-size="12" text-anchor="middle" fill="#1e40af">Clerk 6+</text>
+  <text x="155" y="660" font-family="Arial" font-size="12" text-anchor="middle" fill="#1e40af">Stripe</text>
+  
+  <!-- Search & Storage -->
+  <rect x="250" y="600" width="170" height="150" rx="5" fill="#fee2e2" stroke="#ef4444" stroke-width="2" />
+  <text x="335" y="620" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#b91c1c">Search & Storage</text>
+  <text x="335" y="640" font-family="Arial" font-size="12" text-anchor="middle" fill="#b91c1c">Algolia</text>
+  <text x="335" y="660" font-family="Arial" font-size="12" text-anchor="middle" fill="#b91c1c">Cloudflare R2</text>
+  
+  <!-- Notifications -->
+  <rect x="430" y="600" width="170" height="150" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="2" />
+  <text x="515" y="620" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#92400e">Notifications</text>
+  <text x="515" y="640" font-family="Arial" font-size="12" text-anchor="middle" fill="#92400e">Resend (Email)</text>
+  <text x="515" y="660" font-family="Arial" font-size="12" text-anchor="middle" fill="#92400e">Twilio (SMS)</text>
+  <text x="515" y="680" font-family="Arial" font-size="12" text-anchor="middle" fill="#92400e">Socket.io (temps réel)</text>
+  
+  <!-- Deployment -->
+  <rect x="610" y="600" width="170" height="150" rx="5" fill="#dcfce7" stroke="#10b981" stroke-width="2" />
+  <text x="695" y="620" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#047857">Deployment</text>
+  <text x="695" y="640" font-family="Arial" font-size="12" text-anchor="middle" fill="#047857">Coolify</text>
+  <text x="695" y="660" font-family="Arial" font-size="12" text-anchor="middle" fill="#047857">Docker</text>
+  <text x="695" y="680" font-family="Arial" font-size="12" text-anchor="middle" fill="#047857">GitHub Actions</text>
+  
+  <!-- Monitoring -->
+  <rect x="790" y="600" width="160" height="150" rx="5" fill="#ede9fe" stroke="#8b5cf6" stroke-width="2" />
+  <text x="870" y="620" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#5b21b6">Monitoring</text>
+  <text x="870" y="640" font-family="Arial" font-size="12" text-anchor="middle" fill="#5b21b6">Prometheus / Grafana</text>
+  <text x="870" y="660" font-family="Arial" font-size="12" text-anchor="middle" fill="#5b21b6">Loki (logs)</text>
+  <text x="870" y="680" font-family="Arial" font-size="12" text-anchor="middle" fill="#5b21b6">Glitchtip (erreurs)</text>
+  <text x="870" y="700" font-family="Arial" font-size="12" text-anchor="middle" fill="#5b21b6">Umami (analytics)</text>
+  
+  <!-- Data Flow Arrows -->
+  <!-- Form to Server Actions -->
+  <path d="M385 270 L385 340" stroke="#6366f1" stroke-width="3" stroke-dasharray="5,5" fill="none" />
+  <polygon points="385,350 380,340 390,340" fill="#6366f1" />
+  
+  <!-- Business Logic to Database -->
+  <path d="M470 420 L490 420" stroke="#ef4444" stroke-width="3" fill="none" />
+  <polygon points="500,420 490,415 490,425" fill="#ef4444" />
+  
+  <!-- Business Logic to Tasks -->
+  <path d="M470 470 L690 470" stroke="#10b981" stroke-width="3" fill="none" />
+  <polygon points="700,470 690,465 690,475" fill="#10b981" />
+  
+  <!-- UI to Zustand -->
+  <path d="M270 160 L290 160" stroke="#f59e0b" stroke-width="3" fill="none" />
+  <polygon points="300,160 290,155 290,165" fill="#f59e0b" />
+  
+  <!-- Zustand to UI -->
+  <path d="M300 190 L280 190" stroke="#f59e0b" stroke-width="3" stroke-dasharray="5,5" fill="none" />
+  <polygon points="270,190 280,185 280,195" fill="#f59e0b" />
+  
+  <!-- Backend to Infrastructure -->
+  <path d="M385 520 L385 590" stroke="#4b5563" stroke-width="3" stroke-dasharray="5,5" fill="none" />
+  <polygon points="385,600 380,590 390,590" fill="#4b5563" />
+  
+  <!-- Server Actions to Auth -->
+  <path d="M170 520 L155 590" stroke="#1e40af" stroke-width="3" stroke-dasharray="5,5" fill="none" />
+  <polygon points="155,600 150,590 160,590" fill="#1e40af" />
+  
+  <!-- Server Actions to Business Logic -->
+  <path d="M270 420 L290 420" stroke="#1e40af" stroke-width="3" fill="none" />
+  <polygon points="300,420 290,415 290,425" fill="#1e40af" />
+  
+  <!-- Legend -->
+  <rect x="50" y="760" width="20" height="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1" />
+  <text x="80" y="768" font-family="Arial" font-size="12" fill="#1e40af">UI / UX</text>
+  
+  <rect x="150" y="760" width="20" height="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" />
+  <text x="180" y="768" font-family="Arial" font-size="12" fill="#92400e">State / Communication</text>
+  
+  <rect x="370" y="760" width="20" height="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="1" />
+  <text x="400" y="768" font-family="Arial" font-size="12" fill="#3730a3">Server Actions / API</text>
+  
+  <rect x="550" y="760" width="20" height="10" fill="#fee2e2" stroke="#ef4444" stroke-width="1" />
+  <text x="580" y="768" font-family="Arial" font-size="12" fill="#b91c1c">Data / Storage</text>
+  
+  <rect x="700" y="760" width="20" height="10" fill="#dcfce7" stroke="#10b981" stroke-width="1" />
+  <text x="730" y="768" font-family="Arial" font-size="12" fill="#047857">Processes / Jobs</text>
+  
+  <rect x="850" y="760" width="20" height="10" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1" />
+  <text x="880" y="768" font-family="Arial" font-size="12" fill="#5b21b6">Quality / Monitoring</text>
+</svg>
