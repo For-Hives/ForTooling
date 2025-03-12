@@ -19,9 +19,9 @@ Cette plateforme SaaS de gestion d'équipements avec tracking NFC/QR combine les
 ### Gestion d'état client
 
 - **Zustand** - Gestion d'état global légère et simple
-    - Utilisé pour éviter le prop drilling
-    - Stockage des préférences utilisateur, thèmes, filtres
-    - État partagé entre composants distants
+  - Utilisé pour éviter le prop drilling
+  - Stockage des préférences utilisateur, thèmes, filtres
+  - État partagé entre composants distants
 
 ### PWA & Mobile
 
@@ -41,8 +41,8 @@ Cette plateforme SaaS de gestion d'équipements avec tracking NFC/QR combine les
 ### API & Validation
 
 - **Next.js Server Actions** - Actions serveur typées et sécurisées
-    - Pattern de protection centralisé (HOF withProtection)
-    - Isolation multi-tenant intégrée
+  - Pattern de protection centralisé (HOF withProtection)
+  - Isolation multi-tenant intégrée
 - **Zod** - Validation de schémas pour les données d'entrée
 - **React Hook Form** - Gestion de formulaires avec validation côté client
 
@@ -119,8 +119,8 @@ Cette plateforme SaaS de gestion d'équipements avec tracking NFC/QR combine les
 ## 8. Optimisations & Performance
 
 - **SEO** - Optimisation pour la partie publique (landing)
-    - Screaming Frog pour l'audit
-    - Lighthouse pour les bonnes pratiques
+  - Screaming Frog pour l'audit
+  - Lighthouse pour les bonnes pratiques
 - **Web Vitals** - Suivi continu des métriques de performance
 - **Unlighthouse/IBM checker** - Outils d'analyse supplémentaires
 
@@ -150,3 +150,5 @@ src/
 ├── styles/                 # Styles globaux Tailwind
 └── types/                  # Types TypeScript partagés
 ```
+
+
