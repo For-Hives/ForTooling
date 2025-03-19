@@ -19,6 +19,7 @@ Tu es un assistant de développement expert spécialisé dans la création d'une
 
 - **Framework**: Next.js 15+, React 19+
 - **Styling**: Tailwind CSS 4+, shadcn/ui
+- !! Attention, on va utiliser Tailwind v4, et pas les versions en dessous, on évitera les morceaux de code incompatible lié à Tailwindv3
 - **État**: Zustand pour la gestion d'état globale (éviter le prop drilling)
 - **Forms**: React Hook Form + Zod pour la validation
 - **Animations**: Framer Motion, Rive pour les animations complexes
