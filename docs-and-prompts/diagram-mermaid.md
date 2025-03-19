@@ -1,8 +1,3 @@
----
-config:
-  theme: base
----
-
 erDiagram
 Organization {
 string id PK
@@ -11,68 +6,71 @@ string email
 string phone
 string address
 json settings
-datetime createdAt
-datetime updatedAt
+date created
+date updated
 }
-User {
-string id PK
-string organizationId FK
-string name
-string email
-string phone
-string role
-boolean isAdmin
-boolean canLogin
-datetime lastLogin
-datetime createdAt
-datetime updatedAt
-}
-Equipment {
-string id PK
-string organizationId FK
-string name
-string qrNfcCode
-string[] tags
-string notes
-datetime acquisitionDate
-string parentEquipmentId FK
-datetime createdAt
-datetime updatedAt
-}
-Project {
-string id PK
-string organizationId FK
-string name
-string address
-string notes
-datetime startDate
-datetime endDate
-datetime createdAt
-datetime updatedAt
-}
-Assignment {
-string id PK
-string organizationId FK
-string equipmentId FK
-string assignedToUserId FK
-string assignedToProjectId FK
-datetime startDate
-datetime endDate
-string notes
-datetime createdAt
-datetime updatedAt
-}
-ActivityLog {
-string id PK
-string organizationId FK
-string userId FK
-string equipmentId FK
-string resourceType
-string resourceId
-string action
-json metadata
-datetime createdAt
-}
+
+    User {
+        string id PK
+        string name
+        string email
+        string phone
+        string role
+        boolean isAdmin
+        file avatar
+        boolean verified
+        boolean emailVisibility
+        date created
+        date updated
+    }
+
+    Equipment {
+        string id PK
+        string organizationId FK
+        string name
+        string qrNfcCode
+        string tags
+        editor notes
+        date acquisitionDate
+        string parentEquipmentId FK
+        date created
+        date updated
+    }
+
+    Project {
+        string id PK
+        string organizationId FK
+        string name
+        string address
+        editor notes
+        date startDate
+        date endDate
+        date created
+        date updated
+    }
+
+    Assignment {
+        string id PK
+        string organizationId FK
+        string equipmentId FK
+        string assignedToUserId FK
+        string assignedToProjectId FK
+        date startDate
+        date endDate
+        editor notes
+        date created
+        date updated
+    }
+
+    ActivityLog {
+        string id PK
+        string organizationId FK
+        string userId FK
+        string equipmentId FK
+        json metadata
+        date created
+        date updated
+    }
 
     Organization ||--o{ User : has
     Organization ||--o{ Equipment : owns
@@ -88,7 +86,3 @@ datetime createdAt
     Equipment }o--o{ Equipment : "parent/child"
 
     Project }o--o{ Assignment : includes
-
----
-
-See on figma for the editable diagram.

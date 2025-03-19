@@ -12,7 +12,7 @@
   
   <!-- Section Titles -->
   <text x="50" y="95" font-family="Arial" font-size="18" font-weight="bold" fill="#1f2937">Frontend (Next.js + React)</text>
-  <text x="50" y="335" font-family="Arial" font-size="18" font-weight="bold" fill="#1f2937">Backend (Server Actions + Prisma)</text>
+  <text x="50" y="335" font-family="Arial" font-size="18" font-weight="bold" fill="#1f2937">Backend (Server Actions + Pocketbase)</text>
   <text x="50" y="585" font-family="Arial" font-size="18" font-weight="bold" fill="#1f2937">Infrastructure & Services</text>
   
   <!-- Frontend Components -->
@@ -79,18 +79,10 @@
   <text x="385" y="470" font-family="Arial" font-size="12" text-anchor="middle" fill="#1e40af">Analytics</text>
   <text x="385" y="490" font-family="Arial" font-size="12" text-anchor="middle" fill="#1e40af">Multi-tenant</text>
   
-  <!-- Prisma ORM -->
-  <rect x="500" y="350" width="170" height="70" rx="5" fill="#fee2e2" stroke="#ef4444" stroke-width="2" />
-  <text x="585" y="370" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#b91c1c">Prisma ORM</text>
-  <text x="585" y="390" font-family="Arial" font-size="12" text-anchor="middle" fill="#b91c1c">Schema définition</text>
-  <text x="585" y="410" font-family="Arial" font-size="12" text-anchor="middle" fill="#b91c1c">Migrations</text>
-  
   <!-- Database -->
   <rect x="500" y="430" width="170" height="90" rx="5" fill="#fee2e2" stroke="#ef4444" stroke-width="2" />
   <text x="585" y="450" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#b91c1c">Database</text>
-  <text x="585" y="470" font-family="Arial" font-size="12" text-anchor="middle" fill="#b91c1c">PostgreSQL (prod)</text>
-  <text x="585" y="490" font-family="Arial" font-size="12" text-anchor="middle" fill="#b91c1c">Neon (dev)</text>
-  <text x="585" y="510" font-family="Arial" font-size="12" text-anchor="middle" fill="#b91c1c">pgbackrest (backup)</text>
+  <text x="585" y="470" font-family="Arial" font-size="12" text-anchor="middle" fill="#b91c1c">Pocketbase</text>
   
   <!-- Async Tasks -->
   <rect x="700" y="350" width="200" height="170" rx="5" fill="#dcfce7" stroke="#10b981" stroke-width="2" />

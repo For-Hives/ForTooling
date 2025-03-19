@@ -46,11 +46,9 @@ Cette plateforme SaaS de gestion d'équipements avec tracking NFC/QR combine les
 - **Zod** - Validation de schémas pour les données d'entrée
 - **React Hook Form** - Gestion de formulaires avec validation côté client
 
-### ORM & Base de données
+### Backend
 
-- **Prisma** - ORM moderne pour TypeScript
-- **PostgreSQL** - Base de données relationnelle robuste et évolutive
-- **Neon** - Base de données PostgreSQL serverless pour l'environnement de développement
+- **Pockebase** - Backend as a service
 
 ### Sécurité API
 
