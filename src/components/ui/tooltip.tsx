@@ -1,61 +1,109 @@
-"use client"
+'use client'
 
-import * as React from "react"
-import * as TooltipPrimitive from "@radix-ui/react-tooltip"
+import * as React from 'react'
 
-import { cn } from "@/lib/utils"
-
-function TooltipProvider({
-  delayDuration = 0,
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
-  return (
-    <TooltipPrimitive.Provider
-      data-slot="tooltip-provider"
-      delayDuration={delayDuration}
-      {...props}
-    />
-  )
+function cn(...classes: (string | boolean | undefined)[]) {
+	return classes.filter(Boolean).join(' ')
 }
 
-function Tooltip({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Root>) {
-  return (
-    <TooltipProvider>
-      <TooltipPrimitive.Root data-slot="tooltip" {...props} />
-    </TooltipProvider>
-  )
+// Simplified tooltip implementation without any library dependencies
+export interface TooltipProps {
+	children: React.ReactNode
 }
 
-function TooltipTrigger({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
+const TooltipContext = React.createContext<{
+	open: boolean
+	setOpen: React.Dispatch<React.SetStateAction<boolean>>
+	content: React.ReactNode
+	setContent: React.Dispatch<React.SetStateAction<React.ReactNode>>
+}>({
+	open: false,
+	setOpen: () => {},
+	content: null,
+	setContent: () => {},
+})
+
+export function TooltipProvider({ children }: { children: React.ReactNode }) {
+	const [open, setOpen] = React.useState(false)
+	const [content, setContent] = React.useState<React.ReactNode>(null)
+
+	return (
+		<TooltipContext.Provider value={{ open, setOpen, content, setContent }}>
+			{children}
+		</TooltipContext.Provider>
+	)
 }
 
-function TooltipContent({
-  className,
-  sideOffset = 0,
-  children,
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
-  return (
-    <TooltipPrimitive.Portal>
-      <TooltipPrimitive.Content
-        data-slot="tooltip-content"
-        sideOffset={sideOffset}
-        className={cn(
-          "bg-primary text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) rounded-md px-3 py-1.5 text-xs text-balance",
-          className
-        )}
-        {...props}
-      >
-        {children}
-        <TooltipPrimitive.Arrow className="bg-primary fill-primary z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px]" />
-      </TooltipPrimitive.Content>
-    </TooltipPrimitive.Portal>
-  )
+export function Tooltip({ children }: TooltipProps) {
+	return <>{children}</>
 }
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+export interface TooltipTriggerProps
+	extends React.HTMLAttributes<HTMLDivElement> {
+	asChild?: boolean
+}
+
+export function TooltipTrigger({
+	children,
+	asChild = false,
+	...props
+}: TooltipTriggerProps) {
+	const { setOpen, setContent } = React.useContext(TooltipContext)
+	const Comp = asChild ? React.Fragment : 'div'
+
+	const handleMouseEnter = React.useCallback(() => {
+		setOpen(true)
+	}, [setOpen])
+
+	const handleMouseLeave = React.useCallback(() => {
+		setOpen(false)
+	}, [setOpen])
+
+	return (
+		<Comp
+			onMouseEnter={handleMouseEnter}
+			onMouseLeave={handleMouseLeave}
+			{...props}
+		>
+			{children}
+		</Comp>
+	)
+}
+
+export interface TooltipContentProps
+	extends React.HTMLAttributes<HTMLDivElement> {
+	side?: 'top' | 'right' | 'bottom' | 'left'
+	align?: 'start' | 'center' | 'end'
+	hidden?: boolean
+}
+
+export function TooltipContent({
+	children,
+	className,
+	side = 'top',
+	align = 'center',
+	hidden = false,
+	...props
+}: TooltipContentProps) {
+	const { open, setContent } = React.useContext(TooltipContext)
+
+	React.useEffect(() => {
+		setContent(children)
+	}, [children, setContent])
+
+	if (hidden || !open) {
+		return null
+	}
+
+	return (
+		<div
+			className={cn(
+				'bg-primary text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 overflow-hidden rounded-md px-3 py-1.5 text-xs',
+				className
+			)}
+			{...props}
+		>
+			{children}
+		</div>
+	)
+}
