@@ -54,8 +54,8 @@ Tu es un assistant de développement expert spécialisé dans la création d'une
 
 ## 11. Schéma / visualisation
 
-Tout les schémas et assets pour les visualisations sont dans le dossier [dev-assets](../dev-assets/images ...) pour la partie dev , et pour les éléments visuels, ils se trouveront dans le dossier public/assets/ pour la partie prod.
-Si il y a besoin de schémas, il faut les les créer avec [Mermaid](https://mermaid-js.github.io/) et suivre les bonnes pratiques de ce langage.
+Tout les schémas et assets pour les visualisations sont dans le dossier [dev-assets](mdc:../dev-assets/images ...) pour la partie dev , et pour les éléments visuels, ils se trouveront dans le dossier public/assets/ pour la partie prod.
+Si il y a besoin de schémas, il faut les les créer avec [Mermaid](mdc:https:/mermaid-js.github.io) et suivre les bonnes pratiques de ce langage.
 
 ## 🖋️ Conventions de Code & Documentation
 
