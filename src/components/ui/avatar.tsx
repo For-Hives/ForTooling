@@ -1,85 +1,53 @@
-'use client'
+"use client"
 
-import * as React from 'react'
+import * as React from "react"
+import * as AvatarPrimitive from "@radix-ui/react-avatar"
 
-function cn(...classes: (string | boolean | undefined)[]) {
-	return classes.filter(Boolean).join(' ')
+import { cn } from "@/lib/utils"
+
+function Avatar({
+  className,
+  ...props
+}: React.ComponentProps<typeof AvatarPrimitive.Root>) {
+  return (
+    <AvatarPrimitive.Root
+      data-slot="avatar"
+      className={cn(
+        "relative flex size-8 shrink-0 overflow-hidden rounded-full",
+        className
+      )}
+      {...props}
+    />
+  )
 }
 
-export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {}
-
-export function Avatar({ className, ...props }: AvatarProps) {
-	return (
-		<div
-			className={cn(
-				'relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full',
-				className
-			)}
-			{...props}
-		/>
-	)
+function AvatarImage({
+  className,
+  ...props
+}: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+  return (
+    <AvatarPrimitive.Image
+      data-slot="avatar-image"
+      className={cn("aspect-square size-full", className)}
+      {...props}
+    />
+  )
 }
 
-export interface AvatarImageProps
-	extends React.ImgHTMLAttributes<HTMLImageElement> {
-	onLoadingStatusChange?: (status: 'loading' | 'loaded' | 'error') => void
+function AvatarFallback({
+  className,
+  ...props
+}: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
+  return (
+    <AvatarPrimitive.Fallback
+      data-slot="avatar-fallback"
+      className={cn(
+        "bg-muted flex size-full items-center justify-center rounded-full",
+        className
+      )}
+      {...props}
+    />
+  )
 }
 
-export function AvatarImage({
-	className,
-	src,
-	alt = '',
-	onLoadingStatusChange,
-	...props
-}: AvatarImageProps) {
-	const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>(
-		src ? 'loading' : 'error'
-	)
-
-	React.useEffect(() => {
-		if (!src) {
-			setStatus('error')
-			onLoadingStatusChange?.('error')
-			return
-		}
-
-		const image = new Image()
-		image.src = src
-		image.onload = () => {
-			setStatus('loaded')
-			onLoadingStatusChange?.('loaded')
-		}
-		image.onerror = () => {
-			setStatus('error')
-			onLoadingStatusChange?.('error')
-		}
-	}, [src, onLoadingStatusChange])
-
-	return (
-		<img
-			src={src}
-			className={cn(
-				'h-full w-full object-cover',
-				status === 'loading' && 'bg-muted animate-pulse',
-				className
-			)}
-			alt={alt}
-			{...props}
-		/>
-	)
-}
-
-export interface AvatarFallbackProps
-	extends React.HTMLAttributes<HTMLDivElement> {}
-
-export function AvatarFallback({ className, ...props }: AvatarFallbackProps) {
-	return (
-		<div
-			className={cn(
-				'bg-muted flex h-full w-full items-center justify-center rounded-full',
-				className
-			)}
-			{...props}
-		/>
-	)
-}
+export { Avatar, AvatarImage, AvatarFallback }
