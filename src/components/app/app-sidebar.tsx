@@ -9,6 +9,11 @@ import {
 	SidebarMenuButton,
 } from '@/components/ui/sidebar'
 import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
 	Construction,
 	Wrench,
 	User,
@@ -19,11 +24,6 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from '@/components/ui/tooltip'
 
 export function AppSidebar() {
 	const pathname = usePathname()
