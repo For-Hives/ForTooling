@@ -1,6 +1,13 @@
 'use client'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import {
+	Sidebar,
+	SidebarContent,
+	SidebarFooter,
+	SidebarMenu,
+	SidebarMenuItem,
+	SidebarMenuButton,
+} from '@/components/ui/sidebar'
 import {
 	Construction,
 	Wrench,
@@ -10,16 +17,8 @@ import {
 	Scan,
 	ClipboardList,
 } from 'lucide-react'
-
-import {
-	Sidebar,
-	SidebarContent,
-	SidebarFooter,
-	SidebarMenu,
-	SidebarMenuItem,
-	SidebarMenuButton,
-} from '@/components/ui/sidebar'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 export function AppSidebar() {
 	const pathname = usePathname()
