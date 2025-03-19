@@ -20,12 +20,6 @@ import {
 	SidebarMenuButton,
 } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-	TooltipProvider,
-} from '@/components/ui/tooltip'
 
 export function AppSidebar() {
 	const pathname = usePathname()
