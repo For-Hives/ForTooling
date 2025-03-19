@@ -19,14 +19,14 @@ export default function Dashboard() {
 	const quickLinks = [
 		{
 			color: 'bg-blue-100 text-blue-700',
-			description: 'Gérer et suivre tous les équipements',
+			description: 'Gérer et suivre tous les équipements et outils',
 			href: '/app/equipments',
 			icon: Wrench,
 			title: 'Équipements',
 		},
 		{
 			color: 'bg-amber-100 text-amber-700',
-			description: 'Gérer les projets et emplacements',
+			description: 'Gérer les projets, chantiers et emplacements',
 			href: '/app/projects',
 			icon: Construction,
 			title: 'Projets',
