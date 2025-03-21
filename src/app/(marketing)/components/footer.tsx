@@ -1,94 +1,5 @@
-import {
-	PlusGrid,
-	PlusGridItem,
-	PlusGridRow,
-} from '@/app/(marketing)/components/plus-grid'
-import { Button } from './button'
 import { Container } from './container'
-import { Gradient } from './gradient'
 import { Link } from './link'
-import { Logo } from './logo'
-import { Subheading } from './text'
-
-function CallToAction() {
-	return (
-		<div className='relative pt-20 pb-16 text-center sm:py-24'>
-			<hgroup>
-				<Subheading>Get started</Subheading>
-				<p className='mt-6 text-3xl font-medium tracking-tight text-gray-950 sm:text-5xl'>
-					Ready to dive in?
-					<br />
-					Start your free trial today.
-				</p>
-			</hgroup>
-			<p className='mx-auto mt-6 max-w-xs text-sm/6 text-gray-500'>
-				Get the cheat codes for selling and unlock your team&apos;s revenue
-				potential.
-			</p>
-			<div className='mt-6'>
-				<Button className='w-full sm:w-auto' href='#'>
-					Get started
-				</Button>
-			</div>
-		</div>
-	)
-}
-
-function SitemapHeading({ children }: { children: React.ReactNode }) {
-	return <h3 className='text-sm/6 font-medium text-gray-950/50'>{children}</h3>
-}
-
-function SitemapLinks({ children }: { children: React.ReactNode }) {
-	return <ul className='mt-6 space-y-4 text-sm/6'>{children}</ul>
-}
-
-function SitemapLink(props: React.ComponentPropsWithoutRef<typeof Link>) {
-	return (
-		<li>
-			<Link
-				{...props}
-				className='font-medium text-gray-950 data-hover:text-gray-950/75'
-			/>
-		</li>
-	)
-}
-
-function Sitemap() {
-	return (
-		<>
-			<div>
-				<SitemapHeading>Product</SitemapHeading>
-				<SitemapLinks>
-					<SitemapLink href='/pricing'>Pricing</SitemapLink>
-					<SitemapLink href='#'>Analysis</SitemapLink>
-					<SitemapLink href='#'>API</SitemapLink>
-				</SitemapLinks>
-			</div>
-			<div>
-				<SitemapHeading>Company</SitemapHeading>
-				<SitemapLinks>
-					<SitemapLink href='#'>Careers</SitemapLink>
-					<SitemapLink href='/blog'>Blog</SitemapLink>
-					<SitemapLink href='/company'>Company</SitemapLink>
-				</SitemapLinks>
-			</div>
-			<div>
-				<SitemapHeading>Support</SitemapHeading>
-				<SitemapLinks>
-					<SitemapLink href='#'>Help center</SitemapLink>
-					<SitemapLink href='#'>Community</SitemapLink>
-				</SitemapLinks>
-			</div>
-			<div>
-				<SitemapHeading>Company</SitemapHeading>
-				<SitemapLinks>
-					<SitemapLink href='#'>Terms of service</SitemapLink>
-					<SitemapLink href='#'>Privacy policy</SitemapLink>
-				</SitemapLinks>
-			</div>
-		</>
-	)
-}
 
 function SocialIconX(props: React.ComponentPropsWithoutRef<'svg'>) {
 	return (
@@ -152,46 +63,90 @@ function SocialLinks() {
 function Copyright() {
 	return (
 		<div className='text-sm/6 text-gray-950'>
-			&copy; {new Date().getFullYear()} Radiant Inc.
+			&copy; {new Date().getFullYear()} ForTooling. Tous droits réservés.
 		</div>
 	)
 }
 
 export function Footer() {
 	return (
-		<footer>
-			<Gradient className='relative'>
-				<div className='absolute inset-2 rounded-4xl bg-white/80' />
-				<Container>
-					<CallToAction />
-					<PlusGrid className='pb-16'>
-						<PlusGridRow>
-							<div className='grid grid-cols-2 gap-y-10 pb-6 lg:grid-cols-6 lg:gap-8'>
-								<div className='col-span-2 flex'>
-									<PlusGridItem className='pt-6 lg:pb-6'>
-										<Logo className='h-9' />
-									</PlusGridItem>
-								</div>
-								<div className='col-span-2 grid grid-cols-2 gap-x-8 gap-y-12 lg:col-span-4 lg:grid-cols-subgrid lg:pt-6'>
-									<Sitemap />
-								</div>
-							</div>
-						</PlusGridRow>
-						<PlusGridRow className='flex justify-between'>
-							<div>
-								<PlusGridItem className='py-3'>
-									<Copyright />
-								</PlusGridItem>
-							</div>
-							<div className='flex'>
-								<PlusGridItem className='flex items-center gap-8 py-3'>
-									<SocialLinks />
-								</PlusGridItem>
-							</div>
-						</PlusGridRow>
-					</PlusGrid>
-				</Container>
-			</Gradient>
+		<footer className='mt-24 sm:mt-32 lg:mt-40'>
+			<Container>
+				<div className='grid grid-cols-1 gap-x-8 gap-y-16 lg:grid-cols-2'>
+					<div className='flex flex-col'>
+						<div className='flex h-12 w-auto items-center text-xl font-bold'>
+							ForTooling
+						</div>
+						<p className='mt-6 text-sm text-gray-600'>
+							{`ForTooling simplifie la gestion de votre parc d'équipements grâce
+							à la technologie NFC/QR. Localisez, attribuez et entretenez vos
+							équipements en toute simplicité.`}
+						</p>
+						<div className='mt-6 flex gap-x-4'>
+							<SocialLinks />
+						</div>
+					</div>
+
+					<div className='grid grid-cols-2 gap-8 sm:grid-cols-3'>
+						<div>
+							<h3 className='text-sm font-semibold'>Produit</h3>
+							<ul className='mt-6 space-y-4 text-sm'>
+								<li>
+									<Link
+										href='/features'
+										className='text-gray-600 hover:text-gray-950'
+									>
+										{'Fonctionnalités'}
+									</Link>
+								</li>
+							</ul>
+						</div>
+
+						<div>
+							<h3 className='text-sm font-semibold'>Company</h3>
+							<ul className='mt-6 space-y-4 text-sm'>
+								<li>
+									<Link href='#'>Careers</Link>
+								</li>
+								<li>
+									<Link href='/blog'>Blog</Link>
+								</li>
+								<li>
+									<Link href='/company'>Company</Link>
+								</li>
+							</ul>
+						</div>
+
+						<div>
+							<h3 className='text-sm font-semibold'>Support</h3>
+							<ul className='mt-6 space-y-4 text-sm'>
+								<li>
+									<Link href='#'>Help center</Link>
+								</li>
+								<li>
+									<Link href='#'>Community</Link>
+								</li>
+							</ul>
+						</div>
+
+						<div>
+							<h3 className='text-sm font-semibold'>Company</h3>
+							<ul className='mt-6 space-y-4 text-sm'>
+								<li>
+									<Link href='#'>Terms of service</Link>
+								</li>
+								<li>
+									<Link href='#'>Privacy policy</Link>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+
+				<div className='mt-16 border-t border-gray-900/5 pt-8 sm:mt-20 sm:pt-10 md:mt-24 lg:mt-32'>
+					<Copyright />
+				</div>
+			</Container>
 		</footer>
 	)
 }
