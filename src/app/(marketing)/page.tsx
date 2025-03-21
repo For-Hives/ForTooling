@@ -1,24 +1,16 @@
 import type { Metadata } from 'next'
 
-import { BentoCard } from '@/app/(marketing)/components/bento-card'
 import { Button } from '@/app/(marketing)/components/button'
 import { Container } from '@/app/(marketing)/components/container'
 import { Footer } from '@/app/(marketing)/components/footer'
 import { Gradient } from '@/app/(marketing)/components/gradient'
-import { Keyboard } from '@/app/(marketing)/components/keyboard'
-import { LinkedAvatars } from '@/app/(marketing)/components/linked-avatars'
-import { Logo } from '@/app/(marketing)/components/logo'
-import { LogoCloud } from '@/app/(marketing)/components/logo-cloud'
-import { LogoTimeline } from '@/app/(marketing)/components/logo-timeline'
-import { Map } from '@/app/(marketing)/components/map'
 import { Navbar } from '@/app/(marketing)/components/navbar'
 import { Screenshot } from '@/app/(marketing)/components/screenshot'
-import { Testimonials } from '@/app/(marketing)/components/testimonials'
 import { Heading, Subheading } from '@/app/(marketing)/components/text'
 
 export const metadata: Metadata = {
 	description:
-		'Radiant helps you sell more by revealing sensitive information about your customers.',
+		"ForTooling aide les entreprises BTP à suivre, attribuer et maintenir leur parc d'équipements via une interface simple et des QR codes.",
 }
 
 function Hero() {
@@ -29,17 +21,23 @@ function Hero() {
 				<Navbar />
 				<div className='pt-16 pb-24 sm:pt-24 sm:pb-32 md:pt-32 md:pb-48'>
 					<h1 className='font-display text-6xl/[0.9] font-medium tracking-tight text-balance text-gray-950 sm:text-8xl/[0.8] md:text-9xl/[0.8]'>
-						Close every deal.
+						ForTooling
 					</h1>
 					<p className='mt-8 max-w-lg text-xl/7 font-medium text-gray-950/75 sm:text-2xl/8'>
-						Radiant helps you sell more by revealing sensitive information about
-						your customers.
+						Suivez votre matériel BTP sans effort et sans vous ruiner. Solution
+						complète de suivi d'équipements par QR code à prix imbattable.
 					</p>
 					<div className='mt-12 flex flex-col gap-x-6 gap-y-4 sm:flex-row'>
-						<Button href='#'>Get started</Button>
-						<Button variant='secondary' href='/pricing'>
-							See pricing
-						</Button>
+						<Button href='#contact'>Nous contacter</Button>
+						{/* 
+							TODO: Ajouter bouton "Essai gratuit" quand disponible 
+							<Button variant='secondary' href='/signup'>Essai gratuit</Button>
+						*/}
+
+						{/*
+							TODO: Ajouter bouton de connexion Clerk quand disponible
+							<Button variant='secondary' href='/signin'>Connexion</Button>
+						*/}
 					</div>
 				</div>
 			</Container>
@@ -52,130 +50,116 @@ function FeatureSection() {
 		<div className='overflow-hidden'>
 			<Container className='pb-24'>
 				<Heading as='h2' className='max-w-3xl'>
-					A snapshot of your entire sales pipeline.
+					Gestion simplifiée de vos équipements BTP
 				</Heading>
-				<Screenshot
-					width={1216}
-					height={768}
-					src='/screenshots/app.png'
-					className='mt-16 h-[36rem] sm:h-auto sm:w-[76rem]'
-				/>
+				<div className='mt-8 space-y-6 text-xl text-gray-700'>
+					<p>
+						ForTooling est une solution SaaS qui permet aux entreprises du BTP
+						de:
+					</p>
+					<ul className='list-disc space-y-3 pl-6'>
+						<li>Suivre la localisation de chaque équipement par QR code</li>
+						<li>
+							Attribuer facilement le matériel aux employés ou aux chantiers
+						</li>
+						<li>Réduire significativement les pertes d'équipements</li>
+						<li>Simplifier la gestion quotidienne de votre parc matériel</li>
+					</ul>
+					<p>Le tout à un prix défiant toute concurrence.</p>
+				</div>
+
+				{/* 
+					TODO: Ajouter des captures d'écran réelles quand disponibles
+					<Screenshot
+						width={1216}
+						height={768}
+						src='/screenshots/app.png'
+						className='mt-16 h-[36rem] sm:h-auto sm:w-[76rem]'
+					/>
+				*/}
+
+				<div className='mt-16 flex justify-center'>
+					<img src='/logo.png' alt='ForTooling logo' className='h-40 w-auto' />
+				</div>
 			</Container>
 		</div>
 	)
 }
 
-function BentoSection() {
+function ConstructionNotice() {
 	return (
-		<Container>
-			<Subheading>Sales</Subheading>
-			<Heading as='h3' className='mt-2 max-w-3xl'>
-				Know more about your customers than they do.
-			</Heading>
-
-			<div className='mt-10 grid grid-cols-1 gap-4 sm:mt-16 lg:grid-cols-6 lg:grid-rows-2'>
-				<BentoCard
-					eyebrow='Insight'
-					title='Get perfect clarity'
-					description='Radiant uses social engineering to build a detailed financial picture of your leads. Know their budget, compensation package, social security number, and more.'
-					graphic={
-						<div className='h-80 bg-[url(/screenshots/profile.png)] bg-[size:1000px_560px] bg-[left_-109px_top_-112px] bg-no-repeat' />
-					}
-					fade={['bottom']}
-					className='max-lg:rounded-t-4xl lg:col-span-3 lg:rounded-tl-4xl'
-				/>
-				<BentoCard
-					eyebrow='Analysis'
-					title='Undercut your competitors'
-					description='With our advanced data mining, you’ll know which companies your leads are talking to and exactly how much they’re being charged.'
-					graphic={
-						<div className='absolute inset-0 bg-[url(/screenshots/competitors.png)] bg-[size:1100px_650px] bg-[left_-38px_top_-73px] bg-no-repeat' />
-					}
-					fade={['bottom']}
-					className='lg:col-span-3 lg:rounded-tr-4xl'
-				/>
-				<BentoCard
-					eyebrow='Speed'
-					title='Built for power users'
-					description='It’s never been faster to cold email your entire contact list using our streamlined keyboard shortcuts.'
-					graphic={
-						<div className='flex size-full pt-10 pl-10'>
-							<Keyboard highlighted={['LeftCommand', 'LeftShift', 'D']} />
-						</div>
-					}
-					className='lg:col-span-2 lg:rounded-bl-4xl'
-				/>
-				<BentoCard
-					eyebrow='Source'
-					title='Get the furthest reach'
-					description='Bypass those inconvenient privacy laws to source leads from the most unexpected places.'
-					graphic={<Logo />}
-					className='lg:col-span-2'
-				/>
-				<BentoCard
-					eyebrow='Limitless'
-					title='Sell globally'
-					description='Radiant helps you sell in locations currently under international embargo.'
-					graphic={<Map />}
-					className='max-lg:rounded-b-4xl lg:col-span-2 lg:rounded-br-4xl'
-				/>
+		<Container className='py-16 text-center'>
+			<div className='rounded-xl bg-blue-50 p-8'>
+				<Heading as='h3' className='text-3xl'>
+					🚧 Site en construction 🚧
+				</Heading>
+				<p className='mt-4 text-lg text-gray-700'>
+					Nous travaillons activement sur le développement de ForTooling. La
+					plateforme sera bientôt disponible avec toutes ses fonctionnalités.
+				</p>
+				<p className='mt-4 text-lg font-medium text-gray-800'>
+					Intéressé? Contactez-nous dès maintenant pour être informé du
+					lancement et bénéficier d'offres exclusives.
+				</p>
 			</div>
 		</Container>
 	)
 }
 
-function DarkBentoSection() {
+function ContactSection() {
 	return (
-		<div className='mx-2 mt-2 rounded-4xl bg-gray-900 py-32'>
-			<Container>
-				<Subheading dark>Outreach</Subheading>
-				<Heading as='h3' dark className='mt-2 max-w-3xl'>
-					Customer outreach has never been easier.
-				</Heading>
+		<Container id='contact' className='pt-16 pb-24'>
+			<Heading as='h2' className='text-center'>
+				Contactez-nous
+			</Heading>
+			<div className='mt-8 text-center text-xl'>
+				<p>Vous souhaitez en savoir plus ou être informé du lancement?</p>
+				<p className='mt-4 font-medium text-blue-600'>
+					<a href='mailto:contact@fortooling.fr'>contact@fortooling.fr</a>
+				</p>
 
-				<div className='mt-10 grid grid-cols-1 gap-4 sm:mt-16 lg:grid-cols-6 lg:grid-rows-2'>
-					<BentoCard
-						dark
-						eyebrow='Networking'
-						title='Sell at the speed of light'
-						description="Our RadiantAI chat assistants analyze the sentiment of your conversations in real time, ensuring you're always one step ahead."
-						graphic={
-							<div className='h-80 bg-[url(/screenshots/networking.png)] bg-[size:851px_344px] bg-no-repeat' />
-						}
-						fade={['top']}
-						className='max-lg:rounded-t-4xl lg:col-span-4 lg:rounded-tl-4xl'
-					/>
-					<BentoCard
-						dark
-						eyebrow='Integrations'
-						title='Meet leads where they are'
-						description='With thousands of integrations, no one will be able to escape your cold outreach.'
-						graphic={<LogoTimeline />}
-						// `overflow-visible!` is needed to work around a Chrome bug that disables the mask on the graphic.
-						className='z-10 overflow-visible! lg:col-span-2 lg:rounded-tr-4xl'
-					/>
-					<BentoCard
-						dark
-						eyebrow='Meetings'
-						title='Smart call scheduling'
-						description="Automatically insert intro calls into your leads' calendars without their consent."
-						graphic={<LinkedAvatars />}
-						className='lg:col-span-2 lg:rounded-bl-4xl'
-					/>
-					<BentoCard
-						dark
-						eyebrow='Engagement'
-						title='Become a thought leader'
-						description='RadiantAI automatically writes LinkedIn posts that relate current events to B2B sales, helping you build a reputation as a thought leader.'
-						graphic={
-							<div className='h-80 bg-[url(/screenshots/engagement.png)] bg-[size:851px_344px] bg-no-repeat' />
-						}
-						fade={['top']}
-						className='max-lg:rounded-b-4xl lg:col-span-4 lg:rounded-br-4xl'
-					/>
+				{/*
+					TODO: Ajouter un formulaire de contact complet
+					<form className='mt-8 mx-auto max-w-md'>...</form>
+				*/}
+			</div>
+		</Container>
+	)
+}
+
+function SimpleFooter() {
+	return (
+		<footer className='border-t border-gray-200 bg-gray-50 py-12'>
+			<Container>
+				<div className='flex flex-col items-center justify-between gap-6 sm:flex-row'>
+					<div className='flex items-center gap-2'>
+						<img src='/logo.png' alt='ForTooling' className='h-8 w-auto' />
+						<p className='text-sm text-gray-500'>
+							© {new Date().getFullYear()} ForTooling. Tous droits réservés.
+						</p>
+					</div>
+
+					{/* 
+						TODO: Ajouter les liens vers pages légales quand disponibles
+						<div className='flex gap-6 text-sm text-gray-500'>
+							<a href='/mentions-legales'>Mentions légales</a>
+							<a href='/politique-confidentialite'>Confidentialité</a>
+							<a href='/cgv'>CGV</a>
+						</div>
+					*/}
+
+					{/*
+						TODO: Ajouter liens réseaux sociaux quand disponibles
+						<div className='flex gap-4'>
+							<a href='#' className='text-gray-400 hover:text-gray-500'>
+								<span className='sr-only'>LinkedIn</span>
+								<svg>...</svg>
+							</a>
+						</div>
+					*/}
 				</div>
 			</Container>
-		</div>
+		</footer>
 	)
 }
 
@@ -184,17 +168,31 @@ export default function Home() {
 		<div className='overflow-hidden'>
 			<Hero />
 			<main>
-				<Container className='mt-10'>
-					<LogoCloud />
-				</Container>
-				<div className='bg-linear-to-b from-white from-50% to-gray-100 py-32'>
+				<div className='bg-linear-to-b from-white from-50% to-gray-100 py-16'>
 					<FeatureSection />
-					<BentoSection />
+					<ConstructionNotice />
+					<ContactSection />
+
+					{/*
+						TODO: Ajouter sections quand contenu disponible
+						- Problème/Solution 
+						- Comment ça marche (3 étapes)
+						- Tarifs
+						- Avantages vs concurrence
+						- Témoignages
+					*/}
 				</div>
-				<DarkBentoSection />
 			</main>
-			<Testimonials />
-			<Footer />
+			{/*
+				TODO: Remplacer par des vrais témoignages quand disponibles
+				<Testimonials />
+			*/}
+			<SimpleFooter />
+
+			{/*
+				TODO: Remplacer par footer complet quand disponible
+				<Footer />
+			*/}
 		</div>
 	)
 }
