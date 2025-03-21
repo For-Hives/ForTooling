@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 # Stack Technique Finale - Plateforme SaaS de Gestion d'Équipements NFC/QR
 
