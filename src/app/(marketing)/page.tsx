@@ -1,21 +1,20 @@
+import type { Metadata } from 'next'
+
 import { BentoCard } from '@/app/(marketing)/components/bento-card'
 import { Button } from '@/app/(marketing)/components/button'
 import { Container } from '@/app/(marketing)/components/container'
 import { Footer } from '@/app/(marketing)/components/footer'
 import { Gradient } from '@/app/(marketing)/components/gradient'
 import { Keyboard } from '@/app/(marketing)/components/keyboard'
-import { Link } from '@/app/(marketing)/components/link'
 import { LinkedAvatars } from '@/app/(marketing)/components/linked-avatars'
+import { Logo } from '@/app/(marketing)/components/logo'
 import { LogoCloud } from '@/app/(marketing)/components/logo-cloud'
-import { LogoCluster } from '@/app/(marketing)/components/logo-cluster'
 import { LogoTimeline } from '@/app/(marketing)/components/logo-timeline'
 import { Map } from '@/app/(marketing)/components/map'
 import { Navbar } from '@/app/(marketing)/components/navbar'
 import { Screenshot } from '@/app/(marketing)/components/screenshot'
 import { Testimonials } from '@/app/(marketing)/components/testimonials'
 import { Heading, Subheading } from '@/app/(marketing)/components/text'
-import { ChevronRightIcon } from '@heroicons/react/16/solid'
-import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
 	description:
@@ -110,7 +109,7 @@ function BentoSection() {
 					eyebrow='Source'
 					title='Get the furthest reach'
 					description='Bypass those inconvenient privacy laws to source leads from the most unexpected places.'
-					graphic={<LogoCluster />}
+					graphic={<Logo />}
 					className='lg:col-span-2'
 				/>
 				<BentoCard

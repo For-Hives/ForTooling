@@ -7,6 +7,7 @@ import {
 } from '@headlessui/react'
 import { Bars2Icon } from '@heroicons/react/24/solid'
 import { motion } from 'framer-motion'
+
 import { Link } from './link'
 import { Logo } from './logo'
 import { PlusGrid, PlusGridItem, PlusGridRow } from './plus-grid'
@@ -14,7 +15,6 @@ import { PlusGrid, PlusGridItem, PlusGridRow } from './plus-grid'
 const links = [
 	{ href: '/pricing', label: 'Pricing' },
 	{ href: '/company', label: 'Company' },
-	{ href: '/blog', label: 'Blog' },
 	{ href: '/login', label: 'Login' },
 ]
 
@@ -57,7 +57,7 @@ function MobileNav() {
 						transition={{
 							duration: 0.15,
 							ease: 'easeInOut',
-							rotateX: { duration: 0.3, delay: linkIndex * 0.1 },
+							rotateX: { delay: linkIndex * 0.1, duration: 0.3 },
 						}}
 						key={href}
 					>
@@ -75,7 +75,7 @@ function MobileNav() {
 	)
 }
 
-export function Navbar({ banner }: { banner?: React.ReactNode }) {
+export function Navbar() {
 	return (
 		<Disclosure as='header' className='pt-12 sm:pt-16'>
 			<PlusGrid>
@@ -83,7 +83,7 @@ export function Navbar({ banner }: { banner?: React.ReactNode }) {
 					<div className='relative flex gap-6'>
 						<PlusGridItem className='py-3'>
 							<Link href='/' title='Home'>
-								<Logo className='h-9' />
+								<Logo className='h-14 w-14' />
 							</Link>
 						</PlusGridItem>
 					</div>
