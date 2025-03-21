@@ -26,26 +26,26 @@ export const metadata: Metadata = {
 const tiers = [
 	{
 		description:
-			"Idéal pour les petites entreprises débutant avec la gestion d'équipements.",
+			"Solution gratuite pour découvrir les fonctionnalités essentielles de gestion d'équipements.",
 		features: [
-			{ name: 'Utilisateurs', section: 'Fonctionnalités', value: 5 },
-			{ name: 'Équipements suivis', section: 'Fonctionnalités', value: 50 },
+			{ name: 'Utilisateurs', section: 'Fonctionnalités', value: 1 },
+			{ name: 'Équipements suivis', section: 'Fonctionnalités', value: 15 },
 			{ name: 'Étiquettes NFC/QR', section: 'Fonctionnalités', value: true },
-			{ name: 'Projets/Emplacements', section: 'Fonctionnalités', value: 10 },
+			{ name: 'Projets/Emplacements', section: 'Fonctionnalités', value: 3 },
 			{
 				name: "Catégories d'équipements",
 				section: 'Fonctionnalités',
-				value: 'Standard',
+				value: 'Basique',
 			},
 			{
 				name: 'Historique des mouvements',
 				section: 'Analyses',
-				value: '30 jours',
+				value: '7 jours',
 			},
 			{ name: 'Dashboard de base', section: 'Analyses', value: true },
 			{ name: 'Rapports personnalisés', section: 'Analyses', value: false },
 			{ name: 'Analyses prédictives', section: 'Analyses', value: false },
-			{ name: 'Support par email', section: 'Support', value: true },
+			{ name: 'Support par email', section: 'Support', value: false },
 			{ name: 'Support téléphonique', section: 'Support', value: false },
 			{
 				name: 'Gestionnaire de compte dédié',
@@ -54,23 +54,27 @@ const tiers = [
 			},
 		],
 		highlights: [
-			{ description: "Jusqu'à 5 utilisateurs actifs" },
-			{ description: 'Suivi de 50 équipements' },
+			{ description: '1 utilisateur' },
+			{ description: 'Suivi de 15 équipements' },
 			{ description: 'Étiquettes NFC/QR pour le suivi' },
-			{ description: 'Analyses avancées', disabled: true },
-			{ description: 'API personnalisée', disabled: true },
+			{ description: 'Support communautaire' },
+			{ description: 'Fonctionnalités de base uniquement' },
 		],
 		href: '#',
-		name: 'Starter' as const,
-		priceMonthly: 99,
-		slug: 'starter',
+		name: 'Free' as const,
+		priceMonthly: 0,
+		slug: 'free',
 	},
 	{
 		description:
-			'Pour les équipes en croissance nécessitant des fonctionnalités avancées.',
+			'Pour les professionnels nécessitant une solution complète pour le suivi de leur matériel.',
 		features: [
-			{ name: 'Utilisateurs', section: 'Fonctionnalités', value: 20 },
-			{ name: 'Équipements suivis', section: 'Fonctionnalités', value: 200 },
+			{ name: 'Utilisateurs', section: 'Fonctionnalités', value: 10 },
+			{
+				name: 'Équipements suivis',
+				section: 'Fonctionnalités',
+				value: 'Illimité',
+			},
 			{ name: 'Étiquettes NFC/QR', section: 'Fonctionnalités', value: true },
 			{
 				name: 'Projets/Emplacements',
@@ -95,20 +99,20 @@ const tiers = [
 			},
 		],
 		highlights: [
-			{ description: "Jusqu'à 20 utilisateurs actifs" },
-			{ description: 'Suivi de 200 équipements' },
-			{ description: 'Points de scan automatisés' },
-			{ description: "Workflows d'approbation configurables" },
+			{ description: "Jusqu'à 10 utilisateurs actifs" },
+			{ description: 'Équipements illimités' },
+			{ description: 'Accompagnement à la mise en place' },
+			{ description: 'Historique complet des mouvements' },
 			{ description: 'Rapports et analyses avancés' },
 		],
 		href: '#',
-		name: 'Growth' as const,
-		priceMonthly: 199,
-		slug: 'growth',
+		name: 'Pro' as const,
+		priceMonthly: 50,
+		slug: 'pro',
 	},
 	{
 		description:
-			"Solution complète pour les entreprises avec un parc d'équipements important.",
+			"Solution sur mesure pour les grandes entreprises avec des besoins spécifiques d'intégration et de support.",
 		features: [
 			{ name: 'Utilisateurs', section: 'Fonctionnalités', value: 'Illimité' },
 			{
@@ -142,13 +146,13 @@ const tiers = [
 		highlights: [
 			{ description: 'Utilisateurs illimités' },
 			{ description: 'Équipements illimités' },
-			{ description: 'API complète et intégration de systèmes tiers' },
+			{ description: 'Intégration avec vos systèmes existants' },
 			{ description: 'Analyses prédictives pour planification' },
 			{ description: 'Support et configuration personnalisés' },
 		],
-		href: '#',
-		name: 'Enterprise' as const,
-		priceMonthly: 399,
+		href: '#contact',
+		name: 'Entreprise' as const,
+		priceMonthly: ' ',
 		slug: 'enterprise',
 	},
 ]
@@ -192,18 +196,30 @@ export function PricingCard({ tier }: { tier: (typeof tiers)[number] }) {
 					<p className='mt-2 text-sm/6 text-gray-950/75'>{tier.description}</p>
 					<div className='mt-8 flex items-center gap-4'>
 						<div className='text-5xl font-medium text-gray-950'>
-							{tier.priceMonthly}€
+							{typeof tier.priceMonthly === 'number'
+								? tier.priceMonthly === 0
+									? '0€'
+									: `${tier.priceMonthly}€`
+								: tier.priceMonthly}
 						</div>
-						<div className='flex h-full flex-col items-end justify-end text-sm/5 text-gray-950/75'>
-							<p className='mt-5'>/mois</p>
-						</div>
+						{typeof tier.priceMonthly === 'number' && tier.priceMonthly > 0 && (
+							<div className='flex h-full flex-col items-end justify-end text-sm/5 text-gray-950/75'>
+								<p className='mt-5'>/mois</p>
+							</div>
+						)}
 					</div>
 					<div className='mt-8'>
-						<Button href={tier.href}>Start a free trial</Button>
+						<Button href={tier.href}>
+							{tier.priceMonthly === 0
+								? "S'inscrire gratuitement"
+								: tier.priceMonthly === ' '
+									? 'Contactez-nous'
+									: "Démarrer l'essai gratuit"}
+						</Button>
 					</div>
 					<div className='mt-8'>
 						<h3 className='text-sm/6 font-medium text-gray-950'>
-							Start selling with:
+							Inclus dans ce forfait :
 						</h3>
 						<ul className='mt-3 space-y-3'>
 							{tier.highlights.map((props, featureIndex) => (
@@ -225,7 +241,7 @@ function PricingTable({
 	return (
 		<Container className='py-24'>
 			<table className='w-full text-left'>
-				<caption className='sr-only'>Pricing plan comparison</caption>
+				<caption className='sr-only'>Comparaison des forfaits</caption>
 				<colgroup>
 					<col className='w-3/5 sm:w-2/5' />
 					<col
@@ -291,13 +307,17 @@ function PricingTable({
 						</td>
 						<td colSpan={3} className='p-0 text-right'>
 							<Button variant='outline' href={selectedTier.href}>
-								Get started
+								{selectedTier.priceMonthly === 0
+									? "S'inscrire"
+									: selectedTier.priceMonthly === 'Sur mesure'
+										? 'Contacter'
+										: 'Commencer'}
 							</Button>
 						</td>
 					</tr>
 					<tr className='max-sm:hidden'>
 						<th className='p-0' scope='row'>
-							<span className='sr-only'>Get started</span>
+							<span className='sr-only'>Action</span>
 						</th>
 						{tiers.map(tier => (
 							<td
@@ -306,7 +326,11 @@ function PricingTable({
 								className='px-0 pt-4 pb-0 data-selected:table-cell max-sm:hidden'
 							>
 								<Button variant='outline' href={tier.href}>
-									Get started
+									{tier.priceMonthly === 0
+										? "S'inscrire"
+										: tier.priceMonthly === 'Sur mesure'
+											? 'Contacter'
+											: 'Commencer'}
 								</Button>
 							</td>
 						))}

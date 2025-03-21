@@ -12,6 +12,7 @@ import { Navbar } from '@/app/(marketing)/components/navbar'
 import { Heading, Subheading } from '@/app/(marketing)/components/text'
 import Image from 'next/image'
 
+import { Screenshot } from './components/screenshot'
 import { PricingCards } from './pricing/page'
 
 export const metadata: Metadata = {
@@ -74,15 +75,12 @@ function FeatureSection() {
 					<p>{`Le tout à un prix défiant toute concurrence.`}</p>
 				</div>
 
-				{/* 
-					TODO: Ajouter des captures d'écran réelles quand disponibles
-					<Screenshot
-						width={1216}
-						height={768}
-						src='/screenshots/app.png'
-						className='mt-16 h-[36rem] sm:h-auto sm:w-[76rem]'
-					/>
-				*/}
+				<Screenshot
+					width={1920}
+					height={990}
+					src='/Screenshot From 2025-03-21 17-17-44.png'
+					className='mt-16 aspect-[16/9] h-[36rem] sm:h-auto sm:w-[76rem]'
+				/>
 			</Container>
 		</div>
 	)
@@ -103,7 +101,15 @@ function ConstructionNotice() {
 						eyebrow='Programme pionnier'
 						title='Rejoignez nos premiers utilisateurs'
 						description="Bénéficiez de 50% de réduction la première année et d'un accompagnement personnalisé en rejoignant notre programme Pionnier."
-						graphic={<Logo />}
+						graphic={
+							<Image
+								src='/1.png'
+								alt='ForTooling illustration'
+								width={1000}
+								height={1000}
+								className='scale-75'
+							/>
+						}
 						className='lg:col-span-1'
 					/>
 
@@ -112,7 +118,15 @@ function ConstructionNotice() {
 						eyebrow='En construction'
 						title="L'équipe ForTooling travaille d'arrache-pied"
 						description='Notre équipe met les bouchées doubles pour vous livrer une solution clé en main adaptée aux besoins réels du terrain.'
-						graphic={<Keyboard highlighted={['F', 'T']} />}
+						graphic={
+							<Image
+								src='/2.png'
+								alt='ForTooling illustration'
+								width={1000}
+								height={1000}
+								className='scale-75'
+							/>
+						}
 						className='lg:col-span-1'
 					/>
 
@@ -120,8 +134,16 @@ function ConstructionNotice() {
 						dark
 						eyebrow='Déploiement'
 						title='Prêt en un temps record'
-						description='La solution sera déployée sur vos chantiers en 48h seulement, sans perturber votre activité quotidienne.'
-						graphic={<Map />}
+						description='La solution sera utilisable en quelques secondes, et déployée dans votre entreprise en moins de 48h seulement, et sans perturber votre activité quotidienne.'
+						graphic={
+							<Image
+								src='/3.png'
+								alt='ForTooling illustration'
+								width={750}
+								height={750}
+								className='scale-75'
+							/>
+						}
 						className='lg:col-span-1'
 					/>
 				</div>
