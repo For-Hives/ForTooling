@@ -3,7 +3,6 @@ import type { Metadata } from 'next'
 import { Button } from '@/app/(marketing)/components/button'
 import { GradientBackground } from '@/app/(marketing)/components/gradient'
 import { Link } from '@/app/(marketing)/components/link'
-import { Mark } from '@/app/(marketing)/components/logo'
 import { Checkbox, Field, Input, Label } from '@headlessui/react'
 import { CheckIcon } from '@heroicons/react/16/solid'
 import { clsx } from 'clsx'
@@ -22,7 +21,7 @@ export default function Login() {
 					<form action='#' method='POST' className='p-7 sm:p-11'>
 						<div className='flex items-start'>
 							<Link href='/' title='Home'>
-								<Mark className='h-9 fill-black' />
+								{/* <Mark className='h-9 fill-black' /> */}
 							</Link>
 						</div>
 						<h1 className='mt-8 text-base/6 font-medium'>Welcome back!</h1>
