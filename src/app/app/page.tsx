@@ -1,7 +1,6 @@
-'use client'
-
 import { CardDescription, CardTitle } from '@/components/ui/card'
 import SpotlightCard from '@/components/ui/spotlight-card'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import {
 	Construction,
 	Wrench,
@@ -11,8 +10,17 @@ import {
 	ClipboardList,
 } from 'lucide-react'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
-export default function Dashboard() {
+export default async function Dashboard() {
+	const { userId } = await auth()
+
+	if (!userId) {
+		redirect('/')
+	}
+
+	const user = await currentUser()
+
 	const quickLinks = [
 		{
 			bgColor: 'bg-blue-100',
@@ -79,7 +87,7 @@ export default function Dashboard() {
 	return (
 		<div className='w-full'>
 			<h2 className='mb-4 text-2xl font-semibold text-gray-800'>
-				Accès rapide
+				Bonjour {user?.firstName} !
 			</h2>
 			<div className='grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'>
 				{quickLinks.map(link => (
