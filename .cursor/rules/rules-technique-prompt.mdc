@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 # Prompt Système pour Assistant de Développement SaaS - Plateforme de Gestion d'Équipements NFC/QR
 
