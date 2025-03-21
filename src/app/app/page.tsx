@@ -1,6 +1,6 @@
 'use client'
 
-import { CardContent, CardDescription, CardTitle } from '@/components/ui/card'
+import { CardDescription, CardTitle } from '@/components/ui/card'
 import SpotlightCard from '@/components/ui/spotlight-card'
 import {
 	Construction,
@@ -15,63 +15,63 @@ import Link from 'next/link'
 export default function Dashboard() {
 	const quickLinks = [
 		{
-			color: 'text-blue-600',
 			bgColor: 'bg-blue-100',
-			spotlightColor:
-				'rgba(59, 130, 246, 0.25)' as `rgba(${number}, ${number}, ${number}, ${number})`,
+			color: 'text-blue-600',
 			description: 'Gérer et suivre tous les équipements et outils',
 			href: '/app/equipments',
 			icon: Wrench,
+			spotlightColor:
+				'rgba(59, 130, 246, 0.25)' as `rgba(${number}, ${number}, ${number}, ${number})`,
 			title: 'Équipements',
 		},
 		{
-			color: 'text-amber-600',
 			bgColor: 'bg-amber-100',
-			spotlightColor:
-				'rgba(245, 158, 11, 0.25)' as `rgba(${number}, ${number}, ${number}, ${number})`,
+			color: 'text-amber-600',
 			description: 'Gérer les projets, chantiers et emplacements',
 			href: '/app/projects',
 			icon: Construction,
+			spotlightColor:
+				'rgba(245, 158, 11, 0.25)' as `rgba(${number}, ${number}, ${number}, ${number})`,
 			title: 'Projets',
 		},
 		{
-			color: 'text-green-600',
 			bgColor: 'bg-green-100',
-			spotlightColor:
-				'rgba(34, 197, 94, 0.25)' as `rgba(${number}, ${number}, ${number}, ${number})`,
+			color: 'text-green-600',
 			description: 'Gérer les utilisateurs et permissions',
 			href: '/app/users',
 			icon: User,
+			spotlightColor:
+				'rgba(34, 197, 94, 0.25)' as `rgba(${number}, ${number}, ${number}, ${number})`,
 			title: 'Utilisateurs',
 		},
 		{
-			color: 'text-purple-600',
 			bgColor: 'bg-purple-100',
-			spotlightColor:
-				'rgba(168, 85, 247, 0.25)' as `rgba(${number}, ${number}, ${number}, ${number})`,
+			color: 'text-purple-600',
 			description: 'Scanner et localiser des équipements',
 			href: '/app/scan',
 			icon: Scan,
+			spotlightColor:
+				'rgba(168, 85, 247, 0.25)' as `rgba(${number}, ${number}, ${number}, ${number})`,
 			title: 'Scanner',
 		},
 		{
-			color: 'text-red-600',
 			bgColor: 'bg-red-100',
-			spotlightColor:
-				'rgba(239, 68, 68, 0.25)' as `rgba(${number}, ${number}, ${number}, ${number})`,
+			color: 'text-red-600',
 			description: 'Rapports et inventaire complet',
 			href: '/app/inventory',
 			icon: ClipboardList,
+			spotlightColor:
+				'rgba(239, 68, 68, 0.25)' as `rgba(${number}, ${number}, ${number}, ${number})`,
 			title: 'Inventaire',
 		},
 		{
-			color: 'text-indigo-600',
 			bgColor: 'bg-indigo-100',
-			spotlightColor:
-				'rgba(99, 102, 241, 0.25)' as `rgba(${number}, ${number}, ${number}, ${number})`,
+			color: 'text-indigo-600',
 			description: 'Paramètres et configuration',
 			href: '/app/organization',
 			icon: Building,
+			spotlightColor:
+				'rgba(99, 102, 241, 0.25)' as `rgba(${number}, ${number}, ${number}, ${number})`,
 			title: 'Organisation',
 		},
 	]
