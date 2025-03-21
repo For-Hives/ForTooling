@@ -27,7 +27,7 @@ function CallToAction() {
 				{`Simplifiez le suivi de vos équipements et optimisez l'utilisation de votre parc matériel.`}
 			</p>
 			<div className='mt-6'>
-				<Button className='w-full sm:w-auto' href='#'>
+				<Button className='w-full sm:w-auto' href='/app'>
 					{`Démarrer l'essai`}
 				</Button>
 			</div>
