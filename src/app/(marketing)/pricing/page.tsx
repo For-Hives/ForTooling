@@ -19,29 +19,42 @@ import {
 
 export const metadata: Metadata = {
 	description:
-		'Gérez efficacement votre parc d\'équipements avec notre plateforme SaaS. Suivi en temps réel, gestion des attributions, et analyse avancée.',
+		"Gérez efficacement votre parc d'équipements avec notre plateforme SaaS. Suivi en temps réel, gestion des attributions, et analyse avancée.",
 	title: 'Tarification',
 }
 
 const tiers = [
 	{
-		description: 'Idéal pour les petites entreprises débutant avec la gestion d\'équipements.',
+		description:
+			"Idéal pour les petites entreprises débutant avec la gestion d'équipements.",
 		features: [
 			{ name: 'Utilisateurs', section: 'Fonctionnalités', value: 5 },
 			{ name: 'Équipements suivis', section: 'Fonctionnalités', value: 50 },
 			{ name: 'Étiquettes NFC/QR', section: 'Fonctionnalités', value: true },
 			{ name: 'Projets/Emplacements', section: 'Fonctionnalités', value: 10 },
-			{ name: 'Catégories d\'équipements', section: 'Fonctionnalités', value: 'Standard' },
-			{ name: 'Historique des mouvements', section: 'Analyses', value: '30 jours' },
+			{
+				name: "Catégories d'équipements",
+				section: 'Fonctionnalités',
+				value: 'Standard',
+			},
+			{
+				name: 'Historique des mouvements',
+				section: 'Analyses',
+				value: '30 jours',
+			},
 			{ name: 'Dashboard de base', section: 'Analyses', value: true },
 			{ name: 'Rapports personnalisés', section: 'Analyses', value: false },
 			{ name: 'Analyses prédictives', section: 'Analyses', value: false },
 			{ name: 'Support par email', section: 'Support', value: true },
 			{ name: 'Support téléphonique', section: 'Support', value: false },
-			{ name: 'Gestionnaire de compte dédié', section: 'Support', value: false },
+			{
+				name: 'Gestionnaire de compte dédié',
+				section: 'Support',
+				value: false,
+			},
 		],
 		highlights: [
-			{ description: 'Jusqu\'à 5 utilisateurs actifs' },
+			{ description: "Jusqu'à 5 utilisateurs actifs" },
 			{ description: 'Suivi de 50 équipements' },
 			{ description: 'Étiquettes NFC/QR pour le suivi' },
 			{ description: 'Analyses avancées', disabled: true },
@@ -53,26 +66,39 @@ const tiers = [
 		slug: 'starter',
 	},
 	{
-		description: 'Pour les équipes en croissance nécessitant des fonctionnalités avancées.',
+		description:
+			'Pour les équipes en croissance nécessitant des fonctionnalités avancées.',
 		features: [
 			{ name: 'Utilisateurs', section: 'Fonctionnalités', value: 20 },
 			{ name: 'Équipements suivis', section: 'Fonctionnalités', value: 200 },
 			{ name: 'Étiquettes NFC/QR', section: 'Fonctionnalités', value: true },
-			{ name: 'Projets/Emplacements', section: 'Fonctionnalités', value: 'Illimité' },
-			{ name: 'Catégories d\'équipements', section: 'Fonctionnalités', value: 'Avancé' },
+			{
+				name: 'Projets/Emplacements',
+				section: 'Fonctionnalités',
+				value: 'Illimité',
+			},
+			{
+				name: "Catégories d'équipements",
+				section: 'Fonctionnalités',
+				value: 'Avancé',
+			},
 			{ name: 'Historique des mouvements', section: 'Analyses', value: '1 an' },
 			{ name: 'Dashboard de base', section: 'Analyses', value: true },
 			{ name: 'Rapports personnalisés', section: 'Analyses', value: true },
 			{ name: 'Analyses prédictives', section: 'Analyses', value: false },
 			{ name: 'Support par email', section: 'Support', value: true },
 			{ name: 'Support téléphonique', section: 'Support', value: true },
-			{ name: 'Gestionnaire de compte dédié', section: 'Support', value: false },
+			{
+				name: 'Gestionnaire de compte dédié',
+				section: 'Support',
+				value: false,
+			},
 		],
 		highlights: [
-			{ description: 'Jusqu\'à 20 utilisateurs actifs' },
+			{ description: "Jusqu'à 20 utilisateurs actifs" },
 			{ description: 'Suivi de 200 équipements' },
 			{ description: 'Points de scan automatisés' },
-			{ description: 'Workflows d\'approbation configurables' },
+			{ description: "Workflows d'approbation configurables" },
 			{ description: 'Rapports et analyses avancés' },
 		],
 		href: '#',
@@ -81,14 +107,31 @@ const tiers = [
 		slug: 'growth',
 	},
 	{
-		description: 'Solution complète pour les entreprises avec un parc d\'équipements important.',
+		description:
+			"Solution complète pour les entreprises avec un parc d'équipements important.",
 		features: [
 			{ name: 'Utilisateurs', section: 'Fonctionnalités', value: 'Illimité' },
-			{ name: 'Équipements suivis', section: 'Fonctionnalités', value: 'Illimité' },
+			{
+				name: 'Équipements suivis',
+				section: 'Fonctionnalités',
+				value: 'Illimité',
+			},
 			{ name: 'Étiquettes NFC/QR', section: 'Fonctionnalités', value: true },
-			{ name: 'Projets/Emplacements', section: 'Fonctionnalités', value: 'Illimité' },
-			{ name: 'Catégories d\'équipements', section: 'Fonctionnalités', value: 'Personnalisé' },
-			{ name: 'Historique des mouvements', section: 'Analyses', value: 'Complet' },
+			{
+				name: 'Projets/Emplacements',
+				section: 'Fonctionnalités',
+				value: 'Illimité',
+			},
+			{
+				name: "Catégories d'équipements",
+				section: 'Fonctionnalités',
+				value: 'Personnalisé',
+			},
+			{
+				name: 'Historique des mouvements',
+				section: 'Analyses',
+				value: 'Complet',
+			},
 			{ name: 'Dashboard de base', section: 'Analyses', value: true },
 			{ name: 'Rapports personnalisés', section: 'Analyses', value: true },
 			{ name: 'Analyses prédictives', section: 'Analyses', value: true },
@@ -113,10 +156,13 @@ const tiers = [
 function Header() {
 	return (
 		<Container className='mt-16'>
-			<Heading as='h1'>Une tarification adaptée à la taille de votre parc.</Heading>
+			<Heading as='h1'>
+				{`Une tarification adaptée à la taille de votre parc.`}
+			</Heading>
 			<Lead className='mt-6 max-w-3xl'>
-				Des entreprises de tous secteurs optimisent la gestion de leurs équipements grâce à notre plateforme.
-				Commencez dès aujourd'hui et améliorez la traçabilité et l'efficacité de votre parc matériel.
+				{`Des entreprises de tous secteurs optimisent la gestion de leurs
+				équipements grâce à notre plateforme. Commencez dès aujourd'hui et
+				améliorez la traçabilité et l'efficacité de votre parc matériel.`}
 			</Lead>
 		</Container>
 	)
@@ -146,11 +192,10 @@ function PricingCard({ tier }: { tier: (typeof tiers)[number] }) {
 					<p className='mt-2 text-sm/6 text-gray-950/75'>{tier.description}</p>
 					<div className='mt-8 flex items-center gap-4'>
 						<div className='text-5xl font-medium text-gray-950'>
-							${tier.priceMonthly}
+							{tier.priceMonthly}€
 						</div>
-						<div className='text-sm/5 text-gray-950/75'>
-							<p>€</p>
-							<p>par mois</p>
+						<div className='flex h-full flex-col items-end justify-end text-sm/5 text-gray-950/75'>
+							<p className='mt-5'>/mois</p>
 						</div>
 					</div>
 					<div className='mt-8'>
@@ -388,8 +433,12 @@ function Testimonial() {
 					<div className='flex max-lg:mt-16 lg:col-span-2 lg:px-16'>
 						<figure className='mx-auto flex max-w-xl flex-col gap-16 max-lg:text-center'>
 							<blockquote>
-								<p className="relative text-3xl tracking-tight text-white before:absolute before:-translate-x-full before:content-['"'] after:absolute after:content-['"'] lg:text-4xl">
-									Grâce à cette plateforme, nous avons considérablement réduit les pertes d'équipements et optimisé leur utilisation. Le suivi par NFC/QR a révolutionné notre gestion logistique.
+								<p
+									className={`relative text-3xl tracking-tight text-white before:absolute before:-translate-x-full before:content-['"'] after:absolute after:content-['"'] lg:text-4xl`}
+								>
+									{`Grâce à cette plateforme, nous avons considérablement réduit
+									les pertes d'équipements et optimisé leur utilisation. Le
+									suivi par NFC/QR a révolutionné notre gestion logistique.`}
 								</p>
 							</blockquote>
 							<figcaption className='mt-auto'>
@@ -412,21 +461,22 @@ function FrequentlyAskedQuestions() {
 	return (
 		<Container>
 			<section id='faqs' className='scroll-mt-8'>
-				<Subheading className='text-center'>
-					Questions fréquentes
-				</Subheading>
+				<Subheading className='text-center'>{`Questions fréquentes`}</Subheading>
 				<Heading as='div' className='mt-2 text-center'>
-					Vos questions, nos réponses.
+					{`Vos questions, nos réponses.`}
 				</Heading>
 				<div className='mx-auto mt-16 mb-32 max-w-xl space-y-12'>
 					<dl>
 						<dt className='text-sm font-semibold'>
-							Quelles mesures sont en place pour assurer la sécurité de nos données?
+							{`Quelles mesures sont en place pour assurer la sécurité de nos
+							données?`}
 						</dt>
 						<dd className='mt-4 text-sm/6 text-gray-600'>
-							La sécurité des données est notre priorité absolue. Nous utilisons des technologies de chiffrement avancées, 
-							hébergeons vos données dans des centres de données sécurisés, et réalisons régulièrement des audits 
-							de sécurité. Notre infrastructure est conforme aux normes RGPD et aux standards de l'industrie.
+							{`La sécurité des données est notre priorité absolue. Nous utilisons
+							des technologies de chiffrement avancées, hébergeons vos données
+							dans des centres de données sécurisés, et réalisons régulièrement
+							des audits de sécurité. Notre infrastructure est conforme aux
+							normes RGPD et aux standards de l'industrie.`}
 						</dd>
 					</dl>
 					<dl>
@@ -434,21 +484,24 @@ function FrequentlyAskedQuestions() {
 							Existe-t-il une application mobile pour votre plateforme?
 						</dt>
 						<dd className='mt-4 text-sm/6 text-gray-600'>
-							Oui, notre plateforme est disponible sous forme d'application Progressive Web App (PWA) 
-							qui fonctionne sur tous les appareils modernes. Elle permet de scanner les codes NFC/QR, 
-							de consulter et modifier les informations des équipements, et de gérer les affectations 
-							directement depuis le terrain.
+							{`Oui, notre plateforme est disponible sous forme d'application
+							Progressive Web App (PWA) qui fonctionne sur tous les appareils
+							modernes. Elle permet de scanner les codes NFC/QR, de consulter et
+							modifier les informations des équipements, et de gérer les
+							affectations directement depuis le terrain.`}
 						</dd>
 					</dl>
 					<dl>
 						<dt className='text-sm font-semibold'>
-							Puis-je personnaliser les workflows selon les processus de mon entreprise?
+							Puis-je personnaliser les workflows selon les processus de mon
+							entreprise?
 						</dt>
 						<dd className='mt-4 text-sm/6 text-gray-600'>
-							Absolument. Notre plateforme est hautement configurable et permet de créer des workflows 
-							d'approbation personnalisés, d'adapter la terminologie à votre secteur d'activité, et de 
-							définir des champs spécifiques pour vos équipements. Les offres Growth et Enterprise incluent 
-							des options de personnalisation avancées.
+							{`Absolument. Notre plateforme est hautement configurable et permet
+							de créer des workflows d'approbation personnalisés, d'adapter la
+							terminologie à votre secteur d'activité, et de définir des champs
+							spécifiques pour vos équipements. Les offres Growth et Enterprise
+							incluent des options de personnalisation avancées.`}
 						</dd>
 					</dl>
 					<dl>
@@ -456,10 +509,12 @@ function FrequentlyAskedQuestions() {
 							Quel type de support proposez-vous?
 						</dt>
 						<dd className='mt-4 text-sm/6 text-gray-600'>
-							Nous offrons différents niveaux de support selon votre forfait. Tous les clients bénéficient 
-							d'un support par email et d'une base de connaissances complète. Les forfaits Growth et Enterprise 
-							incluent un support téléphonique, et les clients Enterprise profitent d'un gestionnaire de compte 
-							dédié pour un accompagnement personnalisé.
+							{`Nous offrons différents niveaux de support selon votre forfait.
+							Tous les clients bénéficient d'un support par email et d'une base
+							de connaissances complète. Les forfaits Growth et Enterprise
+							incluent un support téléphonique, et les clients Enterprise
+							profitent d'un gestionnaire de compte dédié pour un accompagnement
+							personnalisé.`}
 						</dd>
 					</dl>
 					<dl>
@@ -467,10 +522,12 @@ function FrequentlyAskedQuestions() {
 							Puis-je intégrer la plateforme à nos systèmes existants?
 						</dt>
 						<dd className='mt-4 text-sm/6 text-gray-600'>
-							Oui, notre solution propose une API REST complète qui permet l'intégration avec vos systèmes 
-							existants comme les ERP, GMAO, ou logiciels comptables. Des connecteurs prédéfinis sont disponibles 
-							pour les systèmes les plus courants, et notre équipe technique peut vous accompagner dans la mise 
-							en place d'intégrations spécifiques.
+							{`Oui, notre solution propose une API REST complète qui permet
+							l'intégration avec vos systèmes existants comme les ERP, GMAO, ou
+							logiciels comptables. Des connecteurs prédéfinis sont disponibles
+							pour les systèmes les plus courants, et notre équipe technique
+							peut vous accompagner dans la mise en place d'intégrations
+							spécifiques.`}
 						</dd>
 					</dl>
 				</div>
@@ -479,14 +536,15 @@ function FrequentlyAskedQuestions() {
 	)
 }
 
-export default function Pricing({
+export default async function Pricing({
 	searchParams,
 }: {
 	searchParams: { [key: string]: string | string[] | undefined }
 }) {
+	const searchPrms = await searchParams
 	const tier =
-		typeof searchParams.tier === 'string'
-			? tiers.find(({ slug }) => slug === searchParams.tier)!
+		typeof searchPrms?.tier === 'string'
+			? tiers.find(({ slug }) => slug === searchPrms.tier)!
 			: tiers[0]
 
 	return (
