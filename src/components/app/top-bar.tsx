@@ -19,7 +19,7 @@ export function TopBar() {
 	const pageTitle = getPageTitle()
 
 	return (
-		<header className='flex h-16 w-full shrink-0 items-center justify-between bg-[#0f2942] px-6 text-white'>
+		<header className='relative flex h-16 w-full shrink-0 items-center justify-between bg-[#0f2942] px-6 text-white'>
 			<div className='flex flex-1 items-center gap-2'>
 				<div className='rounded-lg bg-white px-4 py-2 text-gray-900 shadow-sm'>
 					<h1 className='text-xl font-semibold'>{pageTitle}</h1>

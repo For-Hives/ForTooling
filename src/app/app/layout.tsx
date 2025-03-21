@@ -9,9 +9,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 		<div className={`h-full min-h-screen`}>
 			<SidebarProvider defaultOpen={true}>
 				<AppSidebar />
-				<div className='ml-20 min-h-screen w-full'>
+				<div className='ml-20 min-h-screen w-full bg-[#0f2942]'>
 					<TopBar />
-					<main className='min-h-[calc(100vh-4rem)] w-full overflow-auto bg-gray-100'>
+					<main className='min-h-[calc(100vh-4rem)] w-full overflow-auto rounded-tl-xl bg-stone-50'>
 						<div className='h-full w-full max-w-full p-4'>{children}</div>
 					</main>
 				</div>
