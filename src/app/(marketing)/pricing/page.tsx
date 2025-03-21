@@ -8,7 +8,6 @@ import {
 	GradientBackground,
 } from '@/app/(marketing)/components/gradient'
 import { Link } from '@/app/(marketing)/components/link'
-import { LogoCloud } from '@/app/(marketing)/components/logo-cloud'
 import { Navbar } from '@/app/(marketing)/components/navbar'
 import { Heading, Lead, Subheading } from '@/app/(marketing)/components/text'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
@@ -20,33 +19,33 @@ import {
 
 export const metadata: Metadata = {
 	description:
-		'Companies all over the world have closed millions of deals with Radiant. Sign up today and start selling smarter.',
-	title: 'Pricing',
+		'Gérez efficacement votre parc d\'équipements avec notre plateforme SaaS. Suivi en temps réel, gestion des attributions, et analyse avancée.',
+	title: 'Tarification',
 }
 
 const tiers = [
 	{
-		description: 'Everything you need to start selling.',
+		description: 'Idéal pour les petites entreprises débutant avec la gestion d\'équipements.',
 		features: [
-			{ name: 'Accounts', section: 'Features', value: 3 },
-			{ name: 'Deal progress boards', section: 'Features', value: 5 },
-			{ name: 'Sourcing platforms', section: 'Features', value: 'Select' },
-			{ name: 'Contacts', section: 'Features', value: 100 },
-			{ name: 'AI assisted outreach', section: 'Features', value: false },
-			{ name: 'Competitor analysis', section: 'Analysis', value: false },
-			{ name: 'Dashboard reporting', section: 'Analysis', value: false },
-			{ name: 'Community insights', section: 'Analysis', value: false },
-			{ name: 'Performance analysis', section: 'Analysis', value: false },
-			{ name: 'Email support', section: 'Support', value: true },
-			{ name: '24 / 7 call center support', section: 'Support', value: false },
-			{ name: 'Dedicated account manager', section: 'Support', value: false },
+			{ name: 'Utilisateurs', section: 'Fonctionnalités', value: 5 },
+			{ name: 'Équipements suivis', section: 'Fonctionnalités', value: 50 },
+			{ name: 'Étiquettes NFC/QR', section: 'Fonctionnalités', value: true },
+			{ name: 'Projets/Emplacements', section: 'Fonctionnalités', value: 10 },
+			{ name: 'Catégories d\'équipements', section: 'Fonctionnalités', value: 'Standard' },
+			{ name: 'Historique des mouvements', section: 'Analyses', value: '30 jours' },
+			{ name: 'Dashboard de base', section: 'Analyses', value: true },
+			{ name: 'Rapports personnalisés', section: 'Analyses', value: false },
+			{ name: 'Analyses prédictives', section: 'Analyses', value: false },
+			{ name: 'Support par email', section: 'Support', value: true },
+			{ name: 'Support téléphonique', section: 'Support', value: false },
+			{ name: 'Gestionnaire de compte dédié', section: 'Support', value: false },
 		],
 		highlights: [
-			{ description: 'Up to 3 team members' },
-			{ description: 'Up to 5 deal progress boards' },
-			{ description: 'Source leads from select platforms' },
-			{ description: 'RadiantAI integrations', disabled: true },
-			{ description: 'Competitor analysis', disabled: true },
+			{ description: 'Jusqu\'à 5 utilisateurs actifs' },
+			{ description: 'Suivi de 50 équipements' },
+			{ description: 'Étiquettes NFC/QR pour le suivi' },
+			{ description: 'Analyses avancées', disabled: true },
+			{ description: 'API personnalisée', disabled: true },
 		],
 		href: '#',
 		name: 'Starter' as const,
@@ -54,59 +53,59 @@ const tiers = [
 		slug: 'starter',
 	},
 	{
-		description: 'All the extras for your growing team.',
+		description: 'Pour les équipes en croissance nécessitant des fonctionnalités avancées.',
 		features: [
-			{ name: 'Accounts', section: 'Features', value: 10 },
-			{ name: 'Deal progress boards', section: 'Features', value: 'Unlimited' },
-			{ name: 'Sourcing platforms', section: 'Features', value: '100+' },
-			{ name: 'Contacts', section: 'Features', value: 1000 },
-			{ name: 'AI assisted outreach', section: 'Features', value: true },
-			{ name: 'Competitor analysis', section: 'Analysis', value: '5 / month' },
-			{ name: 'Dashboard reporting', section: 'Analysis', value: true },
-			{ name: 'Community insights', section: 'Analysis', value: true },
-			{ name: 'Performance analysis', section: 'Analysis', value: true },
-			{ name: 'Email support', section: 'Support', value: true },
-			{ name: '24 / 7 call center support', section: 'Support', value: true },
-			{ name: 'Dedicated account manager', section: 'Support', value: false },
+			{ name: 'Utilisateurs', section: 'Fonctionnalités', value: 20 },
+			{ name: 'Équipements suivis', section: 'Fonctionnalités', value: 200 },
+			{ name: 'Étiquettes NFC/QR', section: 'Fonctionnalités', value: true },
+			{ name: 'Projets/Emplacements', section: 'Fonctionnalités', value: 'Illimité' },
+			{ name: 'Catégories d\'équipements', section: 'Fonctionnalités', value: 'Avancé' },
+			{ name: 'Historique des mouvements', section: 'Analyses', value: '1 an' },
+			{ name: 'Dashboard de base', section: 'Analyses', value: true },
+			{ name: 'Rapports personnalisés', section: 'Analyses', value: true },
+			{ name: 'Analyses prédictives', section: 'Analyses', value: false },
+			{ name: 'Support par email', section: 'Support', value: true },
+			{ name: 'Support téléphonique', section: 'Support', value: true },
+			{ name: 'Gestionnaire de compte dédié', section: 'Support', value: false },
 		],
 		highlights: [
-			{ description: 'Up to 10 team members' },
-			{ description: 'Unlimited deal progress boards' },
-			{ description: 'Source leads from over 50 verified platforms' },
-			{ description: 'RadiantAI integrations' },
-			{ description: '5 competitor analyses per month' },
+			{ description: 'Jusqu\'à 20 utilisateurs actifs' },
+			{ description: 'Suivi de 200 équipements' },
+			{ description: 'Points de scan automatisés' },
+			{ description: 'Workflows d\'approbation configurables' },
+			{ description: 'Rapports et analyses avancés' },
 		],
 		href: '#',
 		name: 'Growth' as const,
-		priceMonthly: 149,
+		priceMonthly: 199,
 		slug: 'growth',
 	},
 	{
-		description: 'Added flexibility to close deals at scale.',
+		description: 'Solution complète pour les entreprises avec un parc d\'équipements important.',
 		features: [
-			{ name: 'Accounts', section: 'Features', value: 'Unlimited' },
-			{ name: 'Deal progress boards', section: 'Features', value: 'Unlimited' },
-			{ name: 'Sourcing platforms', section: 'Features', value: '100+' },
-			{ name: 'Contacts', section: 'Features', value: 'Unlimited' },
-			{ name: 'AI assisted outreach', section: 'Features', value: true },
-			{ name: 'Competitor analysis', section: 'Analysis', value: 'Unlimited' },
-			{ name: 'Dashboard reporting', section: 'Analysis', value: true },
-			{ name: 'Community insights', section: 'Analysis', value: true },
-			{ name: 'Performance analysis', section: 'Analysis', value: true },
-			{ name: 'Email support', section: 'Support', value: true },
-			{ name: '24 / 7 call center support', section: 'Support', value: true },
-			{ name: 'Dedicated account manager', section: 'Support', value: true },
+			{ name: 'Utilisateurs', section: 'Fonctionnalités', value: 'Illimité' },
+			{ name: 'Équipements suivis', section: 'Fonctionnalités', value: 'Illimité' },
+			{ name: 'Étiquettes NFC/QR', section: 'Fonctionnalités', value: true },
+			{ name: 'Projets/Emplacements', section: 'Fonctionnalités', value: 'Illimité' },
+			{ name: 'Catégories d\'équipements', section: 'Fonctionnalités', value: 'Personnalisé' },
+			{ name: 'Historique des mouvements', section: 'Analyses', value: 'Complet' },
+			{ name: 'Dashboard de base', section: 'Analyses', value: true },
+			{ name: 'Rapports personnalisés', section: 'Analyses', value: true },
+			{ name: 'Analyses prédictives', section: 'Analyses', value: true },
+			{ name: 'Support par email', section: 'Support', value: true },
+			{ name: 'Support téléphonique', section: 'Support', value: true },
+			{ name: 'Gestionnaire de compte dédié', section: 'Support', value: true },
 		],
 		highlights: [
-			{ description: 'Unlimited active team members' },
-			{ description: 'Unlimited deal progress boards' },
-			{ description: 'Source leads from over 100 verified platforms' },
-			{ description: 'RadiantAI integrations' },
-			{ description: 'Unlimited competitor analyses' },
+			{ description: 'Utilisateurs illimités' },
+			{ description: 'Équipements illimités' },
+			{ description: 'API complète et intégration de systèmes tiers' },
+			{ description: 'Analyses prédictives pour planification' },
+			{ description: 'Support et configuration personnalisés' },
 		],
 		href: '#',
 		name: 'Enterprise' as const,
-		priceMonthly: 299,
+		priceMonthly: 399,
 		slug: 'enterprise',
 	},
 ]
@@ -114,10 +113,10 @@ const tiers = [
 function Header() {
 	return (
 		<Container className='mt-16'>
-			<Heading as='h1'>Pricing that grows with your team size.</Heading>
+			<Heading as='h1'>Une tarification adaptée à la taille de votre parc.</Heading>
 			<Lead className='mt-6 max-w-3xl'>
-				Companies all over the world have closed millions of deals with Radiant.
-				Sign up today and start selling smarter.
+				Des entreprises de tous secteurs optimisent la gestion de leurs équipements grâce à notre plateforme.
+				Commencez dès aujourd'hui et améliorez la traçabilité et l'efficacité de votre parc matériel.
 			</Lead>
 		</Container>
 	)
@@ -133,7 +132,6 @@ function PricingCards() {
 						<PricingCard key={tierIndex} tier={tier} />
 					))}
 				</div>
-				<LogoCloud className='mt-24' />
 			</Container>
 		</div>
 	)
@@ -151,8 +149,8 @@ function PricingCard({ tier }: { tier: (typeof tiers)[number] }) {
 							${tier.priceMonthly}
 						</div>
 						<div className='text-sm/5 text-gray-950/75'>
-							<p>USD</p>
-							<p>per month</p>
+							<p>€</p>
+							<p>par mois</p>
 						</div>
 					</div>
 					<div className='mt-8'>
@@ -380,7 +378,7 @@ function Testimonial() {
 								<div className='overflow-hidden rounded-3xl shadow-2xl outline outline-1 -outline-offset-1 outline-black/10'>
 									<img
 										alt=''
-										src='/testimonials/tina-yards.jpg'
+										src='/testimonials/client-testimonial.jpg'
 										className='aspect-3/4 w-full object-cover'
 									/>
 								</div>
@@ -390,16 +388,15 @@ function Testimonial() {
 					<div className='flex max-lg:mt-16 lg:col-span-2 lg:px-16'>
 						<figure className='mx-auto flex max-w-xl flex-col gap-16 max-lg:text-center'>
 							<blockquote>
-								<p className="relative text-3xl tracking-tight text-white before:absolute before:-translate-x-full before:content-['“'] after:absolute after:content-['”'] lg:text-4xl">
-									Thanks to Radiant, we&apos;re finding new leads that we never
-									would have found with legal methods.
+								<p className="relative text-3xl tracking-tight text-white before:absolute before:-translate-x-full before:content-['"'] after:absolute after:content-['"'] lg:text-4xl">
+									Grâce à cette plateforme, nous avons considérablement réduit les pertes d'équipements et optimisé leur utilisation. Le suivi par NFC/QR a révolutionné notre gestion logistique.
 								</p>
 							</blockquote>
 							<figcaption className='mt-auto'>
-								<p className='text-sm/6 font-medium text-white'>Tina Yards</p>
+								<p className='text-sm/6 font-medium text-white'>Marie Dupont</p>
 								<p className='text-sm/6 font-medium'>
 									<span className='bg-linear-to-r from-[#fff1be] from-28% via-[#ee87cb] via-70% to-[#b060ff] bg-clip-text text-transparent'>
-										VP of Sales, Protocol
+										Directrice Opérations, BTP Construct
 									</span>
 								</p>
 							</figcaption>
@@ -416,75 +413,64 @@ function FrequentlyAskedQuestions() {
 		<Container>
 			<section id='faqs' className='scroll-mt-8'>
 				<Subheading className='text-center'>
-					Frequently asked questions
+					Questions fréquentes
 				</Subheading>
 				<Heading as='div' className='mt-2 text-center'>
-					Your questions answered.
+					Vos questions, nos réponses.
 				</Heading>
 				<div className='mx-auto mt-16 mb-32 max-w-xl space-y-12'>
 					<dl>
 						<dt className='text-sm font-semibold'>
-							What measures are in place to ensure the security of our data?
+							Quelles mesures sont en place pour assurer la sécurité de nos données?
 						</dt>
 						<dd className='mt-4 text-sm/6 text-gray-600'>
-							Data security is a top priority for us, which is ironic given that
-							our business depends on others not taking it very seriously. We
-							understand that any breach could put both us and most of our
-							customers out of business—and behind bars. We employ robust
-							security measures, including data encryption, secure data centers,
-							and regular security audits to ensure this never happens.
+							La sécurité des données est notre priorité absolue. Nous utilisons des technologies de chiffrement avancées, 
+							hébergeons vos données dans des centres de données sécurisés, et réalisons régulièrement des audits 
+							de sécurité. Notre infrastructure est conforme aux normes RGPD et aux standards de l'industrie.
 						</dd>
 					</dl>
 					<dl>
 						<dt className='text-sm font-semibold'>
-							Is there a mobile app available for your platform?
+							Existe-t-il une application mobile pour votre plateforme?
 						</dt>
 						<dd className='mt-4 text-sm/6 text-gray-600'>
-							Yes, we offer a mobile app that provides all the key
-							functionalities of our desktop platform, allowing sales reps to
-							manage deals on the go. Additionally, we have another app
-							pre-installed on most modern smartphones that allows us to track
-							your location, listen to your conversations, and access your
-							camera and microphone at any time. This app is not available for
-							download.
+							Oui, notre plateforme est disponible sous forme d'application Progressive Web App (PWA) 
+							qui fonctionne sur tous les appareils modernes. Elle permet de scanner les codes NFC/QR, 
+							de consulter et modifier les informations des équipements, et de gérer les affectations 
+							directement depuis le terrain.
 						</dd>
 					</dl>
 					<dl>
 						<dt className='text-sm font-semibold'>
-							Can I customize the workflow to match our company’s deal process?
+							Puis-je personnaliser les workflows selon les processus de mon entreprise?
 						</dt>
 						<dd className='mt-4 text-sm/6 text-gray-600'>
-							Yes, our platform is highly customizable, although there should be
-							no need. Before you sign up, we discreetly gather information
-							about your company and its processes from a variety of sources. We
-							then use this information to pre-configure the platform to match
-							your existing workflows. This is why we ask for your social
-							security number and access to your email account during the
-							sign-up process.
+							Absolument. Notre plateforme est hautement configurable et permet de créer des workflows 
+							d'approbation personnalisés, d'adapter la terminologie à votre secteur d'activité, et de 
+							définir des champs spécifiques pour vos équipements. Les offres Growth et Enterprise incluent 
+							des options de personnalisation avancées.
 						</dd>
 					</dl>
 					<dl>
 						<dt className='text-sm font-semibold'>
-							What kind of support do you offer?
+							Quel type de support proposez-vous?
 						</dt>
 						<dd className='mt-4 text-sm/6 text-gray-600'>
-							We offer comprehensive support through multiple channels,
-							including 24/7 live chat, email, and phone support. However, since
-							we have full access to your internal network, we will know if
-							you’re having issues before you do.
+							Nous offrons différents niveaux de support selon votre forfait. Tous les clients bénéficient 
+							d'un support par email et d'une base de connaissances complète. Les forfaits Growth et Enterprise 
+							incluent un support téléphonique, et les clients Enterprise profitent d'un gestionnaire de compte 
+							dédié pour un accompagnement personnalisé.
 						</dd>
 					</dl>
 					<dl>
 						<dt className='text-sm font-semibold'>
-							Can I integrate the CRM with other sales intelligence tools?
+							Puis-je intégrer la plateforme à nos systèmes existants?
 						</dt>
 						<dd className='mt-4 text-sm/6 text-gray-600'>
-							Yes, our solution integrates seamlessly with a variety of other
-							systems. However, be warned that most of these integrations are
-							short-lived. We have a dedicated team of engineers who
-							reverse-engineer the APIs of other tools, enabling us to build
-							their functionality into our product and eventually put them out
-							of business.
+							Oui, notre solution propose une API REST complète qui permet l'intégration avec vos systèmes 
+							existants comme les ERP, GMAO, ou logiciels comptables. Des connecteurs prédéfinis sont disponibles 
+							pour les systèmes les plus courants, et notre équipe technique peut vous accompagner dans la mise 
+							en place d'intégrations spécifiques.
 						</dd>
 					</dl>
 				</div>
