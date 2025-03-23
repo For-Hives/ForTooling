@@ -1,5 +1,6 @@
 'use client'
 
+import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import {
 	Disclosure,
 	DisclosureButton,
@@ -13,8 +14,8 @@ import { Logo } from './logo'
 import { PlusGrid, PlusGridItem, PlusGridRow } from './plus-grid'
 
 const links = [
-	{ href: '/pricing', label: 'Pricing' },
-	{ href: '/login', label: 'Login' },
+	{ href: '/pricing', label: 'Tarifs' },
+	{ href: '/sign-in', label: 'Se connecter' },
 ]
 
 function DesktopNav() {
@@ -22,12 +23,52 @@ function DesktopNav() {
 		<nav className='relative hidden lg:flex'>
 			{links.map(({ href, label }) => (
 				<PlusGridItem key={href} className='relative flex'>
-					<Link
-						href={href}
-						className='flex items-center px-4 py-3 text-base font-medium text-gray-950 bg-blend-multiply data-hover:bg-black/[2.5%]'
-					>
-						{label}
-					</Link>
+					{href === '/sign-in' ? (
+						<>
+							<SignedIn>
+								<div className='flex items-center px-4 py-3 text-base font-medium text-gray-950 bg-blend-multiply data-hover:bg-black/[2.5%]'>
+									<UserButton />
+									<Link
+										href={'/app'}
+										className='ml-2 flex items-start gap-1 text-sm font-normal'
+									>
+										<span className='underline'>
+											{`Aller à l'application `}
+										</span>
+										<svg
+											xmlns='http://www.w3.org/2000/svg'
+											viewBox='0 0 20 20'
+											fill='currentColor'
+											aria-hidden='true'
+											data-slot='icon'
+											className='size-3.5'
+										>
+											<path
+												fillRule='evenodd'
+												d='M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z'
+												clipRule='evenodd'
+											></path>
+										</svg>
+									</Link>
+								</div>
+							</SignedIn>
+							<SignedOut>
+								<Link
+									href={href}
+									className='flex items-center px-4 py-3 text-base font-medium text-gray-950 bg-blend-multiply data-hover:bg-black/[2.5%]'
+								>
+									{label}
+								</Link>
+							</SignedOut>
+						</>
+					) : (
+						<Link
+							href={href}
+							className='flex items-center px-4 py-3 text-base font-medium text-gray-950 bg-blend-multiply data-hover:bg-black/[2.5%]'
+						>
+							{label}
+						</Link>
+					)}
 				</PlusGridItem>
 			))}
 		</nav>
