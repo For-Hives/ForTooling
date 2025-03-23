@@ -107,7 +107,7 @@ const tiers = [
 		],
 		href: '#',
 		name: 'Pro' as const,
-		priceMonthly: 50,
+		priceMonthly: 49.99,
 		slug: 'pro',
 	},
 	{
