@@ -1,15 +1,15 @@
 import type { Metadata } from 'next'
 
-import { Button } from '@/app/(marketing)/components/button'
-import { Container } from '@/app/(marketing)/components/container'
-import { Footer } from '@/app/(marketing)/components/footer'
+import { Button } from '@/app/(marketing)/marketing-components/button'
+import { Container } from '@/app/(marketing)/marketing-components/container'
+import { Footer } from '@/app/(marketing)/marketing-components/footer'
 import {
 	Gradient,
 	GradientBackground,
-} from '@/app/(marketing)/components/gradient'
-import { Link } from '@/app/(marketing)/components/link'
-import { Navbar } from '@/app/(marketing)/components/navbar'
-import { Heading, Lead, Subheading } from '@/app/(marketing)/components/text'
+} from '@/app/(marketing)/marketing-components/gradient'
+import { Link } from '@/app/(marketing)/marketing-components/link'
+import { Navbar } from '@/app/(marketing)/marketing-components/navbar'
+import { Heading, Lead, Subheading } from '@/app/(marketing)/marketing-components/text'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import {
 	CheckIcon,

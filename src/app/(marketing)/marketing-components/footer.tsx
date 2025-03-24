@@ -1,15 +1,14 @@
+import { Button } from '@/app/(marketing)/marketing-components/button'
+import { Container } from '@/app/(marketing)/marketing-components/container'
+import { Gradient } from '@/app/(marketing)/marketing-components/gradient'
+import { Link } from '@/app/(marketing)/marketing-components/link'
+import { Logo } from '@/app/(marketing)/marketing-components/logo'
 import {
 	PlusGrid,
 	PlusGridItem,
 	PlusGridRow,
-} from '@/app/(marketing)/components/plus-grid'
-
-import { Button } from './button'
-import { Container } from './container'
-import { Gradient } from './gradient'
-import { Link } from './link'
-import { Logo } from './logo'
-import { Subheading } from './text'
+} from '@/app/(marketing)/marketing-components/plus-grid'
+import { Subheading } from '@/app/(marketing)/marketing-components/text'
 
 function CallToAction() {
 	return (
