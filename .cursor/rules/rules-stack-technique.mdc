@@ -27,6 +27,7 @@ Cette plateforme SaaS de gestion d'équipements avec tracking NFC/QR combine les
   - Utilisé pour éviter le prop drilling
   - Stockage des préférences utilisateur, thèmes, filtres
   - État partagé entre composants distants
+  - On utilisera pas les React Context, mais bien Zustand quand on aura besoin de ce genre de système
 
 ### PWA & Mobile
 
