@@ -17,7 +17,6 @@ import {
 	SignedIn,
 	SignedOut,
 	UserButton,
-	OrganizationSwitcher,
 } from '@clerk/nextjs'
 import {
 	Construction,
@@ -26,6 +25,7 @@ import {
 	HardHat,
 	Scan,
 	ClipboardList,
+	Building,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -162,17 +162,12 @@ export function AppSidebar() {
 									isActive={pathname?.startsWith('/app/organization')}
 									className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white hover:text-[#0f2942]'
 								>
-									<OrganizationSwitcher
-										organizationProfileMode='navigation'
-										organizationProfileUrl='/app/organization'
-										hideSlug={true}
-									/>
-									{/* <Link
-										href='/app/organization'
+									<Link
+										href='/organizations'
 										className='flex h-full items-center justify-center'
 									>
 										<Building className='h-8 w-8' />
-									</Link> */}
+									</Link>
 								</SidebarMenuButton>
 							</TooltipTrigger>
 							<TooltipContent side='right'>Organisation</TooltipContent>
