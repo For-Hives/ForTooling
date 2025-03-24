@@ -6,6 +6,7 @@ import { Container } from '@/app/(marketing)/marketing-components/container'
 import { Footer } from '@/app/(marketing)/marketing-components/footer'
 import { Gradient } from '@/app/(marketing)/marketing-components/gradient'
 import { Navbar } from '@/app/(marketing)/marketing-components/navbar'
+import { Screenshot } from '@/app/(marketing)/marketing-components/screenshot'
 import {
 	Heading,
 	Subheading,

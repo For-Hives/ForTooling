@@ -9,6 +9,7 @@ const isPublicRoute = createRouteMatcher([
 	'/invitation(.*)',
 	'/onboarding(.*)',
 	'/create-organization(.*)',
+	'/waitlist(.*)',
 ])
 
 const isAdminRoute = createRouteMatcher(['/admin(.*)'])
