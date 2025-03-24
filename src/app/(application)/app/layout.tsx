@@ -5,7 +5,12 @@ import { AppSidebar } from '@/components/app/app-sidebar'
 import { TopBar } from '@/components/app/top-bar'
 import '@/app/globals.css'
 import { SidebarProvider } from '@/components/ui/sidebar'
-import { ClerkProvider, RedirectToSignIn, SignedIn, SignedOut } from '@clerk/nextjs'
+import {
+	ClerkProvider,
+	RedirectToSignIn,
+	SignedIn,
+	SignedOut,
+} from '@clerk/nextjs'
 
 export const metadata: Metadata = {
 	title: {

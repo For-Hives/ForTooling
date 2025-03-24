@@ -5,8 +5,8 @@ import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
 export const metadata: Metadata = {
 	title: {
-		default: 'Radiant - Close every deal',
-		template: '%s - Radiant',
+		default: "ForTooling - Gestion de l'outillage",
+		template: '%s - ForTooling',
 	},
 }
 
