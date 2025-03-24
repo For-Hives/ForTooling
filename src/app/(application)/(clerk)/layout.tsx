@@ -36,9 +36,7 @@ export default function RootLayout({
 							<div className='ml-20 min-h-screen w-full bg-[#0f2942]'>
 								<TopBar />
 								<main className='min-h-[calc(100vh-4rem)] w-full overflow-auto rounded-tl-xl bg-stone-50'>
-									<div className='h-full w-full max-w-full p-4'>
-										{children}
-									</div>
+									<div className='h-full w-full max-w-full p-4'>{children}</div>
 								</main>
 							</div>
 						</SidebarProvider>
