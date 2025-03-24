@@ -9,7 +9,11 @@ import {
 } from '@/app/(marketing)/marketing-components/gradient'
 import { Link } from '@/app/(marketing)/marketing-components/link'
 import { Navbar } from '@/app/(marketing)/marketing-components/navbar'
-import { Heading, Lead, Subheading } from '@/app/(marketing)/marketing-components/text'
+import {
+	Heading,
+	Lead,
+	Subheading,
+} from '@/app/(marketing)/marketing-components/text'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import {
 	CheckIcon,
