@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/button'
 import confetti from 'canvas-confetti'
 import { CheckCircle2, ThumbsUp, Rocket, CircleCheck } from 'lucide-react'
-import Image from 'next/image'
 import { useEffect, useRef } from 'react'
 
 export function CompletionStep({

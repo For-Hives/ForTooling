@@ -1,10 +1,10 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { CheckIcon } from '@radix-ui/react-icons'
 import { LoaderCircle } from 'lucide-react'
 import * as React from 'react'
 import { createContext, useContext } from 'react'
-import { CheckIcon } from '@radix-ui/react-icons'
 
 // Types
 type StepperContextValue = {
@@ -55,11 +55,11 @@ interface StepperProps extends React.HTMLAttributes<HTMLDivElement> {
 const Stepper = React.forwardRef<HTMLDivElement, StepperProps>(
 	(
 		{
+			className,
 			defaultValue = 0,
-			value,
 			onValueChange,
 			orientation = 'horizontal',
-			className,
+			value,
 			...props
 		},
 		ref
@@ -82,8 +82,8 @@ const Stepper = React.forwardRef<HTMLDivElement, StepperProps>(
 			<StepperContext.Provider
 				value={{
 					activeStep: currentStep,
-					setActiveStep,
 					orientation,
+					setActiveStep,
 				}}
 			>
 				<div
@@ -112,12 +112,12 @@ interface StepperItemProps extends React.HTMLAttributes<HTMLDivElement> {
 const StepperItem = React.forwardRef<HTMLDivElement, StepperItemProps>(
 	(
 		{
-			step,
+			children,
+			className,
 			completed = false,
 			disabled = false,
 			loading = false,
-			className,
-			children,
+			step,
 			...props
 		},
 		ref
@@ -135,7 +135,7 @@ const StepperItem = React.forwardRef<HTMLDivElement, StepperItemProps>(
 
 		return (
 			<StepItemContext.Provider
-				value={{ step, state, isDisabled: disabled, isLoading }}
+				value={{ isDisabled: disabled, isLoading, state, step }}
 			>
 				<div
 					ref={ref}
@@ -162,9 +162,9 @@ interface StepperTriggerProps
 }
 
 const StepperTrigger = React.forwardRef<HTMLButtonElement, StepperTriggerProps>(
-	({ asChild = false, className, children, ...props }, ref) => {
+	({ asChild = false, children, className, ...props }, ref) => {
 		const { setActiveStep } = useStepper()
-		const { step, isDisabled } = useStepItem()
+		const { isDisabled, step } = useStepItem()
 
 		if (asChild) {
 			return <div className={className}>{children}</div>
@@ -196,8 +196,8 @@ interface StepperIndicatorProps extends React.HTMLAttributes<HTMLDivElement> {
 const StepperIndicator = React.forwardRef<
 	HTMLDivElement,
 	StepperIndicatorProps
->(({ asChild = false, className, children, ...props }, ref) => {
-	const { state, step, isLoading } = useStepItem()
+>(({ asChild = false, children, className, ...props }, ref) => {
+	const { isLoading, state, step } = useStepItem()
 
 	return (
 		<div
