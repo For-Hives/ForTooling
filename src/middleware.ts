@@ -7,7 +7,8 @@ const isPublicRoute = createRouteMatcher([
 	'/sign-up(.*)',
 	'/api(.*)',
 	'/invitation(.*)',
-	'/waiting-approval(.*)',
+	'/onboarding(.*)',
+	'/create-organization(.*)',
 ])
 
 const isAdminRoute = createRouteMatcher(['/admin(.*)'])
@@ -22,17 +23,15 @@ export default clerkMiddleware(async (auth, req) => {
 		return Response.redirect(new URL('/sign-in', req.url))
 	}
 
-	console.log(authAwaited)
 	if (isAdminRoute(req)) {
 		const userData = authAwaited.orgRole
-		console.log(userData)
 		if (userData !== 'admin') {
 			return Response.redirect(new URL('/', req.url))
 		}
 	}
 
 	if (!authAwaited.orgId) {
-		return Response.redirect(new URL('/waiting-approval', req.url))
+		return Response.redirect(new URL('/onboarding', req.url))
 	}
 
 	if (isProtectedRoute(req)) await auth.protect()
