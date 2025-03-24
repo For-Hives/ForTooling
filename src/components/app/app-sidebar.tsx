@@ -42,7 +42,7 @@ export function AppSidebar() {
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Link
-							href='/'
+							href='/app'
 							className='flex h-full w-full items-center justify-center'
 						>
 							<div className='text-primary relative flex h-10 w-10 items-center justify-center rounded-md bg-white'>
