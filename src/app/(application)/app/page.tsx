@@ -13,7 +13,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 export default async function Dashboard() {
-	const { orgId, orgRole, userId } = await auth()
+	const { orgId, userId } = await auth()
 
 	if (!userId || !orgId) {
 		redirect('/onboarding')

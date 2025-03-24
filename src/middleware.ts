@@ -44,7 +44,6 @@ export default clerkMiddleware(async (auth, req) => {
 		authAwaited.userId
 	)
 
-	console.log(userMetadata)
 	if (
 		isProtectedRoute(req) &&
 		!userMetadata?.publicMetadata?.hasCompletedOnboarding

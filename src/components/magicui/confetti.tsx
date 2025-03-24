@@ -5,8 +5,10 @@ import type {
 	CreateTypes as ConfettiInstance,
 	Options as ConfettiOptions,
 } from 'canvas-confetti'
-import confetti from 'canvas-confetti'
 import type { ReactNode } from 'react'
+
+import { Button, ButtonProps } from '@/components/ui/button'
+import confetti from 'canvas-confetti'
 import React, {
 	createContext,
 	forwardRef,
@@ -16,8 +18,6 @@ import React, {
 	useMemo,
 	useRef,
 } from 'react'
-
-import { Button, ButtonProps } from '@/components/ui/button'
 
 type Api = {
 	fire: (options?: ConfettiOptions) => void
@@ -37,10 +37,10 @@ const ConfettiContext = createContext<Api>({} as Api)
 // Define component first
 const ConfettiComponent = forwardRef<ConfettiRef, Props>((props, ref) => {
 	const {
-		options,
+		children,
 		globalOptions = { resize: true, useWorker: true },
 		manualstart = false,
-		children,
+		options,
 		...rest
 	} = props
 	const instanceRef = useRef<ConfettiInstance | null>(null)
@@ -116,8 +116,8 @@ interface ConfettiButtonProps extends ButtonProps {
 }
 
 const ConfettiButtonComponent = ({
-	options,
 	children,
+	options,
 	...props
 }: ConfettiButtonProps) => {
 	const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
