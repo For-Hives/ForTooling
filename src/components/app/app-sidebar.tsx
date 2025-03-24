@@ -14,6 +14,12 @@ import {
 	TooltipTrigger,
 } from '@/components/ui/tooltip'
 import {
+	RedirectToSignIn,
+	SignedIn,
+	SignedOut,
+	UserButton,
+} from '@clerk/nextjs'
+import {
 	Construction,
 	Wrench,
 	User,
@@ -173,20 +179,18 @@ export function AppSidebar() {
 							<TooltipTrigger asChild>
 								<SidebarMenuButton
 									asChild
-									className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white hover:text-[#0f2942]'
+									className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:text-[#0f2942]'
 								>
-									<Link
-										href='/app/profile'
-										className='flex h-full items-center justify-center'
-									>
-										<Avatar className='border-primary h-12 w-12 border-2'>
-											<AvatarImage
-												src='/placeholder.svg?height=48&width=48'
-												alt='User'
-											/>
-											<AvatarFallback>UN</AvatarFallback>
-										</Avatar>
-									</Link>
+									<div className='flex h-full items-center justify-center'>
+										<SignedIn>
+											<div className='flex h-full items-center justify-center'>
+												<UserButton />
+											</div>
+										</SignedIn>
+										<SignedOut>
+											<RedirectToSignIn />
+										</SignedOut>
+									</div>
 								</SidebarMenuButton>
 							</TooltipTrigger>
 							<TooltipContent side='right'>Profil</TooltipContent>
