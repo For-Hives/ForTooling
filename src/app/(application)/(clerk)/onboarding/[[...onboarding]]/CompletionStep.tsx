@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import confetti from 'canvas-confetti'
-import { CheckCircle2, ThumbsUp, Rocket } from 'lucide-react'
+import { CheckCircle2, ThumbsUp, Rocket, CircleCheck } from 'lucide-react'
 import Image from 'next/image'
 import { useEffect, useRef } from 'react'
 
@@ -96,20 +96,7 @@ export function CompletionStep({
 					<p className='text-sm'>Performance optimisée</p>
 				</div>
 				<div className='flex flex-col items-center rounded-lg bg-purple-50 p-4 text-purple-700'>
-					<svg
-						className='mb-2 h-8 w-8'
-						viewBox='0 0 24 24'
-						fill='none'
-						xmlns='http://www.w3.org/2000/svg'
-					>
-						<path
-							d='M5.5 17.5L3.5 19.5M18.5 17.5L20.5 19.5M12 14V16M8 14.5L7 17M16 14.5L17 17M2 12C2 6.477 6.477 2 12 2C17.523 2 22 6.477 22 12C22 17.523 17.523 22 12 22C6.477 22 2 17.523 2 12Z'
-							stroke='currentColor'
-							strokeWidth='2'
-							strokeLinecap='round'
-							strokeLinejoin='round'
-						/>
-					</svg>
+					<CircleCheck className='mb-2 h-8 w-8' />
 					<p className='text-sm'>Expérience optimale</p>
 				</div>
 			</div>
@@ -131,16 +118,6 @@ export function CompletionStep({
 				>
 					{isLoading ? 'Chargement...' : 'Accéder à la plateforme'}
 				</Button>
-			</div>
-
-			<div className='mt-4 flex justify-center'>
-				<Image
-					src='/logo.png'
-					alt='ForTooling Logo'
-					width={50}
-					height={50}
-					className='opacity-70'
-				/>
 			</div>
 		</div>
 	)
