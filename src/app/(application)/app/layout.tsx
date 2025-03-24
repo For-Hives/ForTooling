@@ -32,7 +32,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 				<ClerkProvider>
 					<SignedIn>
 						<div className={`h-full min-h-screen`}>
-							<SidebarProvider defaultOpen={true}>
+							<SidebarProvider>
 								<AppSidebar />
 								<div className='ml-20 min-h-screen w-full bg-[#0f2942]'>
 									<TopBar />

@@ -1,8 +1,13 @@
 import '@/app/globals.css'
 
 import type { Metadata } from 'next'
+import type React from 'react'
 
-import { ClerkProvider, OrganizationSwitcher, UserButton } from '@clerk/nextjs'
+import { AppSidebar } from '@/components/app/app-sidebar'
+import { TopBar } from '@/components/app/top-bar'
+import { SidebarProvider } from '@/components/ui/sidebar'
+import { ClerkProvider } from '@clerk/nextjs'
+
 export const metadata: Metadata = {
 	title: {
 		default: "ForTooling - Gestion de l'outillage",
@@ -25,30 +30,18 @@ export default function RootLayout({
 					/>
 				</head>
 				<body className='text-gray-950 antialiased'>
-					<div className='flex min-h-screen flex-col'>
-						<header className='flex items-center justify-between bg-[#0f2942] px-6 py-3 text-white'>
-							<h1 className='text-xl font-bold'>ForTooling</h1>
-							<div className='flex items-center gap-4'>
-								<OrganizationSwitcher
-									hidePersonal={true}
-									appearance={{
-										elements: {
-											organizationName: {
-												color: 'white',
-											},
-											organizationSwitcherTrigger: {
-												color: 'white',
-											},
-											rootBox: {
-												display: 'flex',
-											},
-										},
-									}}
-								/>
-								<UserButton />
+					<div className={`h-full min-h-screen`}>
+						<SidebarProvider>
+							<AppSidebar />
+							<div className='ml-20 min-h-screen w-full bg-[#0f2942]'>
+								<TopBar />
+								<main className='min-h-[calc(100vh-4rem)] w-full overflow-auto rounded-tl-xl bg-stone-50'>
+									<div className='h-full w-full max-w-full p-4'>
+										{children}
+									</div>
+								</main>
 							</div>
-						</header>
-						<main className='flex-1'>{children}</main>
+						</SidebarProvider>
 					</div>
 				</body>
 			</html>

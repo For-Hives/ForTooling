@@ -17,16 +17,25 @@ export default function InvitationPage() {
 	}, [isLoaded, isSignedIn, orgIsLoaded, organization, router])
 
 	if (!isLoaded || !orgIsLoaded) {
-		return <div>Chargement...</div>
+		return (
+			<div className='flex h-full w-full items-center justify-center'>
+				<div className='text-muted-foreground animate-pulse'>Chargement...</div>
+			</div>
+		)
 	}
 
 	return (
-		<div className='flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6'>
-			<div className='w-full max-w-lg rounded-lg bg-white p-8 shadow-md'>
-				<h1 className='mb-6 text-center text-2xl font-bold text-gray-900'>
-					{`Complétez votre invitation`}
+		<div className='mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]'>
+			<div className='flex flex-col space-y-2 text-center'>
+				<h1 className='text-2xl font-semibold tracking-tight'>
+					Complétez votre invitation
 				</h1>
+				<p className='text-muted-foreground text-sm'>
+					Suivez les étapes pour rejoindre l&apos;organisation
+				</p>
+			</div>
 
+			<div className='bg-card rounded-lg border p-6 shadow-sm'>
 				<OrganizationProfile
 					appearance={{
 						elements: {

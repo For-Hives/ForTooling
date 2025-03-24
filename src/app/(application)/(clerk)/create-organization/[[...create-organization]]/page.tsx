@@ -4,8 +4,8 @@ import { CreateOrganization } from '@clerk/nextjs'
 
 export default function CreateOrganizationPage() {
 	return (
-		<div className='flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6'>
-			<div className='w-full max-w-md'>
+		<div className='flex min-h-[calc(100vh-8rem)] flex-col items-center justify-center bg-gray-50'>
+			<div className='mx-auto max-w-7xl'>
 				<CreateOrganization
 					appearance={{
 						elements: {
