@@ -1,6 +1,13 @@
 'use client'
 
-import { useUser, UserProfile } from '@clerk/nextjs'
+import { Container } from '@/components/app/container'
+import {
+	useUser,
+	UserProfile,
+	SignedIn,
+	SignedOut,
+	RedirectToSignIn,
+} from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
@@ -28,32 +35,27 @@ export default function OnboardingPage() {
 	}
 
 	return (
-		<div className='mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]'>
-			<div className='flex flex-col space-y-2 text-center'>
-				<h1 className='text-2xl font-semibold tracking-tight'>
-					Complétez votre profil
-				</h1>
-				<p className='text-muted-foreground text-sm'>
-					Quelques informations supplémentaires pour commencer
-				</p>
-			</div>
+		<>
+			{/* todo : onboarding page */}
+			<SignedIn>
+				<Container isAlternative>
+					<div className='flex w-full flex-col items-start space-y-2'>
+						<h1 className='text-2xl font-semibold tracking-tight'>
+							Complétez votre profil
+						</h1>
+						<p className='text-muted-foreground text-sm'>
+							Quelques informations supplémentaires pour commencer
+						</p>
+					</div>
 
-			<div className='bg-card rounded-lg border p-6 shadow-sm'>
-				<UserProfile
-					appearance={{
-						elements: {
-							card: {
-								border: 'none',
-								boxShadow: 'none',
-							},
-							rootBox: {
-								boxShadow: 'none',
-								width: '100%',
-							},
-						},
-					}}
-				/>
-			</div>
-		</div>
+					<div className='pt-4'>
+						<UserProfile />
+					</div>
+				</Container>
+			</SignedIn>
+			<SignedOut>
+				<RedirectToSignIn />
+			</SignedOut>
+		</>
 	)
 }
