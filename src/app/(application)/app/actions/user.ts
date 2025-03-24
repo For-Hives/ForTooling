@@ -4,6 +4,8 @@ import { auth, clerkClient } from '@clerk/nextjs/server'
 
 /**
  * Marks the user's onboarding as complete by setting metadata
+ * This allows the application to know that the user has completed the onboarding process
+ * and shouldn't be redirected to the onboarding page again
  */
 export async function markOnboardingComplete(): Promise<boolean> {
 	const { userId } = await auth()
@@ -13,10 +15,14 @@ export async function markOnboardingComplete(): Promise<boolean> {
 	}
 
 	try {
+		// Update the user's public metadata
+		// hasCompletedOnboarding=true indicates the user has finished onboarding
+		// onboardingCompletedAt stores the date when onboarding was completed
 		const clerkClientInstance = await clerkClient()
 		await clerkClientInstance.users.updateUserMetadata(userId, {
 			publicMetadata: {
 				hasCompletedOnboarding: true,
+				onboardingCompletedAt: new Date().toISOString(),
 			},
 		})
 

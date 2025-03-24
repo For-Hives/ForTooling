@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
 				hostname: '**.andy-cinquin.fr',
 				protocol: 'https',
 			},
+			{
+				hostname: '**.clerk.com',
+				protocol: 'https',
+			},
 		],
 	},
 }

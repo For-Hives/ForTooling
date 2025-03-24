@@ -1,4 +1,8 @@
-import { clerkClient, clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import {
+	clerkClient,
+	clerkMiddleware,
+	createRouteMatcher,
+} from '@clerk/nextjs/server'
 const isProtectedRoute = createRouteMatcher(['/app(.*)'])
 
 const isPublicRoute = createRouteMatcher([
@@ -36,9 +40,15 @@ export default clerkMiddleware(async (auth, req) => {
 	}
 
 	const clerkClientInstance = await clerkClient()
-	const userMetadata = await clerkClientInstance.users.getUser(authAwaited.userId)
+	const userMetadata = await clerkClientInstance.users.getUser(
+		authAwaited.userId
+	)
 
-	if (isProtectedRoute(req) && !userMetadata?.publicMetadata?.hasCompletedOnboarding) {
+	console.log(userMetadata)
+	if (
+		isProtectedRoute(req) &&
+		!userMetadata?.publicMetadata?.hasCompletedOnboarding
+	) {
 		return Response.redirect(new URL('/onboarding', req.url))
 	}
 
