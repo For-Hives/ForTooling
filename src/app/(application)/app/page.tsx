@@ -13,10 +13,10 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 export default async function Dashboard() {
-	const { userId } = await auth()
+	const { orgId, orgRole, userId } = await auth()
 
-	if (!userId) {
-		redirect('/')
+	if (!userId || !orgId) {
+		redirect('/onboarding')
 	}
 
 	const user = await currentUser()
@@ -89,6 +89,10 @@ export default async function Dashboard() {
 			<h2 className='mb-4 text-2xl font-semibold text-gray-800'>
 				Bonjour {user?.firstName} !
 			</h2>
+			<p>
+				Vous êtes connecté avec l&apos;organisation {orgId} et vous avez le rôle{' '}
+				{orgRole}
+			</p>
 			<div className='grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'>
 				{quickLinks.map(link => (
 					<Link href={link.href} key={link.title} className='group block'>
