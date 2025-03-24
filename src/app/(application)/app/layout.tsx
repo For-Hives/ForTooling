@@ -14,8 +14,8 @@ import {
 
 export const metadata: Metadata = {
 	title: {
-		default: 'Radiant - Close every deal',
-		template: '%s - Radiant',
+		default: 'ForTooling',
+		template: '%s - ForTooling',
 	},
 }
 

@@ -1,16 +1,17 @@
 import type { Metadata } from 'next'
 
-import { BentoCard } from '@/app/(marketing)/components/bento-card'
-import { Button } from '@/app/(marketing)/components/button'
-import { Container } from '@/app/(marketing)/components/container'
-import { Footer } from '@/app/(marketing)/components/footer'
-import { Gradient } from '@/app/(marketing)/components/gradient'
-import { Navbar } from '@/app/(marketing)/components/navbar'
-import { Heading, Subheading } from '@/app/(marketing)/components/text'
+import { BentoCard } from '@/app/(marketing)/marketing-components/bento-card'
+import { Button } from '@/app/(marketing)/marketing-components/button'
+import { Container } from '@/app/(marketing)/marketing-components/container'
+import { Footer } from '@/app/(marketing)/marketing-components/footer'
+import { Gradient } from '@/app/(marketing)/marketing-components/gradient'
+import { Navbar } from '@/app/(marketing)/marketing-components/navbar'
+import {
+	Heading,
+	Subheading,
+} from '@/app/(marketing)/marketing-components/text'
+import { PricingCards } from '@/app/(marketing)/pricing/page'
 import Image from 'next/image'
-
-import { Screenshot } from './components/screenshot'
-import { PricingCards } from './pricing/page'
 
 export const metadata: Metadata = {
 	description:

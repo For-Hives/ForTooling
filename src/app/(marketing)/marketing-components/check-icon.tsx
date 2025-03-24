@@ -1,4 +1,3 @@
-// src/app/(marketing)/components/check-icon.tsx
 import React from 'react'
 
 export function CheckIcon({ className }: { className?: string }) {
