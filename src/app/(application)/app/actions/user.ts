@@ -1,20 +1,20 @@
 'use server'
 
-import { auth } from '@clerk/nextjs'
-import { clerkClient } from '@clerk/nextjs/server'
+import { auth, clerkClient } from '@clerk/nextjs/server'
 
 /**
  * Marks the user's onboarding as complete by setting metadata
  */
 export async function markOnboardingComplete(): Promise<boolean> {
-	const { userId } = auth()
+	const { userId } = await auth()
 
 	if (!userId) {
 		throw new Error('Authentication required')
 	}
 
 	try {
-		await clerkClient.users.updateUserMetadata(userId, {
+		const clerkClientInstance = await clerkClient()
+		await clerkClientInstance.users.updateUserMetadata(userId, {
 			publicMetadata: {
 				hasCompletedOnboarding: true,
 			},
