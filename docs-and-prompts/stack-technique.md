@@ -44,7 +44,7 @@ Cette plateforme SaaS de gestion d'équipements avec tracking NFC/QR combine les
   - Pattern de protection centralisé (HOF withProtection)
   - Isolation multi-tenant intégrée
 - **Zod** - Validation de schémas pour les données d'entrée
-- **React Hook Form** - Gestion de formulaires avec validation côté client
+- **Tan stack Form** - Gestion de formulaires avec validation côté client
 
 ### Backend
 
