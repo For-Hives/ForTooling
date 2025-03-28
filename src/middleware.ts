@@ -7,6 +7,10 @@ const isProtectedRoute = createRouteMatcher(['/app(.*)'])
 
 const isPublicRoute = createRouteMatcher([
 	'/',
+	'/app(.*)',
+	'/pricing(.*)',
+	'/legals(.*)',
+	'/marketing-components(.*)',
 	'/sign-in(.*)',
 	'/sign-up(.*)',
 	'/api(.*)',
