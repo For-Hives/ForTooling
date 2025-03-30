@@ -35,12 +35,12 @@ export interface Organization extends BaseModel {
 /**
  * User model (auth collection)
  */
-export interface User extends BaseModel {
+export interface AppUser extends BaseModel {
 	email: string
 	emailVisibility: boolean
 	verified: boolean
 	name: string | null
-	avatar?: string | null // File field
+	avatar?: string | null
 	phone: string | null
 	role: string | null
 	isAdmin: boolean

@@ -20,7 +20,7 @@ erDiagram
         date updated
     }
 
-    User {
+    AppUser {
         string id PK
         string name
         string email
@@ -30,7 +30,7 @@ erDiagram
         boolean verified
         boolean emailVisibility
         string clerkId
-        file avatar
+        date lastLogin
         date created
         date updated
     }
@@ -83,15 +83,16 @@ erDiagram
         date updated
     }
 
-    Organization ||--o{ User : "has"
+    Organization ||--o{ UserApp : "has"
     Organization ||--o{ Equipment : "owns"
     Organization ||--o{ Project : "manages"
     Organization ||--o{ Assignment : "oversees"
     Organization ||--o{ ActivityLog : "tracks"
 
-    User }o--o{ Organization : "belongs to"
-    User }o--o{ Assignment : "is assigned to"
-    User }o--o{ ActivityLog : "generates"
+    UserApp }o--o{ Organization : "belongs to"
+    UserApp }o--o{ Assignment : "is assigned to"
+    UserApp }o--o{ ActivityLog : "generates"
+    UserApp }o--|| Image : "have"
 
     Equipment }o--o{ Assignment : "is assigned via"
     Equipment }o--o{ Equipment : "parent/child"

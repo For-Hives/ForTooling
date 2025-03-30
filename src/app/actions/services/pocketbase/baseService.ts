@@ -17,8 +17,10 @@ export const getPocketBase = async (): Promise<PocketBase | null> => {
 	}
 
 	// Get credentials from environment variables
-	const token = process.env.PB_USER_TOKEN
-	const url = process.env.PB_SERVER_URL
+	// PB_TOKEN_API_ADMIN
+	// PB_API_URL
+	const token = process.env.PB_TOKEN_API_ADMIN
+	const url = process.env.PB_API_URL
 
 	if (!token || !url) {
 		console.error('Missing PocketBase credentials in environment variables')

@@ -1,7 +1,5 @@
-import { userService } from '@/app/actions/services/pocketbase/userService'
 import { verifyClerkWebhook } from '@/lib/webhookUtils'
 import { NextRequest, NextResponse } from 'next/server'
-
 /**
  * Handles webhook events from Clerk related to users
  */
