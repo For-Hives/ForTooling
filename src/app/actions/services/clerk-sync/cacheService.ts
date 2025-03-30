@@ -1,5 +1,9 @@
-// src/app/actions/services/clerk-sync/cacheService.ts
 import crypto from 'crypto'
+
+/**
+ * Type for cacheable data to avoid using any
+ */
+type CacheableValue = unknown
 
 /**
  * Interface for cache entries with security features
@@ -16,8 +20,8 @@ interface SecureCacheEntry<T> {
  * Implements security best practices to prevent cache manipulation attacks
  */
 class SecureCache {
-	private cache: Map<string, SecureCacheEntry<any>>
-	private secretKey: string
+	private readonly cache: Map<string, SecureCacheEntry<CacheableValue>>
+	private readonly secretKey: string
 
 	constructor() {
 		this.cache = new Map()
@@ -25,7 +29,7 @@ class SecureCache {
 		// Use the environment secret or generate a random one per instance
 		// This makes cache manipulation attacks significantly harder
 		this.secretKey =
-			process.env.CACHE_SECRET || crypto.randomBytes(32).toString('hex')
+			process.env.CACHE_SECRET ?? crypto.randomBytes(32).toString('hex')
 	}
 
 	/**
@@ -35,7 +39,7 @@ class SecureCache {
 	 * @param userId The user ID to include in the hash
 	 * @returns The generated hash
 	 */
-	private createHash(data: any, userId: string): string {
+	private createHash(data: CacheableValue, userId: string): string {
 		const content = JSON.stringify(data) + userId + this.secretKey
 		return crypto.createHash('sha256').update(content).digest('hex')
 	}
@@ -50,7 +54,7 @@ class SecureCache {
 	 */
 	set(
 		key: string,
-		value: any,
+		value: CacheableValue,
 		userId: string,
 		ttl: number = 2 * 60 * 1000
 	): void {
@@ -80,7 +84,11 @@ class SecureCache {
 	 * @param maxAge Optional maximum age in milliseconds
 	 * @returns The cached value or null if not found/invalid
 	 */
-	get(key: string, userId: string, maxAge: number = 2 * 60 * 1000): any | null {
+	get(
+		key: string,
+		userId: string,
+		maxAge: number = 2 * 60 * 1000
+	): CacheableValue | null {
 		const entry = this.cache.get(key)
 
 		// No entry found

@@ -1,6 +1,5 @@
 // src/app/actions/services/clerk-sync/reconciliation.ts
-import { getPocketBase } from '@/app/actions/services/pocketbase/baseService'
-import { clerkClient } from '@clerk/nextjs'
+import { clerkClient } from '@clerk/nextjs/server'
 
 import {
 	syncUserToPocketBase,

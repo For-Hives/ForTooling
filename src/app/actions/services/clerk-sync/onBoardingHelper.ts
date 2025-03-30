@@ -1,12 +1,14 @@
-import { getPocketBase } from '@/app/actions/services/pocketbase/baseService'
-// src/app/actions/services/clerk-sync/onboardingHelpers.ts
-import { auth, clerkClient } from '@clerk/nextjs/server'
-
 import {
 	syncUserToPocketBase,
 	syncOrganizationToPocketBase,
 	linkUserToOrganization,
-} from './syncService'
+} from '@/app/actions/services/clerk-sync/syncService'
+import { auth, clerkClient } from '@clerk/nextjs/server'
+
+/**
+ * Type for metadata to replace any
+ */
+type ClerkMetadata = Record<string, unknown>
 
 /**
  * Imports an organization after it's created during onboarding
@@ -27,8 +29,9 @@ export async function importOrganizationAfterCreation(clerkOrgId: string) {
 
 		// Get the organization data from Clerk
 		const clerkClientInstance = await clerkClient()
-		const clerkOrg =
-			await clerkClientInstance.organizations.getOrganization(clerkOrgId)
+		const clerkOrg = await clerkClientInstance.organizations.getOrganization({
+			organizationId: clerkOrgId,
+		})
 
 		// Sync the organization to PocketBase
 		const organization = await syncOrganizationToPocketBase(clerkOrg)
@@ -67,7 +70,7 @@ export async function importOrganizationAfterCreation(clerkOrgId: string) {
  * @param metadata The metadata to set for the user
  * @returns Success status
  */
-export async function updateUserMetadataAndSync(metadata: Record<string, any>) {
+export async function updateUserMetadataAndSync(metadata: ClerkMetadata) {
 	'use server'
 
 	try {
@@ -105,7 +108,7 @@ export async function updateUserMetadataAndSync(metadata: Record<string, any>) {
  */
 export async function updateOrgMetadataAndSync(
 	orgId: string,
-	metadata: Record<string, any>
+	metadata: ClerkMetadata
 ) {
 	'use server'
 
@@ -123,8 +126,9 @@ export async function updateOrgMetadataAndSync(
 		})
 
 		// Get the updated organization
-		const clerkOrg =
-			await clerkClientInstance.organizations.getOrganization(orgId)
+		const clerkOrg = await clerkClientInstance.organizations.getOrganization({
+			organizationId: orgId,
+		})
 
 		// Sync the updated organization to PocketBase
 		await syncOrganizationToPocketBase(clerkOrg)
