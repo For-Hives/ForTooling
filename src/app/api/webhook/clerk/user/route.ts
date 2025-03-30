@@ -1,48 +1,55 @@
+import * as appUserService from '@/app/actions/services/pocketbase/app-user'
 import { verifyClerkWebhook } from '@/lib/webhookUtils'
 import { NextRequest, NextResponse } from 'next/server'
 /**
  * Handles webhook events from Clerk related to users
  */
 export async function POST(req: NextRequest) {
-	// Verify webhook signature
-	const isValid = await verifyClerkWebhook(
-		req,
-		process.env.CLERK_WEBHOOK_SECRET_USER
-	)
+	console.log('Received Clerk webhook request')
+
+	// Log the entire request for debugging
+	console.log('req', req)
+
+	const webhookSecret = process.env.CLERK_WEBHOOK_SECRET
+
+	// Verify the webhook signature
+	const isValid = await verifyClerkWebhook(req, webhookSecret)
+	console.log('isValid', isValid)
 
 	if (!isValid) {
 		console.error('Invalid webhook signature for user event')
-		return new NextResponse('Invalid signature', { status: 401 })
+		return new NextResponse('Unauthorized', { status: 401 })
 	}
 
 	try {
-		// Get the request body
-		const clone = req.clone()
-		const body = await clone.json()
+		// Get the webhook body
+		const body = await req.json()
+		console.log('Webhook body:', JSON.stringify(body, null, 2))
+
+		// Process based on event type
 		const { data, type } = body
 
-		console.log(`Processing user webhook: ${type}`)
-
-		// Handle different user events
-		switch (type) {
-			case 'user.created':
-				await handleUserCreated(data)
-				break
-			case 'user.updated':
-				await handleUserUpdated(data)
-				break
-			case 'user.deleted':
-				await handleUserDeleted(data)
-				break
-			default:
-				console.log(`Unhandled user event type: ${type}`)
+		if (type.startsWith('user.')) {
+			if (type === 'user.created') {
+				const result = await appUserService.handleWebhookCreated(data, true)
+				return NextResponse.json(result)
+			} else if (type === 'user.updated') {
+				const result = await appUserService.handleWebhookUpdated(data, true)
+				return NextResponse.json(result)
+			} else if (type === 'user.deleted') {
+				const result = await appUserService.handleWebhookDeleted(data, true)
+				return NextResponse.json(result)
+			}
 		}
 
-		return NextResponse.json({ success: true })
+		return NextResponse.json({
+			message: `Unhandled event type: ${type}`,
+			success: false,
+		})
 	} catch (error) {
-		console.error('Error processing user webhook:', error)
+		console.error('Error processing webhook:', error)
 		return NextResponse.json(
-			{ error: 'Internal server error' },
+			{ message: 'Error processing webhook', success: false },
 			{ status: 500 }
 		)
 	}

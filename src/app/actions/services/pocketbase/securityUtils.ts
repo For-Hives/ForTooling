@@ -1,45 +1,20 @@
 'use server'
 
 import { getPocketBase } from '@/app/actions/services/pocketbase/baseService'
-import { User } from '@/types/types_pocketbase'
+import {
+	SecurityError,
+	PermissionLevel,
+	ResourceType,
+} from '@/app/actions/services/securyUtilsTools'
+import { AppUser } from '@/types/types_pocketbase'
 import { auth } from '@clerk/nextjs/server'
-
-/**
- * User permission levels
- */
-export enum PermissionLevel {
-	ADMIN = 'admin',
-	READ = 'read',
-	WRITE = 'write',
-}
-
-/**
- * Resource types for permission checks
- */
-export enum ResourceType {
-	ASSIGNMENT = 'assignment',
-	EQUIPMENT = 'equipment',
-	ORGANIZATION = 'organization',
-	PROJECT = 'project',
-	USER = 'user',
-}
-
-/**
- * Error thrown when security checks fail
- */
-export class SecurityError extends Error {
-	constructor(message: string) {
-		super(message)
-		this.name = 'SecurityError'
-	}
-}
 
 /**
  * Validates a user ID against the current authenticated user
  * @param userId The user ID to validate
  * @throws {SecurityError} If the user ID is invalid or unauthorized
  */
-export async function validateCurrentUser(userId?: string): Promise<User> {
+export async function validateCurrentUser(userId?: string): Promise<AppUser> {
 	// Get Clerk auth context
 	const { userId: clerkUserId } = await auth()
 
@@ -75,12 +50,12 @@ export async function validateCurrentUser(userId?: string): Promise<User> {
  * @param organizationId The organization ID to validate
  * @param permission The required permission level
  * @returns The validated user and organization
- * @throws {SecurityError} If access is unauthorized
+ * @throws {Error} If access is unauthorized
  */
 export async function validateOrganizationAccess(
 	organizationId: string,
 	permission: PermissionLevel = PermissionLevel.READ
-): Promise<{ user: User; organizationId: string }> {
+): Promise<{ user: AppUser; organizationId: string }> {
 	// Get authenticated user
 	const user = await validateCurrentUser()
 
@@ -116,13 +91,13 @@ export async function validateOrganizationAccess(
  * @param resourceId The resource ID
  * @param permission The required permission level
  * @returns The validated user and organization ID
- * @throws {SecurityError} If access is unauthorized
+ * @throws {Error} If access is unauthorized
  */
 export async function validateResourceAccess(
 	resourceType: ResourceType,
 	resourceId: string,
 	permission: PermissionLevel = PermissionLevel.READ
-): Promise<{ user: User; organizationId: string }> {
+): Promise<{ user: AppUser; organizationId: string }> {
 	const pb = await getPocketBase()
 	if (!pb) {
 		throw new SecurityError('Database connection error')
@@ -150,10 +125,10 @@ export async function validateResourceAccess(
  * @param additionalFilter Optional additional filter expression
  * @returns A complete filter string with organization filtering
  */
-export function createOrganizationFilter(
+export async function createOrganizationFilter(
 	organizationId: string,
 	additionalFilter?: string
-): string {
+): Promise<string> {
 	const orgFilter = `organization="${organizationId}"`
 
 	if (!additionalFilter) {

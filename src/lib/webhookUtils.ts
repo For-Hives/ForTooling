@@ -2,7 +2,7 @@ import * as crypto from 'crypto'
 import { NextRequest } from 'next/server'
 
 /**
- * Validates a webhook signature from Clerk - simplified version
+ * Validates a webhook signature from Clerk
  */
 export async function verifyClerkWebhook(
 	req: NextRequest,
@@ -23,27 +23,49 @@ export async function verifyClerkWebhook(
 		return false
 	}
 
+	// Log the headers for debugging
+	console.log('Webhook Headers:', {
+		svix_id,
+		svix_signature,
+		svix_timestamp,
+	})
+
 	// Get the raw body
 	const payload = await req.text()
 	const signaturePayload = `${svix_id}.${svix_timestamp}.${payload}`
 
-	// Verify signatures
-	const expectedSignatures = svix_signature.split(' ')
-	const signatures = expectedSignatures.map(sig => {
-		const [version, signature] = sig.split(',')
-		return { signature, version }
-	})
+	// Clerk signatures are in the format "v1,signature1 v1,signature2"
+	const signatures = svix_signature.split(' ')
 
-	// Check if any signature matches
-	return signatures.some(({ signature }) => {
+	for (const sig of signatures) {
+		// Format is "version,signature"
+		const [version, signature] = sig.split(',')
+
+		if (!signature || !version) {
+			continue
+		}
+
 		try {
+			// Create HMAC with the secret
 			const hmac = crypto.createHmac('sha256', secret)
 			hmac.update(signaturePayload)
-			const digest = hmac.digest('hex')
-			return crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(signature))
+			const digest = hmac.digest('base64')
+
+			console.log('Verification attempt:', {
+				computedSignature: digest,
+				expectedSignature: signature,
+				version,
+			})
+
+			// Simple string comparison
+			if (signature === digest) {
+				return true
+			}
 		} catch (error) {
-			console.error('Error verifying signature:', error)
-			return false
+			console.error('Error in signature verification:', error)
 		}
-	})
+	}
+
+	console.error('No matching signatures found')
+	return false
 }
