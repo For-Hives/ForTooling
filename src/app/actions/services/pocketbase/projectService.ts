@@ -89,8 +89,8 @@ export async function getOrganizationProjects(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		// Apply organization filter
-		const filter = `organization="${organizationId}"`
+		// Apply organization filter - fixed field name
+		const filter = `organizationId="${organizationId}"`
 
 		return await pb.collection('projects').getFullList({
 			filter,
@@ -125,9 +125,10 @@ export async function getActiveProjects(
 
 		const now = new Date().toISOString()
 
+		// Fixed field name in filter
 		return await pb.collection('projects').getFullList({
 			filter: pb.filter(
-				'organization = {:orgId} && (startDate <= {:now} && (endDate >= {:now} || endDate = ""))',
+				'organizationId = {:orgId} && (startDate <= {:now} && (endDate >= {:now} || endDate = ""))',
 				{ now, orgId: organizationId }
 			),
 			sort: 'name',
@@ -145,7 +146,10 @@ export async function getActiveProjects(
  */
 export async function createProject(
 	organizationId: string,
-	data: Omit<Partial<Project>, 'organization'>
+	data: Pick<
+		Partial<Project>,
+		'name' | 'address' | 'notes' | 'startDate' | 'endDate'
+	>
 ): Promise<Project> {
 	try {
 		// Security check - requires WRITE permission
@@ -156,10 +160,10 @@ export async function createProject(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		// Ensure organization ID is set correctly
+		// Ensure organization ID is set correctly - fixed field name
 		return await pb.collection('projects').create({
 			...data,
-			organization: organizationId, // Force the correct organization ID
+			organizationId, // Force the correct organization ID
 		})
 	} catch (error) {
 		if (error instanceof SecurityError) {
@@ -174,7 +178,10 @@ export async function createProject(
  */
 export async function updateProject(
 	id: string,
-	data: Omit<Partial<Project>, 'organization' | 'id'>
+	data: Pick<
+		Partial<Project>,
+		'name' | 'address' | 'notes' | 'startDate' | 'endDate'
+	>
 ): Promise<Project> {
 	try {
 		// Security check - requires WRITE permission
@@ -191,7 +198,8 @@ export async function updateProject(
 
 		// Never allow changing the organization
 		const sanitizedData = { ...data }
-		delete (sanitizedData as any).organization
+		// Fixed 'any' type and field name
+		delete (sanitizedData as Record<string, unknown>).organizationId
 
 		return await pb.collection('projects').update(id, sanitizedData)
 	} catch (error) {
@@ -242,8 +250,9 @@ export async function getProjectCount(organizationId: string): Promise<number> {
 			throw new Error('Failed to connect to PocketBase')
 		}
 
+		// Fixed field name
 		const result = await pb.collection('projects').getList(1, 1, {
-			filter: `organization="${organizationId}"`,
+			filter: `organizationId=${organizationId}`,
 			skipTotal: false,
 		})
 
@@ -272,9 +281,10 @@ export async function searchProjects(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
+		// Fixed field name in filter
 		return await pb.collection('projects').getFullList({
 			filter: pb.filter(
-				'organization = {:orgId} && (name ~ {:query} || address ~ {:query})',
+				'organizationId = {:orgId} && (name ~ {:query} || address ~ {:query})',
 				{
 					orgId: organizationId,
 					query,

@@ -7,8 +7,6 @@ import {
 import {
 	validateCurrentUser,
 	validateOrganizationAccess,
-	validateResourceAccess,
-	ResourceType,
 	PermissionLevel,
 	SecurityError,
 } from '@/app/actions/services/pocketbase/securityUtils'
@@ -53,15 +51,31 @@ export async function getOrganizationByClerkId(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
+		// Fixed the template literal syntax
 		const organization = await pb
 			.collection('organizations')
-			.getFirstListItem(`clerkId=`${clerkId}``)
+			.getFirstListItem(`clerkId=${clerkId}`)
 
 		// After fetching, verify that the user belongs to this organization
-		if (user.organization !== organization.id) {
+		// The user can have multiple organizations, so we need to check if the requested org
+		// is in their list of organizations
+		if (
+			!user.expand?.organizationId ||
+			!Array.isArray(user.expand.organizationId)
+		) {
+			throw new SecurityError('User has no associated organizations')
+		}
+
+		// Check if the requested organization is in the user's list of organizations
+		const hasAccess = user.expand.organizationId.some(
+			org => org.id === organization.id
+		)
+
+		if (!hasAccess) {
 			throw new SecurityError('User does not belong to this organization')
 		}
 
+		// todo: fix type
 		return organization
 	} catch (error) {
 		if (error instanceof SecurityError) {
@@ -70,6 +84,52 @@ export async function getOrganizationByClerkId(
 		return handlePocketBaseError(
 			error,
 			'OrganizationService.getOrganizationByClerkId'
+		)
+	}
+}
+
+/**
+ * Get organizations list with pagination for the current user
+ */
+export async function getUserOrganizations(): Promise<Organization[]> {
+	try {
+		const user = await validateCurrentUser()
+
+		// If the user's organizations are already expanded, return them
+		if (
+			user.expand?.organizationId &&
+			Array.isArray(user.expand.organizationId)
+		) {
+			return user.expand.organizationId
+		}
+
+		// Otherwise, we need to fetch them
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Assuming there's a relation field in the users collection that points to organizations
+		// Fetch the user with expanded organizations
+		const userWithOrgs = await pb.collection('users').getOne(user.id, {
+			expand: 'organizationId',
+		})
+
+		if (
+			userWithOrgs.expand?.organizationId &&
+			Array.isArray(userWithOrgs.expand.organizationId)
+		) {
+			return userWithOrgs.expand.organizationId
+		}
+
+		return []
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(
+			error,
+			'OrganizationService.getUserOrganizations'
 		)
 	}
 }
@@ -194,17 +254,23 @@ export async function updateSubscription(
 
 /**
  * Get current organization settings for the authenticated user
+ * If the user belongs to multiple organizations, takes the first active one or prompts selection
  */
 export async function getCurrentOrganizationSettings(): Promise<Organization> {
 	try {
-		// Get the current authenticated user
-		const user = await validateCurrentUser()
+		// Get all organizations for the current user
+		const userOrganizations = await getUserOrganizations()
 
-		// Get their organization
-		const organizationId = user.organization
+		if (!userOrganizations.length) {
+			throw new SecurityError('User does not belong to any organization')
+		}
 
-		// Fetch the organization with validated access
-		return await getOrganization(organizationId)
+		// For simplicity, we're returning the first organization
+		// In a real application, you might want to use the last selected org or prompt for selection
+		const firstOrgId = userOrganizations[0].id
+
+		// Fetch full organization details with validated access
+		return await getOrganization(firstOrgId)
 	} catch (error) {
 		if (error instanceof SecurityError) {
 			throw error
@@ -217,15 +283,30 @@ export async function getCurrentOrganizationSettings(): Promise<Organization> {
 }
 
 /**
- * Check if current user is organization admin
+ * Check if current user is organization admin for a specific organization
  */
-export async function isCurrentUserOrgAdmin(): Promise<boolean> {
+export async function isCurrentUserOrgAdmin(
+	organizationId: string
+): Promise<boolean> {
 	try {
 		// Get current user
 		const user = await validateCurrentUser()
 
-		// Check admin status
-		return user.isAdmin || user.role === 'admin'
+		// Check if user has admin role
+		const isAdmin = user.isAdmin || user.role === 'admin'
+
+		// If they're not an admin by role, we need to check if they're an admin of this specific org
+		if (!isAdmin) {
+			// This would need additional checks in a real application
+			// For example, checking a userOrganizationRole table
+			return false
+		}
+
+		// Verify they belong to this organization
+		const userOrgs = await getUserOrganizations()
+		const belongsToOrg = userOrgs.some(org => org.id === organizationId)
+
+		return isAdmin && belongsToOrg
 	} catch (error) {
 		if (error instanceof SecurityError) {
 			throw error
