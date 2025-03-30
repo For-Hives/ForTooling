@@ -73,7 +73,7 @@ async function checkAuthentication(req: NextRequest): Promise<boolean> {
 	}
 
 	// Option 2: Check API key for automated tasks
-	const headerPayload = headers()
+	const headerPayload = await headers()
 	const apiKey = headerPayload.get('x-api-key')
 
 	if (apiKey && apiKey === process.env.INTERNAL_API_KEY) {

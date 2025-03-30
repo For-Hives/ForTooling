@@ -16,10 +16,13 @@ type ActionData = Record<string, unknown>
  * Middleware function to ensure user and organization data is synced
  * Acts as a fallback in case webhooks fail
  *
- * @param request The incoming request
  * @returns The modified response
  */
-export async function syncMiddleware(request: Request) {
+export async function syncMiddleware() {
+	// we will probably need to add :
+	// todo: add a check to see if the request is for the webhook
+	// * @param request The incoming request -> to be able to check if the request is for the webhook
+
 	// Only run this middleware for authenticated routes
 	const { orgId, userId } = await auth()
 

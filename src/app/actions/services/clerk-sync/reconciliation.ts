@@ -1,3 +1,4 @@
+// this file is used to sync the data between Clerk and PocketBase
 // Import types for Clerk entities
 import type { Organization, User } from '@clerk/nextjs/server'
 

@@ -1,14 +1,72 @@
 // src/app/actions/services/clerk-sync/syncService.ts
 import { getPocketBase } from '@/app/actions/services/pocketbase/baseService'
 import { User, Organization } from '@/types/types_pocketbase'
-import { clerkClient } from '@clerk/nextjs'
+import { clerkClient } from '@clerk/nextjs/server'
+
+/**
+ * Type definitions for Clerk user data
+ */
+type ClerkUserData = {
+	id: string
+	first_name?: string
+	last_name?: string
+	username?: string
+	image_url?: string
+	email_addresses?: Array<{
+		email_address: string
+		verification?: {
+			status?: string
+		}
+	}>
+	phone_numbers?: Array<{
+		phone_number: string
+	}>
+	public_metadata?: {
+		isAdmin?: boolean
+		role?: string
+		[key: string]: unknown
+	}
+	[key: string]: unknown
+}
+
+/**
+ * Type definitions for Clerk organization data
+ */
+type ClerkOrganizationData = {
+	id: string
+	name?: string
+	email_address?: string
+	phone_number?: string
+	public_metadata?: {
+		address?: string
+		settings?: Record<string, unknown>
+		[key: string]: unknown
+	}
+	[key: string]: unknown
+}
+
+/**
+ * Type definitions for Clerk membership data
+ */
+type ClerkMembershipData = {
+	organization: {
+		id: string
+	}
+	public_user_data?: {
+		user_id: string
+	}
+	role?: string
+	[key: string]: unknown
+}
 
 /**
  * Synchronizes Clerk user data to PocketBase
  * @param userData The user data from Clerk webhook or API
  * @returns The created or updated user
  */
-export async function syncUserToPocketBase(userData: any): Promise<User> {
+export async function syncUserToPocketBase(
+	userData: ClerkUserData
+): Promise<User> {
 	try {
 		const clerkId = userData.id
 		if (!clerkId) {
@@ -29,6 +87,7 @@ export async function syncUserToPocketBase(userData: any): Promise<User> {
 		} catch (error) {
 			// User doesn't exist yet, we'll create a new one
 			pbUser = null
+			console.error('Error syncing user to PocketBase:', error)
 		}
 
 		// Prepare the user data
@@ -53,10 +112,10 @@ export async function syncUserToPocketBase(userData: any): Promise<User> {
 
 		// Update or create the user
 		if (pbUser) {
-			console.log(`Updating existing user ${clerkId} in PocketBase`)
+			console.info(`Updating existing user ${clerkId} in PocketBase`)
 			return await pb.collection('users').update(pbUser.id, userDataToSync)
 		} else {
-			console.log(`Creating new user ${clerkId} in PocketBase`)
+			console.info(`Creating new user ${clerkId} in PocketBase`)
 			return await pb.collection('users').create(userDataToSync)
 		}
 	} catch (error) {
@@ -71,7 +130,7 @@ export async function syncUserToPocketBase(userData: any): Promise<User> {
  * @returns The created or updated organization
  */
 export async function syncOrganizationToPocketBase(
-	orgData: any
+	orgData: ClerkOrganizationData
 ): Promise<Organization> {
 	try {
 		const clerkId = orgData.id
@@ -93,6 +152,7 @@ export async function syncOrganizationToPocketBase(
 		} catch (error) {
 			// Organization doesn't exist yet, we'll create a new one
 			pbOrg = null
+			console.error('Error syncing organization to PocketBase:', error)
 		}
 
 		// Prepare the organization data
@@ -107,12 +167,12 @@ export async function syncOrganizationToPocketBase(
 
 		// Update or create the organization
 		if (pbOrg) {
-			console.log(`Updating existing organization ${clerkId} in PocketBase`)
+			console.info(`Updating existing organization ${clerkId} in PocketBase`)
 			return await pb
 				.collection('organizations')
 				.update(pbOrg.id, orgDataToSync)
 		} else {
-			console.log(`Creating new organization ${clerkId} in PocketBase`)
+			console.info(`Creating new organization ${clerkId} in PocketBase`)
 			return await pb.collection('organizations').create(orgDataToSync)
 		}
 	} catch (error) {
@@ -127,7 +187,7 @@ export async function syncOrganizationToPocketBase(
  * @returns Success status
  */
 export async function linkUserToOrganization(
-	membershipData: any
+	membershipData: ClerkMembershipData
 ): Promise<boolean> {
 	try {
 		const userId = membershipData.public_user_data?.user_id
@@ -146,18 +206,18 @@ export async function linkUserToOrganization(
 		// Find the user in PocketBase by Clerk ID
 		const pbUser = await pb
 			.collection('users')
-			.getFirstListItem(`clerkId="${userId}"`)
+			.getFirstListItem(`clerkId=${userId}`)
 
 		// Find the organization in PocketBase by Clerk ID
 		const pbOrg = await pb
 			.collection('organizations')
-			.getFirstListItem(`clerkId="${orgId}"`)
+			.getFirstListItem(`clerkId=${orgId}`)
 
 		// Check if the relation already exists
 		const existingRelations = await pb
 			.collection('user_organizations')
 			.getList(1, 1, {
-				filter: `user=`${pbUser.id}` && organization=`${pbOrg.id}``,
+				filter: `user="${pbUser.id}" && organization="${pbOrg.id}"`,
 			})
 
 		// If the relation doesn't exist, create it
@@ -196,10 +256,23 @@ export async function linkUserToOrganization(
  * @param clerkId The Clerk user ID
  * @returns The user data from Clerk
  */
-export async function getClerkUserById(clerkId: string): Promise<any> {
+export async function getClerkUserById(
+	clerkId: string
+): Promise<ClerkUserData> {
 	try {
 		const clerkClientInstance = await clerkClient()
-		return await clerkClientInstance.users.getUser(clerkId)
+		const user = await clerkClientInstance.users.getUser(clerkId)
+		return {
+			// email_addresses: user.emailAddresses.map(email => ({
+			// 	email_address: email.emailAddress,
+			// 	verification: email.verification,
+			// })),
+			// first_name: user.firstName,
+			id: user.id,
+			image_url: user.imageUrl,
+			// last_name: user.lastName,
+			// username: user.username,
+		}
 	} catch (error) {
 		console.error('Error fetching user from Clerk:', error)
 		throw error
@@ -211,10 +284,21 @@ export async function getClerkUserById(clerkId: string): Promise<any> {
  * @param clerkId The Clerk organization ID
  * @returns The organization data from Clerk
  */
-export async function getClerkOrganizationById(clerkId: string): Promise<any> {
+export async function getClerkOrganizationById(
+	clerkId: string
+): Promise<ClerkOrganizationData> {
 	try {
 		const clerkClientInstance = await clerkClient()
-		return await clerkClientInstance.organizations.getOrganization(clerkId)
+		const organization =
+			await clerkClientInstance.organizations.getOrganization({
+				organizationId: clerkId,
+			})
+		return {
+			// email_address: organization.email_address,
+			id: organization.id,
+			name: organization.name,
+			// phone_number: organization.phone_number,
+		}
 	} catch (error) {
 		console.error('Error fetching organization from Clerk:', error)
 		throw error
