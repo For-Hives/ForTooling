@@ -13,17 +13,17 @@ export {
 	deleteOrganization,
 	updateSubscription,
 	getCurrentOrganizationSettings,
-} from './core'
+} from '@/app/actions/services/pocketbase/organization/core'
 
 // Membership functions
 export {
 	addUserToOrganization,
 	removeUserFromOrganization,
 	getOrganizationUsers,
-} from './membership'
+} from '@/app/actions/services/pocketbase/organization/membership'
 
 // Security utilities
-export { isCurrentUserOrgAdmin } from './security'
+export { isCurrentUserOrgAdmin } from '@/app/actions/services/pocketbase/organization/security'
 
 // Webhook handlers
 export {
@@ -33,7 +33,7 @@ export {
 	handleMembershipWebhookCreated,
 	handleMembershipWebhookUpdated,
 	handleMembershipWebhookDeleted,
-} from './webhook-handlers'
+} from '@/app/actions/services/pocketbase/organization/webhook-handlers'
 
 // Internal functions for direct access when needed
-export { getByClerkId } from './internal'
+export { getByClerkId } from '@/app/actions/services/pocketbase/organization/internal'

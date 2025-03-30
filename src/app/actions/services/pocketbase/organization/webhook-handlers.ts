@@ -1,19 +1,20 @@
 'use server'
 
-import { userService } from '@/app/actions/services/pocketbase/userService'
+import {
+	createOrganization,
+	updateOrganization,
+	deleteOrganization,
+} from '@/app/actions/services/pocketbase/organization/core'
+import { getByClerkId } from '@/app/actions/services/pocketbase/organization/internal'
+import {
+	addUserToOrganization,
+	removeUserFromOrganization,
+} from '@/app/actions/services/pocketbase/organization/membership'
 import {
 	ClerkOrganizationWebhookData,
 	ClerkMembershipWebhookData,
 	WebhookProcessingResult,
 } from '@/types/webhooks'
-
-import {
-	createOrganization,
-	updateOrganization,
-	deleteOrganization,
-} from './core'
-import { getByClerkId } from './internal'
-import { addUserToOrganization, removeUserFromOrganization } from './membership'
 
 /**
  * Webhook handlers for organization events from Clerk

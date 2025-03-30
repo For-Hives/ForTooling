@@ -4,7 +4,7 @@ import {
 	getPocketBase,
 	handlePocketBaseError,
 } from '@/app/actions/services/pocketbase/baseService'
-import { Organization, User } from '@/types/types_pocketbase'
+import { Organization } from '@/types/types_pocketbase'
 
 /**
  * Internal methods for organization management

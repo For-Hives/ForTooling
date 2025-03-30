@@ -5,18 +5,17 @@ import {
 	handlePocketBaseError,
 } from '@/app/actions/services/pocketbase/baseService'
 import {
+	_createOrganization,
+	_updateOrganization,
+	_deleteOrganization,
+} from '@/app/actions/services/pocketbase/organization/internal'
+import {
 	validateCurrentUser,
 	validateOrganizationAccess,
 	PermissionLevel,
 	SecurityError,
 } from '@/app/actions/services/pocketbase/securityUtils'
 import { Organization, ListOptions, ListResult } from '@/types/types_pocketbase'
-
-import {
-	_createOrganization,
-	_updateOrganization,
-	_deleteOrganization,
-} from './internal'
 
 /**
  * Core organization operations with security validations
