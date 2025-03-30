@@ -1,80 +1,139 @@
 'use server'
 
-import { getPocketBase, handlePocketBaseError } from './baseService'
-import { Equipment, ListOptions, ListResult } from './types'
+import {
+	getPocketBase,
+	handlePocketBaseError,
+} from '@/app/actions/services/pocketbase/baseService'
+import {
+	validateOrganizationAccess,
+	validateResourceAccess,
+	createOrganizationFilter,
+	ResourceType,
+	PermissionLevel,
+	SecurityError,
+} from '@/app/actions/services/pocketbase/securityUtils'
+import { Equipment, ListOptions, ListResult } from '@/types/types_pocketbase'
 
 /**
- * Get a single equipment item by ID
+ * Get a single equipment item by ID with security validation
  */
 export async function getEquipment(id: string): Promise<Equipment> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
 	try {
+		// Security check - validates user has access to this resource
+		await validateResourceAccess(
+			ResourceType.EQUIPMENT,
+			id,
+			PermissionLevel.READ
+		)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
 		return await pb.collection('equipment').getOne(id)
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error // Re-throw security errors
+		}
 		return handlePocketBaseError(error, 'EquipmentService.getEquipment')
 	}
 }
 
 /**
- * Get equipment by QR/NFC code
+ * Get equipment by QR/NFC code with organization validation
  */
 export async function getEquipmentByCode(
+	organizationId: string,
 	qrNfcCode: string
 ): Promise<Equipment> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
 	try {
-		return await pb
-			.collection('equipment')
-			.getFirstListItem(`qrNfcCode="${qrNfcCode}"`)
+		// Security check - validates user belongs to this organization
+		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Apply organization filter for security
+		const filter = createOrganizationFilter(
+			organizationId,
+			`qrNfcCode="${qrNfcCode}"`
+		)
+		return await pb.collection('equipment').getFirstListItem(filter)
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
 		return handlePocketBaseError(error, 'EquipmentService.getEquipmentByCode')
 	}
 }
 
 /**
- * Get equipment list with pagination
+ * Get equipment list with pagination and security checks
  */
 export async function getEquipmentList(
+	organizationId: string,
 	options: ListOptions = {}
 ): Promise<ListResult<Equipment>> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
 	try {
-		const { page = 1, perPage = 30, ...rest } = options
-		return await pb.collection('equipment').getList(page, perPage, rest)
+		// Security check
+		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		const {
+			filter: additionalFilter,
+			page = 1,
+			perPage = 30,
+			...rest
+		} = options
+
+		// Apply organization filter to ensure data isolation
+		const filter = createOrganizationFilter(organizationId, additionalFilter)
+
+		return await pb.collection('equipment').getList(page, perPage, {
+			...rest,
+			filter,
+		})
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
 		return handlePocketBaseError(error, 'EquipmentService.getEquipmentList')
 	}
 }
 
 /**
- * Get all equipment for an organization
+ * Get all equipment for an organization with security check
  */
 export async function getOrganizationEquipment(
 	organizationId: string
 ): Promise<Equipment[]> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
 	try {
+		// Security check
+		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Apply organization filter
+		const filter = `organization="${organizationId}"`
+
 		return await pb.collection('equipment').getFullList({
-			filter: `organization="${organizationId}"`,
+			filter,
 			sort: 'name',
 		})
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
 		return handlePocketBaseError(
 			error,
 			'EquipmentService.getOrganizationEquipment'
@@ -83,55 +142,93 @@ export async function getOrganizationEquipment(
 }
 
 /**
- * Create a new equipment item
+ * Create a new equipment item with permission check
  */
 export async function createEquipment(
-	data: Partial<Equipment>
+	organizationId: string,
+	data: Omit<Partial<Equipment>, 'organization'>
 ): Promise<Equipment> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
 	try {
-		return await pb.collection('equipment').create(data)
+		// Security check - requires WRITE permission
+		const { user } = await validateOrganizationAccess(
+			organizationId,
+			PermissionLevel.WRITE
+		)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Ensure organization ID is set and matches the authenticated user's org
+		return await pb.collection('equipment').create({
+			...data,
+			organization: organizationId, // Force the correct organization ID
+		})
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
 		return handlePocketBaseError(error, 'EquipmentService.createEquipment')
 	}
 }
 
 /**
- * Update an equipment item
+ * Update an equipment item with permission and ownership checks
  */
 export async function updateEquipment(
 	id: string,
-	data: Partial<Equipment>
+	data: Omit<Partial<Equipment>, 'organization' | 'id'>
 ): Promise<Equipment> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
 	try {
-		return await pb.collection('equipment').update(id, data)
+		// Security check - validates organization and requires WRITE permission
+		await validateResourceAccess(
+			ResourceType.EQUIPMENT,
+			id,
+			PermissionLevel.WRITE
+		)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Never allow changing the organization
+		const sanitizedData = { ...data }
+		delete sanitizedData.organization
+
+		return await pb.collection('equipment').update(id, sanitizedData)
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
 		return handlePocketBaseError(error, 'EquipmentService.updateEquipment')
 	}
 }
 
 /**
- * Delete an equipment item
+ * Delete an equipment item with permission check
  */
 export async function deleteEquipment(id: string): Promise<boolean> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
 	try {
+		// Security check - requires ADMIN permission for deletion
+		await validateResourceAccess(
+			ResourceType.EQUIPMENT,
+			id,
+			PermissionLevel.ADMIN
+		)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
 		await pb.collection('equipment').delete(id)
 		return true
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
 		return handlePocketBaseError(error, 'EquipmentService.deleteEquipment')
 	}
 }
@@ -142,17 +239,33 @@ export async function deleteEquipment(id: string): Promise<boolean> {
 export async function getChildEquipment(
 	parentId: string
 ): Promise<Equipment[]> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
 	try {
+		// Security check - validates parent equipment access
+		const { organizationId } = await validateResourceAccess(
+			ResourceType.EQUIPMENT,
+			parentId,
+			PermissionLevel.READ
+		)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Apply organization filter for security
+		const filter = createOrganizationFilter(
+			organizationId,
+			`parentEquipment="${parentId}"`
+		)
+
 		return await pb.collection('equipment').getFullList({
-			filter: `parentEquipment="${parentId}"`,
+			filter,
 			sort: 'name',
 		})
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
 		return handlePocketBaseError(error, 'EquipmentService.getChildEquipment')
 	}
 }
@@ -173,35 +286,44 @@ export async function generateUniqueCode(): Promise<string> {
 export async function getEquipmentCount(
 	organizationId: string
 ): Promise<number> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
 	try {
+		// Security check
+		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
 		const result = await pb.collection('equipment').getList(1, 1, {
-			filter: `organization="${organizationId}"`,
+			filter: `organization=${organizationId}`,
 			skipTotal: false,
 		})
 		return result.totalItems
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
 		return handlePocketBaseError(error, 'EquipmentService.getEquipmentCount')
 	}
 }
 
 /**
- * Search equipment by name or tag
+ * Search equipment by name or tag within organization
  */
 export async function searchEquipment(
 	organizationId: string,
 	query: string
 ): Promise<Equipment[]> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
 	try {
+		// Security check
+		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
 		return await pb.collection('equipment').getFullList({
 			filter: pb.filter(
 				'organization = {:orgId} && (name ~ {:query} || tags ~ {:query} || qrNfcCode = {:query})',
@@ -213,6 +335,9 @@ export async function searchEquipment(
 			sort: 'name',
 		})
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
 		return handlePocketBaseError(error, 'EquipmentService.searchEquipment')
 	}
 }

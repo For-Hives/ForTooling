@@ -1,217 +1,445 @@
-'use server';
+'use server'
 
-import { getPocketBase, handlePocketBaseError } from './baseService';
-import { Assignment, ListOptions, ListResult } from './types';
+import {
+	getPocketBase,
+	handlePocketBaseError,
+} from '@/app/actions/services/pocketbase/baseService'
+import {
+	validateOrganizationAccess,
+	validateResourceAccess,
+	createOrganizationFilter,
+	ResourceType,
+	PermissionLevel,
+	SecurityError,
+} from '@/app/actions/services/pocketbase/securityUtils'
+import { Assignment, ListOptions, ListResult } from '@/types/types_pocketbase'
 
 /**
- * Get a single assignment by ID
+ * Get a single assignment by ID with security validation
  */
 export async function getAssignment(id: string): Promise<Assignment> {
-  const pb = await getPocketBase();
-  if (!pb) {
-    throw new Error('Failed to connect to PocketBase');
-  }
+	try {
+		// Security check - validates user has access to this resource
+		await validateResourceAccess(
+			ResourceType.ASSIGNMENT,
+			id,
+			PermissionLevel.READ
+		)
 
-  try {
-    return await pb.collection('assignments').getOne(id);
-  } catch (error) {
-    return handlePocketBaseError(error, 'AssignmentService.getAssignment');
-  }
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		return await pb.collection('assignments').getOne(id)
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error // Re-throw security errors
+		}
+		return handlePocketBaseError(error, 'AssignmentService.getAssignment')
+	}
 }
 
 /**
- * Get assignments list with pagination
+ * Get assignments list with pagination and security checks
  */
-export async function getAssignmentsList(options: ListOptions = {}): Promise<ListResult<Assignment>> {
-  const pb = await getPocketBase();
-  if (!pb) {
-    throw new Error('Failed to connect to PocketBase');
-  }
+export async function getAssignmentsList(
+	organizationId: string,
+	options: ListOptions = {}
+): Promise<ListResult<Assignment>> {
+	try {
+		// Security check
+		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
 
-  try {
-    const { page = 1, perPage = 30, ...rest } = options;
-    return await pb.collection('assignments').getList(page, perPage, rest);
-  } catch (error) {
-    return handlePocketBaseError(error, 'AssignmentService.getAssignmentsList');
-  }
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		const {
+			filter: additionalFilter,
+			page = 1,
+			perPage = 30,
+			...rest
+		} = options
+
+		// Apply organization filter to ensure data isolation
+		const filter = createOrganizationFilter(organizationId, additionalFilter)
+
+		return await pb.collection('assignments').getList(page, perPage, {
+			...rest,
+			filter,
+		})
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(error, 'AssignmentService.getAssignmentsList')
+	}
 }
 
 /**
- * Get active assignments for an organization
+ * Get active assignments for an organization with security checks
  * Active assignments have startDate ≤ current date and no endDate or endDate ≥ current date
  */
-export async function getActiveAssignments(organizationId: string): Promise<Assignment[]> {
-  const pb = await getPocketBase();
-  if (!pb) {
-    throw new Error('Failed to connect to PocketBase');
-  }
+export async function getActiveAssignments(
+	organizationId: string
+): Promise<Assignment[]> {
+	try {
+		// Security check
+		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
 
-  const now = new Date().toISOString();
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
 
-  try {
-    return await pb.collection('assignments').getFullList({
-      expand: 'equipment,assignedToUser,assignedToProject',
-      filter: pb.filter(
-        'organization = {:orgId} && startDate <= {:now} && (endDate = "" || endDate >= {:now})',
-        { now, orgId: organizationId }
-      ),
-      sort: '-created',
-    });
-  } catch (error) {
-    return handlePocketBaseError(error, 'AssignmentService.getActiveAssignments');
-  }
+		const now = new Date().toISOString()
+
+		return await pb.collection('assignments').getFullList({
+			expand: 'equipment,assignedToUser,assignedToProject',
+			filter: pb.filter(
+				'organization = {:orgId} && startDate <= {:now} && (endDate = "" || endDate >= {:now})',
+				{ now, orgId: organizationId }
+			),
+			sort: '-created',
+		})
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(
+			error,
+			'AssignmentService.getActiveAssignments'
+		)
+	}
 }
 
 /**
- * Get current assignment for a specific equipment
+ * Get current assignment for a specific equipment with security checks
  */
-export async function getCurrentEquipmentAssignment(equipmentId: string): Promise<Assignment | null> {
-  const pb = await getPocketBase();
-  if (!pb) {
-    throw new Error('Failed to connect to PocketBase');
-  }
+export async function getCurrentEquipmentAssignment(
+	equipmentId: string
+): Promise<Assignment | null> {
+	try {
+		// Security check - validates access to the equipment
+		const { organizationId } = await validateResourceAccess(
+			ResourceType.EQUIPMENT,
+			equipmentId,
+			PermissionLevel.READ
+		)
 
-  const now = new Date().toISOString();
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
 
-  try {
-    const assignments = await pb.collection('assignments').getList(1, 1, {
-      expand: 'equipment,assignedToUser,assignedToProject',
-      filter: pb.filter(
-        'equipment = {:equipId} && startDate <= {:now} && (endDate = "" || endDate >= {:now})',
-        { equipId: equipmentId, now }
-      ),
-      sort: '-created',
-    });
+		const now = new Date().toISOString()
 
-    return assignments.items.length > 0 ? assignments.items[0] : null;
-  } catch (error) {
-    return handlePocketBaseError(error, 'AssignmentService.getCurrentEquipmentAssignment');
-  }
+		// Include organization check for extra security
+		const assignments = await pb.collection('assignments').getList(1, 1, {
+			expand: 'equipment,assignedToUser,assignedToProject',
+			filter: pb.filter(
+				'organization = {:orgId} && equipment = {:equipId} && startDate <= {:now} && (endDate = "" || endDate >= {:now})',
+				{ equipId: equipmentId, now, orgId: organizationId }
+			),
+			sort: '-created',
+		})
+
+		return assignments.items.length > 0 ? assignments.items[0] : null
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(
+			error,
+			'AssignmentService.getCurrentEquipmentAssignment'
+		)
+	}
 }
 
 /**
- * Get assignments for a user
+ * Get assignments for a user with security checks
  */
-export async function getUserAssignments(userId: string): Promise<Assignment[]> {
-  const pb = await getPocketBase();
-  if (!pb) {
-    throw new Error('Failed to connect to PocketBase');
-  }
+export async function getUserAssignments(
+	userId: string
+): Promise<Assignment[]> {
+	try {
+		// Security check - validates access to the user
+		const { organizationId } = await validateResourceAccess(
+			ResourceType.USER,
+			userId,
+			PermissionLevel.READ
+		)
 
-  try {
-    return await pb.collection('assignments').getFullList({
-      expand: 'equipment,assignedToProject',
-      filter: `assignedToUser="${userId}"`,
-      sort: '-created',
-    });
-  } catch (error) {
-    return handlePocketBaseError(error, 'AssignmentService.getUserAssignments');
-  }
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Include organization filter for security
+		return await pb.collection('assignments').getFullList({
+			expand: 'equipment,assignedToProject',
+			filter: createOrganizationFilter(
+				organizationId,
+				`assignedToUser="${userId}"`
+			),
+			sort: '-created',
+		})
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(error, 'AssignmentService.getUserAssignments')
+	}
 }
 
 /**
- * Get assignments for a project
+ * Get assignments for a project with security checks
  */
-export async function getProjectAssignments(projectId: string): Promise<Assignment[]> {
-  const pb = await getPocketBase();
-  if (!pb) {
-    throw new Error('Failed to connect to PocketBase');
-  }
+export async function getProjectAssignments(
+	projectId: string
+): Promise<Assignment[]> {
+	try {
+		// Security check - validates access to the project
+		const { organizationId } = await validateResourceAccess(
+			ResourceType.PROJECT,
+			projectId,
+			PermissionLevel.READ
+		)
 
-  try {
-    return await pb.collection('assignments').getFullList({
-      expand: 'equipment,assignedToUser',
-      filter: `assignedToProject="${projectId}"`,
-      sort: '-created',
-    });
-  } catch (error) {
-    return handlePocketBaseError(error, 'AssignmentService.getProjectAssignments');
-  }
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Include organization filter for security
+		return await pb.collection('assignments').getFullList({
+			expand: 'equipment,assignedToUser',
+			filter: createOrganizationFilter(
+				organizationId,
+				`assignedToProject="${projectId}"`
+			),
+			sort: '-created',
+		})
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(
+			error,
+			'AssignmentService.getProjectAssignments'
+		)
+	}
 }
 
 /**
- * Create a new assignment
+ * Create a new assignment with security checks
  */
-export async function createAssignment(data: Partial<Assignment>): Promise<Assignment> {
-  const pb = await getPocketBase();
-  if (!pb) {
-    throw new Error('Failed to connect to PocketBase');
-  }
+export async function createAssignment(
+	organizationId: string,
+	data: Omit<Partial<Assignment>, 'organization'>
+): Promise<Assignment> {
+	try {
+		// Security check - requires WRITE permission
+		const { user } = await validateOrganizationAccess(
+			organizationId,
+			PermissionLevel.WRITE
+		)
 
-  try {
-    return await pb.collection('assignments').create(data);
-  } catch (error) {
-    return handlePocketBaseError(error, 'AssignmentService.createAssignment');
-  }
+		// If equipment is provided, verify access to it
+		if (data.equipment) {
+			await validateResourceAccess(
+				ResourceType.EQUIPMENT,
+				data.equipment,
+				PermissionLevel.READ
+			)
+		}
+
+		// If assignedToUser is provided, verify access to that user
+		if (data.assignedToUser) {
+			await validateResourceAccess(
+				ResourceType.USER,
+				data.assignedToUser,
+				PermissionLevel.READ
+			)
+		}
+
+		// If assignedToProject is provided, verify access to that project
+		if (data.assignedToProject) {
+			await validateResourceAccess(
+				ResourceType.PROJECT,
+				data.assignedToProject,
+				PermissionLevel.READ
+			)
+		}
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Ensure organization ID is set correctly
+		return await pb.collection('assignments').create({
+			...data,
+			organization: organizationId, // Force the correct organization ID
+		})
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(error, 'AssignmentService.createAssignment')
+	}
 }
 
 /**
- * Update an assignment
+ * Update an assignment with security checks
  */
-export async function updateAssignment(id: string, data: Partial<Assignment>): Promise<Assignment> {
-  const pb = await getPocketBase();
-  if (!pb) {
-    throw new Error('Failed to connect to PocketBase');
-  }
+export async function updateAssignment(
+	id: string,
+	data: Omit<Partial<Assignment>, 'organization' | 'id'>
+): Promise<Assignment> {
+	try {
+		// Security check - requires WRITE permission for the assignment
+		const { organizationId } = await validateResourceAccess(
+			ResourceType.ASSIGNMENT,
+			id,
+			PermissionLevel.WRITE
+		)
 
-  try {
-    return await pb.collection('assignments').update(id, data);
-  } catch (error) {
-    return handlePocketBaseError(error, 'AssignmentService.updateAssignment');
-  }
+		// Additional validations for related resources
+		if (data.equipment) {
+			await validateResourceAccess(
+				ResourceType.EQUIPMENT,
+				data.equipment,
+				PermissionLevel.READ
+			)
+		}
+
+		if (data.assignedToUser) {
+			await validateResourceAccess(
+				ResourceType.USER,
+				data.assignedToUser,
+				PermissionLevel.READ
+			)
+		}
+
+		if (data.assignedToProject) {
+			await validateResourceAccess(
+				ResourceType.PROJECT,
+				data.assignedToProject,
+				PermissionLevel.READ
+			)
+		}
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Never allow changing the organization
+		const sanitizedData = { ...data }
+		delete (sanitizedData as any).organization
+
+		return await pb.collection('assignments').update(id, sanitizedData)
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(error, 'AssignmentService.updateAssignment')
+	}
 }
 
 /**
- * Delete an assignment
+ * Delete an assignment with security checks
  */
 export async function deleteAssignment(id: string): Promise<boolean> {
-  const pb = await getPocketBase();
-  if (!pb) {
-    throw new Error('Failed to connect to PocketBase');
-  }
+	try {
+		// Security check - requires WRITE permission
+		await validateResourceAccess(
+			ResourceType.ASSIGNMENT,
+			id,
+			PermissionLevel.WRITE
+		)
 
-  try {
-    await pb.collection('assignments').delete(id);
-    return true;
-  } catch (error) {
-    return handlePocketBaseError(error, 'AssignmentService.deleteAssignment');
-  }
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		await pb.collection('assignments').delete(id)
+		return true
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(error, 'AssignmentService.deleteAssignment')
+	}
 }
 
 /**
- * Complete an assignment by setting its end date to now
+ * Complete an assignment by setting its end date to now with security checks
  */
 export async function completeAssignment(id: string): Promise<Assignment> {
-  const pb = await getPocketBase();
-  if (!pb) {
-    throw new Error('Failed to connect to PocketBase');
-  }
+	try {
+		// Security check - requires WRITE permission
+		await validateResourceAccess(
+			ResourceType.ASSIGNMENT,
+			id,
+			PermissionLevel.WRITE
+		)
 
-  try {
-    return await pb.collection('assignments').update(id, {
-      endDate: new Date().toISOString(),
-    });
-  } catch (error) {
-    return handlePocketBaseError(error, 'AssignmentService.completeAssignment');
-  }
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		return await pb.collection('assignments').update(id, {
+			endDate: new Date().toISOString(),
+		})
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(error, 'AssignmentService.completeAssignment')
+	}
 }
 
 /**
- * Get assignment history for an equipment
+ * Get assignment history for an equipment with security checks
  */
-export async function getEquipmentAssignmentHistory(equipmentId: string): Promise<Assignment[]> {
-  const pb = await getPocketBase();
-  if (!pb) {
-    throw new Error('Failed to connect to PocketBase');
-  }
+export async function getEquipmentAssignmentHistory(
+	equipmentId: string
+): Promise<Assignment[]> {
+	try {
+		// Security check - validates access to the equipment
+		const { organizationId } = await validateResourceAccess(
+			ResourceType.EQUIPMENT,
+			equipmentId,
+			PermissionLevel.READ
+		)
 
-  try {
-    return await pb.collection('assignments').getFullList({
-      expand: 'assignedToUser,assignedToProject',
-      filter: `equipment=`${equipmentId}``,
-      sort: '-startDate',
-    });
-  } catch (error) {
-    return handlePocketBaseError(error, 'AssignmentService.getEquipmentAssignmentHistory');
-  }
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Include organization filter for security
+		return await pb.collection('assignments').getFullList({
+			expand: 'assignedToUser,assignedToProject',
+			filter: createOrganizationFilter(
+				organizationId,
+				`equipment=`${equipmentId}``
+			),
+			sort: '-startDate',
+		})
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(
+			error,
+			'AssignmentService.getEquipmentAssignmentHistory'
+		)
+	}
 }

@@ -1,7 +1,10 @@
 'use server'
 
-import { getPocketBase, handlePocketBaseError } from './baseService'
-import { ListOptions, ListResult, Organization } from './types'
+import {
+	getPocketBase,
+	handlePocketBaseError,
+} from '@/app/actions/services/pocketbase/baseService'
+import { Organization, ListOptions, ListResult } from '@/types/types_pocketbase'
 
 /**
  * Get a single organization by ID

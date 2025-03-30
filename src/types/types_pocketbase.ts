@@ -51,7 +51,10 @@ export interface User extends BaseModel {
 	clerkId?: string
 
 	// Expanded relations
-	expand?: Record<string, unknown>
+	// the user can be part of multiple organizations
+	expand?: {
+		organizationId?: Organization[]
+	}
 }
 
 /**
@@ -118,7 +121,7 @@ export interface Image extends BaseModel {
 	title: string | null
 	alt: string | null
 	caption: string | null
-	image: string | null 
+	image: string | null
 
 	// Expanded relations
 	expand?: Record<string, unknown>
