@@ -1,28 +1,64 @@
 'use server'
 
-import { getPocketBase, handlePocketBaseError } from './baseService'
-import { ListOptions, ListResult, User } from './types'
+import {
+	getPocketBase,
+	handlePocketBaseError,
+} from '@/app/actions/services/pocketbase/baseService'
+import {
+	validateCurrentUser,
+	validateOrganizationAccess,
+	validateResourceAccess,
+	createOrganizationFilter,
+	ResourceType,
+	PermissionLevel,
+	SecurityError,
+} from '@/app/actions/services/pocketbase/securityUtils'
+import { ListOptions, ListResult, User } from '@/types/types_pocketbase'
 
 /**
- * Get a single user by ID
+ * Get a single user by ID with security validation
  */
 export async function getUser(id: string): Promise<User> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
 	try {
+		// Security check - validates user has access to this resource
+		await validateResourceAccess(ResourceType.USER, id, PermissionLevel.READ)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
 		return await pb.collection('users').getOne(id)
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error // Re-throw security errors
+		}
 		return handlePocketBaseError(error, 'UserService.getUser')
 	}
 }
 
 /**
- * Get a user by Clerk ID
+ * Get current authenticated user profile
+ */
+export async function getCurrentUser(): Promise<User> {
+	try {
+		// This function automatically validates the current user
+		return await validateCurrentUser()
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(error, 'UserService.getCurrentUser')
+	}
+}
+
+/**
+ * Get a user by Clerk ID - typically used during authentication
  */
 export async function getUserByClerkId(clerkId: string): Promise<User> {
+	// This is primarily used during authentication flows where
+	// standard security checks aren't possible yet.
+	// However, requests should still come from server-side code only.
 	const pb = await getPocketBase()
 	if (!pb) {
 		throw new Error('Failed to connect to PocketBase')
@@ -36,111 +72,192 @@ export async function getUserByClerkId(clerkId: string): Promise<User> {
 }
 
 /**
- * Get users list with pagination
+ * Get users list with pagination and security checks
  */
 export async function getUsersList(
+	organizationId: string,
 	options: ListOptions = {}
 ): Promise<ListResult<User>> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
 	try {
-		const { page = 1, perPage = 30, ...rest } = options
-		return await pb.collection('users').getList(page, perPage, rest)
+		// Security check - needs at least READ permission
+		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		const {
+			filter: additionalFilter,
+			page = 1,
+			perPage = 30,
+			...rest
+		} = options
+
+		// Apply organization filter to ensure data isolation
+		const filter = createOrganizationFilter(organizationId, additionalFilter)
+
+		return await pb.collection('users').getList(page, perPage, {
+			...rest,
+			filter,
+		})
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
 		return handlePocketBaseError(error, 'UserService.getUsersList')
 	}
 }
 
 /**
- * Get all users for an organization
+ * Get all users for an organization with security checks
  */
 export async function getUsersByOrganization(
 	organizationId: string
 ): Promise<User[]> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
 	try {
+		// Security check
+		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Apply organization filter
 		return await pb.collection('users').getFullList({
 			filter: `organization="${organizationId}"`,
 			sort: 'name',
 		})
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
 		return handlePocketBaseError(error, 'UserService.getUsersByOrganization')
 	}
 }
 
 /**
- * Create a new user
+ * Create a new user with security checks
+ * This is typically controlled access for admins only
  */
-export async function createUser(data: Partial<User>): Promise<User> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
+export async function createUser(
+	organizationId: string,
+	data: Omit<Partial<User>, 'organization'>
+): Promise<User> {
 	try {
-		return await pb.collection('users').create(data)
+		// Security check - requires ADMIN permission to create users
+		await validateOrganizationAccess(organizationId, PermissionLevel.ADMIN)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Ensure organization ID is set correctly
+		return await pb.collection('users').create({
+			...data,
+			organization: organizationId, // Force the correct organization ID
+		})
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
 		return handlePocketBaseError(error, 'UserService.createUser')
 	}
 }
 
 /**
- * Update a user
+ * Update a user with security checks
  */
 export async function updateUser(
 	id: string,
-	data: Partial<User>
+	data: Omit<Partial<User>, 'organization' | 'id'>
 ): Promise<User> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
 	try {
-		return await pb.collection('users').update(id, data)
+		// Get current authenticated user
+		const currentUser = await validateCurrentUser()
+
+		// Different permission checks based on who is being updated
+		if (id !== currentUser.id) {
+			// Updating someone else requires ADMIN permission
+			await validateResourceAccess(ResourceType.USER, id, PermissionLevel.ADMIN)
+		} else {
+			// Users can update their own basic info
+			// But for role changes, they'd still need admin rights
+			if (data.role || data.isAdmin !== undefined) {
+				// If trying to change role or admin status, require admin permission
+				await validateOrganizationAccess(
+					currentUser.organization,
+					PermissionLevel.ADMIN
+				)
+			}
+		}
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Security: never allow changing certain fields
+		const sanitizedData = { ...data }
+		delete (sanitizedData as any).organization // Don't allow org changes
+		delete sanitizedData.clerkId // Don't allow changing Clerk binding
+
+		return await pb.collection('users').update(id, sanitizedData)
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
 		return handlePocketBaseError(error, 'UserService.updateUser')
 	}
 }
 
 /**
- * Delete a user
+ * Delete a user with admin permission check
  */
 export async function deleteUser(id: string): Promise<boolean> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
 	try {
+		// Security check - requires ADMIN permission for user deletion
+		await validateResourceAccess(ResourceType.USER, id, PermissionLevel.ADMIN)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
 		await pb.collection('users').delete(id)
 		return true
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
 		return handlePocketBaseError(error, 'UserService.deleteUser')
 	}
 }
 
 /**
  * Update user's last login time
+ * This is typically called during authentication flows
  */
 export async function updateUserLastLogin(id: string): Promise<User> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
 	try {
+		// Since this is called during authentication,
+		// we'll just verify the user exists rather than permissions
+		const user = await validateCurrentUser(id)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
 		return await pb.collection('users').update(id, {
 			lastLogin: new Date().toISOString(),
 		})
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
 		return handlePocketBaseError(error, 'UserService.updateUserLastLogin')
 	}
 }
@@ -149,18 +266,59 @@ export async function updateUserLastLogin(id: string): Promise<User> {
  * Get the count of users in an organization
  */
 export async function getUserCount(organizationId: string): Promise<number> {
-	const pb = await getPocketBase()
-	if (!pb) {
-		throw new Error('Failed to connect to PocketBase')
-	}
-
 	try {
+		// Security check
+		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
 		const result = await pb.collection('users').getList(1, 1, {
-			filter: 'organization=' + `${organizationId}`,
+			filter: `organization="${organizationId}"`,
 			skipTotal: false,
 		})
+
 		return result.totalItems
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
 		return handlePocketBaseError(error, 'UserService.getUserCount')
+	}
+}
+
+/**
+ * Search for users in the organization
+ */
+export async function searchUsers(
+	organizationId: string,
+	query: string
+): Promise<User[]> {
+	try {
+		// Security check
+		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		return await pb.collection('users').getFullList({
+			filter: pb.filter(
+				'organization = {:orgId} && (name ~ {:query} || email ~ {:query})',
+				{
+					orgId: organizationId,
+					query,
+				}
+			),
+			sort: 'name',
+		})
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(error, 'UserService.searchUsers')
 	}
 }

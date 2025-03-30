@@ -146,6 +146,7 @@ export async function getCurrentEquipmentAssignment(
 			sort: '-created',
 		})
 
+		// todo: fix type error
 		return assignments.items.length > 0 ? assignments.items[0] : null
 	} catch (error) {
 		if (error instanceof SecurityError) {
@@ -429,7 +430,7 @@ export async function getEquipmentAssignmentHistory(
 			expand: 'assignedToUser,assignedToProject',
 			filter: createOrganizationFilter(
 				organizationId,
-				`equipment=`${equipmentId}``
+				`equipment=${equipmentId}`
 			),
 			sort: '-startDate',
 		})
