@@ -8,7 +8,7 @@ import {
 	validateOrganizationAccess,
 	PermissionLevel,
 	SecurityError,
-} from '@/app/actions/services/pocketbase/securityUtils'
+} from '@/app/actions/services/securyUtilsTools'
 import { ListOptions, ListResult, AppUser } from '@/types/types_pocketbase'
 
 /**

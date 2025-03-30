@@ -1,3 +1,5 @@
+'use server'
+
 import { secureCache } from '@/app/actions/services/clerk-sync/cacheService'
 import {
 	syncUserToPocketBase,

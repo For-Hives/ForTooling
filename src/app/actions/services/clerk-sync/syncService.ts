@@ -1,5 +1,15 @@
+import {
+	getByClerkId,
+	_createAppUser,
+	_updateAppUser,
+} from '@/app/actions/services/pocketbase/app-user/internal'
 // src/app/actions/services/clerk-sync/syncService.ts
 import { getPocketBase } from '@/app/actions/services/pocketbase/baseService'
+import {
+	getOrganizationByClerkId,
+	_createOrganization,
+	_updateOrganization,
+} from '@/app/actions/services/pocketbase/organization/internal'
 import { User, Organization } from '@/types/types_pocketbase'
 import { clerkClient } from '@clerk/nextjs/server'
 
@@ -64,59 +74,50 @@ type ClerkMembershipData = {
  * @param userData The user data from Clerk webhook or API
  * @returns The created or updated user
  */
-export async function syncUserToPocketBase(
-	userData: ClerkUserData
-): Promise<User> {
+export async function syncUserToPocketBase(user: User): Promise<AppUser> {
 	try {
-		const clerkId = userData.id
+		const {
+			emailAddresses,
+			firstName,
+			id: clerkId,
+			lastName,
+			...otherUserData
+		} = user
+
 		if (!clerkId) {
-			throw new Error('Missing Clerk ID in user data')
+			throw new Error('Clerk user ID is required for syncing')
 		}
 
-		const pb = await getPocketBase()
-		if (!pb) {
-			throw new Error('Failed to connect to PocketBase')
+		// Get primary email
+		const primaryEmail = emailAddresses.find(
+			email => email.id === user.primaryEmailAddressId
+		)
+		if (!primaryEmail) {
+			throw new Error('User must have a primary email address')
 		}
 
-		// Try to find the existing user first
-		let pbUser: User | null = null
-		try {
-			pbUser = await pb
-				.collection('users')
-				.getFirstListItem(`clerkId="${clerkId}"`)
-		} catch (error) {
-			// User doesn't exist yet, we'll create a new one
-			pbUser = null
-			console.error('Error syncing user to PocketBase:', error)
-		}
+		// Try to find existing AppUser
+		const existingUser = await getByClerkId(clerkId)
 
-		// Prepare the user data
+		// Prepare user data
 		const userDataToSync = {
-			avatar: userData.image_url || null,
-			canLogin: true,
-			clerkId: clerkId,
-			email: userData.email_addresses?.[0]?.email_address || '',
-			emailVisibility: true,
-			isAdmin: userData.public_metadata?.isAdmin || false,
-			lastLogin: new Date().toISOString(),
+			clerkId,
+			email: primaryEmail.emailAddress,
 			name:
-				`${userData.first_name || ''} ${userData.last_name || ''}`.trim() ||
-				userData.username ||
-				'User',
-			phone: userData.phone_numbers?.[0]?.phone_number || null,
-			role: userData.public_metadata?.role || 'user',
-			verified:
-				userData.email_addresses?.[0]?.verification?.status === 'verified' ||
-				false,
+				firstName && lastName
+					? `${firstName} ${lastName}`
+					: user.username || 'Unknown',
+			verified: primaryEmail.verification?.status === 'verified',
+			// Add other fields as needed
 		}
 
-		// Update or create the user
-		if (pbUser) {
-			console.info(`Updating existing user ${clerkId} in PocketBase`)
-			return await pb.collection('users').update(pbUser.id, userDataToSync)
+		// Update or create
+		if (existingUser) {
+			console.info(`Updating existing AppUser ${clerkId} in PocketBase`)
+			return await _updateAppUser(existingUser.id, userDataToSync)
 		} else {
-			console.info(`Creating new user ${clerkId} in PocketBase`)
-			return await pb.collection('users').create(userDataToSync)
+			console.info(`Creating new AppUser ${clerkId} in PocketBase`)
+			return await _createAppUser(userDataToSync)
 		}
 	} catch (error) {
 		console.error('Error syncing user to PocketBase:', error)
@@ -130,50 +131,29 @@ export async function syncUserToPocketBase(
  * @returns The created or updated organization
  */
 export async function syncOrganizationToPocketBase(
-	orgData: ClerkOrganizationData
+	organization: ClerkOrganization
 ): Promise<Organization> {
 	try {
-		const clerkId = orgData.id
+		const { id: clerkId, name, ...otherOrgData } = organization
+
 		if (!clerkId) {
-			throw new Error('Missing Clerk ID in organization data')
+			throw new Error('Clerk organization ID is required for syncing')
 		}
 
-		const pb = await getPocketBase()
-		if (!pb) {
-			throw new Error('Failed to connect to PocketBase')
-		}
-
-		// Try to find the existing organization first
-		let pbOrg: Organization | null = null
-		try {
-			pbOrg = await pb
-				.collection('organizations')
-				.getFirstListItem(`clerkId="${clerkId}"`)
-		} catch (error) {
-			// Organization doesn't exist yet, we'll create a new one
-			pbOrg = null
-			console.error('Error syncing organization to PocketBase:', error)
-		}
-
-		// Prepare the organization data
+		// Prepare organization data
 		const orgDataToSync = {
-			address: orgData.public_metadata?.address || null,
-			clerkId: clerkId,
-			email: orgData.email_address || null,
-			name: orgData.name || 'Organization',
-			phone: orgData.phone_number || null,
-			settings: orgData.public_metadata?.settings || {},
+			clerkId,
+			name: name || 'Unnamed Organization',
+			// Add other fields as needed
 		}
 
-		// Update or create the organization
-		if (pbOrg) {
-			console.info(`Updating existing organization ${clerkId} in PocketBase`)
-			return await pb
-				.collection('organizations')
-				.update(pbOrg.id, orgDataToSync)
+		// Update or create
+		if (existingOrg) {
+			console.info(`Updating existing Organization ${clerkId} in PocketBase`)
+			return await _updateOrganization(existingOrg.id, orgDataToSync)
 		} else {
-			console.info(`Creating new organization ${clerkId} in PocketBase`)
-			return await pb.collection('organizations').create(orgDataToSync)
+			console.info(`Creating new Organization ${clerkId} in PocketBase`)
+			return await _createOrganization(orgDataToSync)
 		}
 	} catch (error) {
 		console.error('Error syncing organization to PocketBase:', error)

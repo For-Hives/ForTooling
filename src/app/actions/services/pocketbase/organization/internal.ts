@@ -25,12 +25,20 @@ export async function _createOrganization(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		return await pb.collection('organizations').create(data)
+		console.log('Creating new Organization with data:', data)
+
+		// Make sure clerkId is included
+		if (!data.clerkId) {
+			throw new Error('clerkId is required when creating a new Organization')
+		}
+
+		const newOrg = await pb.collection('Organization').create(data)
+		console.log('New Organization created:', newOrg)
+
+		return newOrg
 	} catch (error) {
-		return handlePocketBaseError(
-			error,
-			'OrganizationService._createOrganization'
-		)
+		console.error('Error creating organization:', error)
+		throw error
 	}
 }
 
@@ -49,12 +57,15 @@ export async function _updateOrganization(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		return await pb.collection('organizations').update(id, data)
+		console.log(`Updating Organization ${id} with data:`, data)
+
+		const updatedOrg = await pb.collection('Organization').update(id, data)
+		console.log('Organization updated:', updatedOrg)
+
+		return updatedOrg
 	} catch (error) {
-		return handlePocketBaseError(
-			error,
-			'OrganizationService._updateOrganization'
-		)
+		console.error('Error updating organization:', error)
+		throw error
 	}
 }
 
@@ -82,7 +93,7 @@ export async function _deleteOrganization(id: string): Promise<boolean> {
  * @param {string} clerkId - Clerk organization ID
  * @returns {Promise<Organization | null>} Organization record or null if not found
  */
-export async function getByClerkId(
+export async function getOrganizationByClerkId(
 	clerkId: string
 ): Promise<Organization | null> {
 	try {
@@ -91,15 +102,28 @@ export async function getByClerkId(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		const organization = await pb
-			.collection('organizations')
-			.getFirstListItem(`clerkId=${clerkId}`)
-		return organization as Organization
-	} catch (error) {
-		// If organization not found, return null instead of throwing
-		if (error instanceof Error && error.message.includes('404')) {
-			return null
+		console.log(`Searching for Organization with clerkId: ${clerkId}`)
+
+		try {
+			const org = await pb
+				.collection('Organization')
+				.getFirstListItem(`clerkId="${clerkId}"`)
+
+			console.log('Organization found:', org)
+			return org
+		} catch (error) {
+			// Check if this is a "not found" error
+			if (
+				error instanceof Error &&
+				(error.message.includes('404') || error.message.includes('not found'))
+			) {
+				console.log(`No organization found with clerkId: ${clerkId}`)
+				return null
+			}
+			// Otherwise rethrow the error
+			throw error
 		}
+	} catch (error) {
 		console.error('Error fetching organization by clerk ID:', error)
 		return null
 	}
