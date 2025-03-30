@@ -189,20 +189,29 @@ export async function linkUserToOrganization(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
+		console.info(
+			`Linking user ${userId} to organization ${orgId} with role ${role ?? 'member'}`
+		)
+
 		// Find the user in PocketBase by Clerk ID
 		const pbUser = await pb
 			.collection('AppUser')
-			.getFirstListItem(`clerkId="${userId}"`)
+			.getFirstListItem(`clerkId="` + userId + `"`)
 
 		// Find the organization in PocketBase by Clerk ID
 		const pbOrg = await pb
 			.collection('Organization')
-			.getFirstListItem(`clerkId=${orgId}`)
+			.getFirstListItem(`clerkId="` + orgId + `"`)
+
+		console.info(
+			`Found user ${pbUser.id} and organization ${pbOrg.id} in PocketBase`
+		)
 
 		// Update the user with the organization relation
 		await pb.collection('AppUser').update(pbUser.id, {
 			organizations: pbOrg.id,
 		})
+		console.info(`Updated user ${pbUser.id} with organization ${pbOrg.id}`)
 
 		// Update user if they're an admin in the organization
 		if (role === 'admin') {
@@ -210,6 +219,7 @@ export async function linkUserToOrganization(
 				isAdmin: true,
 				role: 'admin',
 			})
+			console.info(`Updated user ${pbUser.id} to admin role`)
 		}
 
 		return true
