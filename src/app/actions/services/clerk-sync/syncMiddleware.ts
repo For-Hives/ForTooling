@@ -2,10 +2,15 @@ import { secureCache } from '@/app/actions/services/clerk-sync/cacheService'
 import {
 	syncUserToPocketBase,
 	syncOrganizationToPocketBase,
+	linkUserToOrganization,
 } from '@/app/actions/services/clerk-sync/syncService'
 import { auth, clerkClient } from '@clerk/nextjs/server'
-// src/app/middlewares/syncMiddleware.ts
 import { NextResponse } from 'next/server'
+
+/**
+ * Type for any data accepted by server actions
+ */
+type ActionData = Record<string, unknown>
 
 /**
  * Middleware function to ensure user and organization data is synced
@@ -16,7 +21,7 @@ import { NextResponse } from 'next/server'
  */
 export async function syncMiddleware(request: Request) {
 	// Only run this middleware for authenticated routes
-	const { orgId, userId } = auth()
+	const { orgId, userId } = await auth()
 
 	if (!userId) {
 		// User is not authenticated, skip this middleware
@@ -73,17 +78,21 @@ export async function ensureUserAndOrgSync(
 
 	// 3. If an organization ID is provided, sync that too
 	if (clerkOrgId) {
-		const clerkOrg =
-			await clerkClientInstance.organizations.getOrganization(clerkOrgId)
+		const clerkOrg = await clerkClientInstance.organizations.getOrganization({
+			organizationId: clerkOrgId,
+		})
 		await syncOrganizationToPocketBase(clerkOrg)
 
 		// 4. Ensure the user-organization relationship exists
-		// This uses data available in the membership endpoints
-		const membership =
-			await clerkClientInstance.organizations.getOrganizationMembership({
+		// This uses data available in the membership EndpointSecretOut
+		const memberships =
+			await clerkClientInstance.organizations.getOrganizationMembershipList({
 				organizationId: clerkOrgId,
-				userId: clerkUserId,
 			})
+
+		const membership = memberships.data.find(
+			m => m.publicUserData?.userId === clerkUserId
+		)
 
 		if (membership) {
 			// Prepare membership data in the format expected by linkUserToOrganization
@@ -111,8 +120,8 @@ export async function ensureUserAndOrgSync(
  * @param handler The server action handler function
  * @returns The wrapped handler with sync check
  */
-export function withSync<T>(handler: (data: any) => Promise<T>) {
-	return async function syncProtectedAction(data: any): Promise<T> {
+export function withSync<T>(handler: (data: ActionData) => Promise<T>) {
+	return async function syncProtectedAction(data: ActionData): Promise<T> {
 		'use server'
 
 		// Get auth context
