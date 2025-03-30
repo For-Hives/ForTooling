@@ -55,6 +55,11 @@ export const handlePocketBaseError = (
 }
 
 /**
+ * Type for record data
+ */
+export type RecordData = Record<string, unknown>
+
+/**
  * Base method for creating records with permission handling
  * @param collection - Collection name
  * @param data - Record data
@@ -62,7 +67,9 @@ export const handlePocketBaseError = (
  */
 export async function createRecord(
 	collection: string,
-	data: any,
+	data: RecordData,
+	// We keep the elevated param for future implementation of permission checks
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	elevated = false
 ) {
 	try {
@@ -89,7 +96,9 @@ export async function createRecord(
 export async function updateRecord(
 	collection: string,
 	id: string,
-	data: any,
+	data: RecordData,
+	// We keep the elevated param for future implementation of permission checks
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	elevated = false
 ) {
 	try {
@@ -115,6 +124,8 @@ export async function updateRecord(
 export async function deleteRecord(
 	collection: string,
 	id: string,
+	// We keep the elevated param for future implementation of permission checks
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	elevated = false
 ) {
 	try {
