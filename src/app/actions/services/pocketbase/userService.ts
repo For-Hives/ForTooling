@@ -124,9 +124,10 @@ export async function getUsersByOrganization(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		// Apply organization filter
+		// Apply organization filter with the correct field name
+		// Since users can belong to multiple organizations, we need to check expand.organizationId
 		return await pb.collection('users').getFullList({
-			filter: `organization="${organizationId}"`,
+			filter: `organizationId.organizationId="${organizationId}"`,
 			sort: 'name',
 		})
 	} catch (error) {
@@ -143,7 +144,19 @@ export async function getUsersByOrganization(
  */
 export async function createUser(
 	organizationId: string,
-	data: Omit<Partial<User>, 'organization'>
+	data: Pick<
+		Partial<User>,
+		| 'name'
+		| 'email'
+		| 'emailVisibility'
+		| 'verified'
+		| 'avatar'
+		| 'phone'
+		| 'role'
+		| 'isAdmin'
+		| 'canLogin'
+		| 'clerkId'
+	>
 ): Promise<User> {
 	try {
 		// Security check - requires ADMIN permission to create users
@@ -154,10 +167,10 @@ export async function createUser(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		// Ensure organization ID is set correctly
+		// Ensure organization ID is set correctly with the proper field name
 		return await pb.collection('users').create({
 			...data,
-			organization: organizationId, // Force the correct organization ID
+			organizationId, // Force the correct organization ID
 		})
 	} catch (error) {
 		if (error instanceof SecurityError) {
@@ -172,7 +185,20 @@ export async function createUser(
  */
 export async function updateUser(
 	id: string,
-	data: Omit<Partial<User>, 'organization' | 'id'>
+	data: Pick<
+		Partial<User>,
+		| 'name'
+		| 'email'
+		| 'emailVisibility'
+		| 'verified'
+		| 'avatar'
+		| 'phone'
+		| 'role'
+		| 'isAdmin'
+		| 'canLogin'
+		| 'lastLogin'
+		| 'clerkId'
+	>
 ): Promise<User> {
 	try {
 		// Get current authenticated user
@@ -187,10 +213,16 @@ export async function updateUser(
 			// But for role changes, they'd still need admin rights
 			if (data.role || data.isAdmin !== undefined) {
 				// If trying to change role or admin status, require admin permission
-				await validateOrganizationAccess(
-					currentUser.organization,
-					PermissionLevel.ADMIN
-				)
+				// Get the user's organization ID - handling possible multiple organizations
+				const userOrgs = currentUser.expand?.organizationId
+
+				if (!userOrgs || !Array.isArray(userOrgs) || userOrgs.length === 0) {
+					throw new SecurityError('User does not belong to any organization')
+				}
+
+				// Use the first organization for permission check
+				const primaryOrgId = userOrgs[0].id
+				await validateOrganizationAccess(primaryOrgId, PermissionLevel.ADMIN)
 			}
 		}
 
@@ -201,8 +233,11 @@ export async function updateUser(
 
 		// Security: never allow changing certain fields
 		const sanitizedData = { ...data }
-		delete (sanitizedData as any).organization // Don't allow org changes
-		delete sanitizedData.clerkId // Don't allow changing Clerk binding
+		// Don't allow org changes or clerk ID changes - use proper type assertion
+		delete (sanitizedData as Record<string, unknown>).organizationId
+		if (sanitizedData['clerkId']) {
+			delete sanitizedData.clerkId
+		}
 
 		return await pb.collection('users').update(id, sanitizedData)
 	} catch (error) {
@@ -246,6 +281,10 @@ export async function updateUserLastLogin(id: string): Promise<User> {
 		// we'll just verify the user exists rather than permissions
 		const user = await validateCurrentUser(id)
 
+		if (!user) {
+			throw new SecurityError('User not found')
+		}
+
 		const pb = await getPocketBase()
 		if (!pb) {
 			throw new Error('Failed to connect to PocketBase')
@@ -275,8 +314,9 @@ export async function getUserCount(organizationId: string): Promise<number> {
 			throw new Error('Failed to connect to PocketBase')
 		}
 
+		// Fixed field name in the filter
 		const result = await pb.collection('users').getList(1, 1, {
-			filter: `organization="${organizationId}"`,
+			filter: `organizationId.organizationId=${organizationId}`,
 			skipTotal: false,
 		})
 
@@ -305,9 +345,10 @@ export async function searchUsers(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
+		// Fixed field name in the filter and handle multi-organization relationship
 		return await pb.collection('users').getFullList({
 			filter: pb.filter(
-				'organization = {:orgId} && (name ~ {:query} || email ~ {:query})',
+				'organizationId.organizationId = {:orgId} && (name ~ {:query} || email ~ {:query})',
 				{
 					orgId: organizationId,
 					query,
