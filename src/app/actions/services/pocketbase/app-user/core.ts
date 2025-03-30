@@ -61,7 +61,7 @@ export async function getCurrentAppUser(): Promise<AppUser> {
 
 		// Find the app_user record with the matching clerk ID
 		return await pb
-			.collection('app_users')
+			.collection('AppUser')
 			.getFirstListItem(`clerkId="${currentUser.clerkId}"`)
 	} catch (error) {
 		if (error instanceof SecurityError) {
@@ -85,7 +85,7 @@ export async function getAppUserByClerkId(clerkId: string): Promise<AppUser> {
 
 	try {
 		return await pb
-			.collection('app_users')
+			.collection('AppUser')
 			.getFirstListItem(`clerkId="${clerkId}"`)
 	} catch (error) {
 		return handlePocketBaseError(error, 'AppUserService.getAppUserByClerkId')

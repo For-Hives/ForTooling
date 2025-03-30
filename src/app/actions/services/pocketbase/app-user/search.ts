@@ -41,7 +41,7 @@ export async function getAppUsersList(
 		// Apply organization filter to ensure data isolation
 		const filter = `organizations ~ "${organizationId}"${additionalFilter ? ` && (${additionalFilter})` : ''}`
 
-		return await pb.collection('app_users').getList(page, perPage, {
+		return await pb.collection('AppUser').getList(page, perPage, {
 			...rest,
 			filter,
 		})
@@ -69,7 +69,7 @@ export async function getAppUsersByOrganization(
 		}
 
 		// Query users with this organization in their organizations relation
-		return await pb.collection('app_users').getFullList({
+		return await pb.collection('AppUser').getFullList({
 			filter: `organizations ~ "${organizationId}"`,
 			sort: 'name',
 		})
@@ -98,7 +98,7 @@ export async function getAppUserCount(organizationId: string): Promise<number> {
 		}
 
 		// Query users with this organization in their organizations relation
-		const result = await pb.collection('app_users').getList(1, 1, {
+		const result = await pb.collection('AppUser').getList(1, 1, {
 			filter: `organizations ~ "${organizationId}"`,
 			skipTotal: false,
 		})
@@ -129,7 +129,7 @@ export async function searchAppUsers(
 		}
 
 		// Query users with search conditions
-		return await pb.collection('app_users').getFullList({
+		return await pb.collection('AppUser').getFullList({
 			filter: pb.filter(
 				'organizations ~ {:orgId} && (name ~ {:query} || email ~ {:query})',
 				{

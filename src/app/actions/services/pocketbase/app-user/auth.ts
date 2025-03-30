@@ -32,7 +32,7 @@ export async function updateAppUserLastLogin(
 		}
 
 		// Update lastLogin timestamp
-		return await pb.collection('app_users').update(appUser.id, {
+		return await pb.collection('AppUser').update(appUser.id, {
 			lastLogin: new Date().toISOString(),
 		})
 	} catch (error) {

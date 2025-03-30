@@ -7,27 +7,24 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function POST(req: NextRequest) {
 	console.log('Received Clerk webhook request')
 
-	// Log the entire request for debugging
-	console.log('req', req)
+	const webhookSecret = process.env.CLERK_WEBHOOK_SECRET_USER
 
-	const webhookSecret = process.env.CLERK_WEBHOOK_SECRET
+	// Verify the webhook
+	const { payload, success } = await verifyClerkWebhook(
+		req.clone(),
+		webhookSecret
+	)
 
-	// Verify the webhook signature
-	const isValid = await verifyClerkWebhook(req, webhookSecret)
-	console.log('isValid', isValid)
-
-	if (!isValid) {
+	if (!success || !payload) {
 		console.error('Invalid webhook signature for user event')
 		return new NextResponse('Unauthorized', { status: 401 })
 	}
 
 	try {
-		// Get the webhook body
-		const body = await req.json()
-		console.log('Webhook body:', JSON.stringify(body, null, 2))
-
 		// Process based on event type
-		const { data, type } = body
+		const { data, type } = payload
+
+		console.log('Webhook verified successfully:', { type })
 
 		if (type.startsWith('user.')) {
 			if (type === 'user.created') {

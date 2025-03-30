@@ -1,16 +1,16 @@
-import * as crypto from 'crypto'
 import { NextRequest } from 'next/server'
+import { Webhook } from 'svix'
 
 /**
- * Validates a webhook signature from Clerk
+ * Validates a webhook signature from Clerk using the official Svix library
  */
 export async function verifyClerkWebhook(
 	req: NextRequest,
 	secret: string | undefined
-): Promise<boolean> {
+): Promise<{ success: boolean; payload?: any }> {
 	if (!secret) {
 		console.error('Missing Clerk webhook secret')
-		return false
+		return { success: false }
 	}
 
 	// Get the signature headers
@@ -20,52 +20,27 @@ export async function verifyClerkWebhook(
 
 	if (!svix_id || !svix_timestamp || !svix_signature) {
 		console.error('Missing Svix headers')
-		return false
+		return { success: false }
 	}
-
-	// Log the headers for debugging
-	console.log('Webhook Headers:', {
-		svix_id,
-		svix_signature,
-		svix_timestamp,
-	})
 
 	// Get the raw body
 	const payload = await req.text()
-	const signaturePayload = `${svix_id}.${svix_timestamp}.${payload}`
 
-	// Clerk signatures are in the format "v1,signature1 v1,signature2"
-	const signatures = svix_signature.split(' ')
+	try {
+		// Create a new Webhook instance with the secret
+		const wh = new Webhook(secret)
 
-	for (const sig of signatures) {
-		// Format is "version,signature"
-		const [version, signature] = sig.split(',')
+		// Verify the webhook payload
+		const event = wh.verify(payload, {
+			'svix-id': svix_id,
+			'svix-signature': svix_signature,
+			'svix-timestamp': svix_timestamp,
+		})
 
-		if (!signature || !version) {
-			continue
-		}
-
-		try {
-			// Create HMAC with the secret
-			const hmac = crypto.createHmac('sha256', secret)
-			hmac.update(signaturePayload)
-			const digest = hmac.digest('base64')
-
-			console.log('Verification attempt:', {
-				computedSignature: digest,
-				expectedSignature: signature,
-				version,
-			})
-
-			// Simple string comparison
-			if (signature === digest) {
-				return true
-			}
-		} catch (error) {
-			console.error('Error in signature verification:', error)
-		}
+		// If we reach here, the verification succeeded
+		return { payload: JSON.parse(payload), success: true }
+	} catch (error) {
+		console.error('Webhook verification error:', error)
+		return { success: false }
 	}
-
-	console.error('No matching signatures found')
-	return false
 }

@@ -1,7 +1,10 @@
 'use server'
 
-import { getPocketBase, handlePocketBaseError } from "@/app/actions/services/pocketbase/baseService"
-import { AppUser } from "@/types/types_pocketbase"
+import {
+	getPocketBase,
+	handlePocketBaseError,
+} from '@/app/actions/services/pocketbase/baseService'
+import { AppUser } from '@/types/types_pocketbase'
 
 /**
  * Internal methods for AppUser management
@@ -24,7 +27,7 @@ export async function _updateAppUser(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		return await pb.collection('app_users').update(id, data)
+		return await pb.collection('AppUser').update(id, data)
 	} catch (error) {
 		return handlePocketBaseError(error, 'AppUserService._updateAppUser')
 	}
@@ -34,16 +37,14 @@ export async function _updateAppUser(
  * Internal: Create AppUser without security checks
  * @param data AppUser data
  */
-export async function _createAppUser(
-	data: Partial<AppUser>
-): Promise<AppUser> {
+export async function _createAppUser(data: Partial<AppUser>): Promise<AppUser> {
 	try {
 		const pb = await getPocketBase()
 		if (!pb) {
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		return await pb.collection('app_users').create(data)
+		return await pb.collection('AppUser').create(data)
 	} catch (error) {
 		return handlePocketBaseError(error, 'AppUserService._createAppUser')
 	}
@@ -60,7 +61,7 @@ export async function _deleteAppUser(id: string): Promise<boolean> {
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		await pb.collection('app_users').delete(id)
+		await pb.collection('AppUser').delete(id)
 		return true
 	} catch (error) {
 		handlePocketBaseError(error, 'AppUserService._deleteAppUser')
@@ -80,7 +81,9 @@ export async function getByClerkId(clerkId: string): Promise<AppUser | null> {
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		const user = await pb.collection('app_users').getFirstListItem(`clerkId="${clerkId}"`)
+		const user = await pb
+			.collection('AppUser')
+			.getFirstListItem(`clerkId="${clerkId}"`)
 		return user
 	} catch (error) {
 		// If user not found, return null instead of throwing
@@ -90,4 +93,4 @@ export async function getByClerkId(clerkId: string): Promise<AppUser | null> {
 		console.error('Error fetching app user by clerk ID:', error)
 		return null
 	}
-} 
+}
