@@ -1,4 +1,5 @@
 'use client'
+import { SignedIn } from '@clerk/nextjs'
 import { Search } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
@@ -26,11 +27,13 @@ export function TopBar() {
 				</div>
 			</div>
 			<div className='relative w-64'>
-				<Search className='absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2 text-gray-400' />
-				<input
-					placeholder='Rechercher...'
-					className='focus:ring-primary h-9 w-full rounded-md border-white/20 bg-white/10 pl-8 text-white placeholder:text-white/50 focus:ring-2 focus:outline-none'
-				/>
+				<SignedIn>
+					<Search className='absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2 text-gray-400' />
+					<input
+						placeholder='Rechercher...'
+						className='focus:ring-primary h-9 w-full rounded-md border-white/20 bg-white/10 pl-8 text-white placeholder:text-white/50 focus:ring-2 focus:outline-none'
+					/>
+				</SignedIn>
 			</div>
 		</header>
 	)

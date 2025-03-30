@@ -55,147 +55,151 @@ export function AppSidebar() {
 			</div>
 			<SidebarContent className='px-1 pt-6'>
 				<SidebarMenu className='w-full space-y-4'>
-					<SidebarMenuItem className='mx-0 my-2 px-2'>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<SidebarMenuButton
-									asChild
-									isActive={pathname?.startsWith('/app/equipments')}
-									className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white hover:text-[#0f2942]'
-								>
-									<Link
-										href='/app/equipments'
-										className='flex h-full items-center justify-center'
+					<SignedIn>
+						<SidebarMenuItem className='mx-0 my-2 px-2'>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<SidebarMenuButton
+										asChild
+										isActive={pathname?.startsWith('/app/equipments')}
+										className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white hover:text-[#0f2942]'
 									>
-										<Wrench className='h-8 w-8' />
-									</Link>
-								</SidebarMenuButton>
-							</TooltipTrigger>
-							<TooltipContent side='right'>Équipements</TooltipContent>
-						</Tooltip>
-					</SidebarMenuItem>
-					<SidebarMenuItem className='mx-0 my-2 px-2'>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<SidebarMenuButton
-									asChild
-									isActive={pathname?.startsWith('/app/projects')}
-									className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white hover:text-[#0f2942]'
-								>
-									<Link
-										href='/app/projects'
-										className='flex h-full items-center justify-center'
+										<Link
+											href='/app/equipments'
+											className='flex h-full items-center justify-center'
+										>
+											<Wrench className='h-8 w-8' />
+										</Link>
+									</SidebarMenuButton>
+								</TooltipTrigger>
+								<TooltipContent side='right'>Équipements</TooltipContent>
+							</Tooltip>
+						</SidebarMenuItem>
+						<SidebarMenuItem className='mx-0 my-2 px-2'>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<SidebarMenuButton
+										asChild
+										isActive={pathname?.startsWith('/app/projects')}
+										className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white hover:text-[#0f2942]'
 									>
-										<Construction className='h-8 w-8' />
-									</Link>
-								</SidebarMenuButton>
-							</TooltipTrigger>
-							<TooltipContent side='right'>Projets</TooltipContent>
-						</Tooltip>
-					</SidebarMenuItem>
-					<SidebarMenuItem className='mx-0 my-2 px-2'>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<SidebarMenuButton
-									asChild
-									isActive={pathname?.startsWith('/app/users')}
-									className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white hover:text-[#0f2942]'
-								>
-									<Link
-										href='/app/users'
-										className='flex h-full items-center justify-center'
+										<Link
+											href='/app/projects'
+											className='flex h-full items-center justify-center'
+										>
+											<Construction className='h-8 w-8' />
+										</Link>
+									</SidebarMenuButton>
+								</TooltipTrigger>
+								<TooltipContent side='right'>Projets</TooltipContent>
+							</Tooltip>
+						</SidebarMenuItem>
+						<SidebarMenuItem className='mx-0 my-2 px-2'>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<SidebarMenuButton
+										asChild
+										isActive={pathname?.startsWith('/app/users')}
+										className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white hover:text-[#0f2942]'
 									>
-										<User className='h-8 w-8' />
-									</Link>
-								</SidebarMenuButton>
-							</TooltipTrigger>
-							<TooltipContent side='right'>Utilisateurs</TooltipContent>
-						</Tooltip>
-					</SidebarMenuItem>
-					<SidebarMenuItem className='mx-0 my-2 px-2'>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<SidebarMenuButton
-									asChild
-									isActive={pathname?.startsWith('/app/scan')}
-									className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white hover:text-[#0f2942]'
-								>
-									<Link
-										href='/app/scan'
-										className='flex h-full items-center justify-center'
+										<Link
+											href='/app/users'
+											className='flex h-full items-center justify-center'
+										>
+											<User className='h-8 w-8' />
+										</Link>
+									</SidebarMenuButton>
+								</TooltipTrigger>
+								<TooltipContent side='right'>Utilisateurs</TooltipContent>
+							</Tooltip>
+						</SidebarMenuItem>
+						<SidebarMenuItem className='mx-0 my-2 px-2'>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<SidebarMenuButton
+										asChild
+										isActive={pathname?.startsWith('/app/scan')}
+										className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white hover:text-[#0f2942]'
 									>
-										<Scan className='h-8 w-8' />
-									</Link>
-								</SidebarMenuButton>
-							</TooltipTrigger>
-							<TooltipContent side='right'>Scanner</TooltipContent>
-						</Tooltip>
-					</SidebarMenuItem>
-					<SidebarMenuItem className='mx-0 my-2 px-2'>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<SidebarMenuButton
-									asChild
-									isActive={pathname?.startsWith('/app/inventory')}
-									className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white hover:text-[#0f2942]'
-								>
-									<Link
-										href='/app/inventory'
-										className='flex h-full items-center justify-center'
+										<Link
+											href='/app/scan'
+											className='flex h-full items-center justify-center'
+										>
+											<Scan className='h-8 w-8' />
+										</Link>
+									</SidebarMenuButton>
+								</TooltipTrigger>
+								<TooltipContent side='right'>Scanner</TooltipContent>
+							</Tooltip>
+						</SidebarMenuItem>
+						<SidebarMenuItem className='mx-0 my-2 px-2'>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<SidebarMenuButton
+										asChild
+										isActive={pathname?.startsWith('/app/inventory')}
+										className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white hover:text-[#0f2942]'
 									>
-										<ClipboardList className='h-8 w-8' />
-									</Link>
-								</SidebarMenuButton>
-							</TooltipTrigger>
-							<TooltipContent side='right'>Inventaire</TooltipContent>
-						</Tooltip>
-					</SidebarMenuItem>
+										<Link
+											href='/app/inventory'
+											className='flex h-full items-center justify-center'
+										>
+											<ClipboardList className='h-8 w-8' />
+										</Link>
+									</SidebarMenuButton>
+								</TooltipTrigger>
+								<TooltipContent side='right'>Inventaire</TooltipContent>
+							</Tooltip>
+						</SidebarMenuItem>
+					</SignedIn>
 				</SidebarMenu>
 			</SidebarContent>
 			<SidebarFooter className='mt-auto px-0 pb-4'>
-				<SidebarMenu className='w-full space-y-4'>
-					<SidebarMenuItem className='mx-0 my-2 px-2'>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<SidebarMenuButton
-									asChild
-									isActive={pathname?.startsWith('/app/organization')}
-									className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white hover:text-[#0f2942]'
-								>
-									<Link
-										href='/organizations'
-										className='flex h-full items-center justify-center'
+				<SignedIn>
+					<SidebarMenu className='w-full space-y-4'>
+						<SidebarMenuItem className='mx-0 my-2 px-2'>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<SidebarMenuButton
+										asChild
+										isActive={pathname?.startsWith('/app/organization')}
+										className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white hover:text-[#0f2942]'
 									>
-										<Building className='h-8 w-8' />
-									</Link>
-								</SidebarMenuButton>
-							</TooltipTrigger>
-							<TooltipContent side='right'>Organisation</TooltipContent>
-						</Tooltip>
-					</SidebarMenuItem>
-					<SidebarMenuItem className='mx-0 my-2 px-2'>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<SidebarMenuButton
-									asChild
-									className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:text-[#0f2942]'
-								>
-									<div className='flex h-full items-center justify-center'>
-										<SignedIn>
-											<div className='flex h-full items-center justify-center'>
-												<UserButton />
-											</div>
-										</SignedIn>
-										<SignedOut>
-											<RedirectToSignIn />
-										</SignedOut>
-									</div>
-								</SidebarMenuButton>
-							</TooltipTrigger>
-							<TooltipContent side='right'>Profil</TooltipContent>
-						</Tooltip>
-					</SidebarMenuItem>
-				</SidebarMenu>
+										<Link
+											href='/organizations'
+											className='flex h-full items-center justify-center'
+										>
+											<Building className='h-8 w-8' />
+										</Link>
+									</SidebarMenuButton>
+								</TooltipTrigger>
+								<TooltipContent side='right'>Organisation</TooltipContent>
+							</Tooltip>
+						</SidebarMenuItem>
+						<SidebarMenuItem className='mx-0 my-2 px-2'>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<SidebarMenuButton
+										asChild
+										className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:text-[#0f2942]'
+									>
+										<div className='flex h-full items-center justify-center'>
+											<SignedIn>
+												<div className='flex h-full items-center justify-center'>
+													<UserButton />
+												</div>
+											</SignedIn>
+											<SignedOut>
+												<RedirectToSignIn />
+											</SignedOut>
+										</div>
+									</SidebarMenuButton>
+								</TooltipTrigger>
+								<TooltipContent side='right'>Profil</TooltipContent>
+							</Tooltip>
+						</SidebarMenuItem>
+					</SidebarMenu>
+				</SignedIn>
 			</SidebarFooter>
 		</Sidebar>
 	)
