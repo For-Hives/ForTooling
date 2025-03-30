@@ -3,6 +3,7 @@ import {
 	syncOrganizationToPocketBase,
 	linkUserToOrganization,
 } from '@/app/actions/services/clerk-sync/syncService'
+import { logData } from '@/lib/testingHelpers'
 import { WebhookEvent } from '@clerk/nextjs/server'
 import { headers } from 'next/headers'
 // src/app/api/webhook/clerk/route.ts
@@ -17,6 +18,8 @@ import { Webhook } from 'svix'
  * @returns Response indicating success or error
  */
 export async function POST(req: NextRequest) {
+	logData('🚀 Webhook received', { timestamp: new Date().toISOString() }, true)
+
 	// Verify the webhook signature to ensure it's from Clerk
 	const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
 
@@ -39,6 +42,7 @@ export async function POST(req: NextRequest) {
 	try {
 		// Get the raw request body
 		const payload = await req.text()
+		logData('🚀 Webhook payload', payload, true)
 
 		// Create a new Svix instance with our webhook secret
 		const webhook = new Webhook(WEBHOOK_SECRET)
@@ -49,6 +53,7 @@ export async function POST(req: NextRequest) {
 			'svix-signature': svixSignature,
 			'svix-timestamp': svixTimestamp,
 		}) as WebhookEvent
+		logData('🚀 Webhook event', evt, true)
 
 		// Get the ID of the webhook for idempotency
 		const eventId = evt.data.id || svixId
@@ -65,6 +70,7 @@ export async function POST(req: NextRequest) {
 		const eventType = evt.type
 
 		if (eventType === 'user.created') {
+			logData('🚀 User created', evt.data, true)
 			await syncUserToPocketBase(evt.data)
 		} else if (eventType === 'user.updated') {
 			await syncUserToPocketBase(evt.data)

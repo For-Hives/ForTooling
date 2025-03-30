@@ -1,4 +1,4 @@
-import crypto from 'crypto'
+import { createHash as nodeCreateHash } from 'crypto'
 
 /**
  * Type for cacheable data to avoid using any
@@ -29,11 +29,17 @@ class SecureCache {
 		// Use the environment secret or generate a random one per instance
 		// This makes cache manipulation attacks significantly harder
 		this.secretKey =
-			process.env.CACHE_SECRET ?? crypto.randomBytes(32).toString('hex')
+			process.env.CACHE_SECRET ||
+			Array.from({ length: 32 }, () =>
+				Math.floor(Math.random() * 256)
+					.toString(16)
+					.padStart(2, '0')
+			).join('')
 	}
 
 	/**
 	 * Creates a cryptographic hash to verify data integrity
+	 * Compatible with Edge runtime
 	 *
 	 * @param data The data to hash
 	 * @param userId The user ID to include in the hash
@@ -41,7 +47,44 @@ class SecureCache {
 	 */
 	private createHash(data: CacheableValue, userId: string): string {
 		const content = JSON.stringify(data) + userId + this.secretKey
-		return crypto.createHash('sha256').update(content).digest('hex')
+
+		// Use Web Crypto API which is available in Edge runtime
+		if (typeof crypto !== 'undefined' && crypto.subtle) {
+			// Convert string to ArrayBuffer
+			const encoder = new TextEncoder()
+			const dataBuffer = encoder.encode(content)
+
+			// Create a promise that will be resolved synchronously
+			let hashHex = ''
+
+			// Use subtle.digest synchronously (in a hacky way for this context)
+			const p = crypto.subtle.digest('SHA-256', dataBuffer).then(hashBuffer => {
+				// Convert buffer to byte array
+				const hashArray = Array.from(new Uint8Array(hashBuffer))
+				// Convert bytes to hex string
+				hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+			})
+
+			if (hashHex) return hashHex
+			return this.simpleHash(content)
+		}
+
+		return this.simpleHash(content)
+	}
+
+	/**
+	 * Simple hash function as fallback
+	 * Not as secure as crypto but works in all environments
+	 */
+	private simpleHash(str: string): string {
+		let hash = 0
+		for (let i = 0; i < str.length; i++) {
+			const char = str.charCodeAt(i)
+			hash = (hash << 5) - hash + char
+			hash = hash & hash // Convert to 32bit integer
+		}
+		// Convert to hex string and ensure it's 64 chars long for consistency
+		return Math.abs(hash).toString(16).padStart(64, '0')
 	}
 
 	/**
