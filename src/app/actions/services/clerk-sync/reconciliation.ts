@@ -1,3 +1,6 @@
+// Import types for Clerk entities
+import type { Organization, User } from '@clerk/nextjs/server'
+
 // src/app/actions/services/clerk-sync/reconciliation.ts
 import { clerkClient } from '@clerk/nextjs/server'
 
@@ -13,7 +16,7 @@ import {
  * Could be triggered by a cron job or scheduled task
  */
 export async function runFullReconciliation() {
-	console.log(
+	console.info(
 		'Starting full Clerk-PocketBase reconciliation:',
 		new Date().toISOString()
 	)
@@ -23,68 +26,79 @@ export async function runFullReconciliation() {
 
 		// Get all users and organizations from Clerk
 		const clerkClientInstance = await clerkClient()
-		const clerkUsers = await clerkClientInstance.users.getUserList()
-		const clerkOrganizations =
+		const clerkUsersResponse = await clerkClientInstance.users.getUserList()
+		const clerkOrganizationsResponse =
 			await clerkClientInstance.organizations.getOrganizationList()
 
-		console.log(
+		// Extract the data arrays from the paginated responses
+		const clerkUsers = clerkUsersResponse.data
+		const clerkOrganizations = clerkOrganizationsResponse.data
+
+		console.info(
 			`Found ${clerkUsers.length} users and ${clerkOrganizations.length} organizations in Clerk`
 		)
 
 		// Sync all organizations first
-		console.log('Syncing organizations...')
+		console.info('Syncing organizations...')
 		const orgResults = await Promise.allSettled(
-			clerkOrganizations.map(org => syncOrganizationToPocketBase(org))
+			clerkOrganizations.map((org: Organization) =>
+				syncOrganizationToPocketBase(org)
+			)
 		)
 
 		const successfulOrgs = orgResults.filter(
-			result => result.status === 'fulfilled'
+			(result: PromiseSettledResult<unknown>) => result.status === 'fulfilled'
 		).length
-		console.log(
+		console.info(
 			`Successfully synced ${successfulOrgs}/${clerkOrganizations.length} organizations`
 		)
 
 		// Sync all users
-		console.log('Syncing users...')
+		console.info('Syncing users...')
 		const userResults = await Promise.allSettled(
-			clerkUsers.map(user => syncUserToPocketBase(user))
+			clerkUsers.map((user: User) => syncUserToPocketBase(user))
 		)
 
 		const successfulUsers = userResults.filter(
-			result => result.status === 'fulfilled'
+			(result: PromiseSettledResult<unknown>) => result.status === 'fulfilled'
 		).length
-		console.log(
+		console.info(
 			`Successfully synced ${successfulUsers}/${clerkUsers.length} users`
 		)
 
 		// Sync organization memberships
-		console.log('Syncing organization memberships...')
+		console.info('Syncing organization memberships...')
 		let membershipCount = 0
 
 		for (const org of clerkOrganizations) {
 			try {
-				const memberships =
+				const membershipsResponse =
 					await clerkClientInstance.organizations.getOrganizationMembershipList(
 						{
 							organizationId: org.id,
 						}
 					)
 
+				// Get the actual membership data array
+				const memberships = membershipsResponse.data
+
 				for (const membership of memberships) {
 					try {
 						const membershipData = {
 							organization: { id: org.id },
-							public_user_data: { user_id: membership.publicUserData.userId },
+							public_user_data: { user_id: membership.publicUserData?.userId },
 							role: membership.role,
 						}
 
 						await linkUserToOrganization(membershipData)
 						membershipCount++
 					} catch (error) {
-						console.error(
-							`Error syncing membership for user ${membership.publicUserData.userId} in org ${org.id}:`,
-							error
-						)
+						if (membership.publicUserData) {
+							console.error(
+								`Error syncing membership for user ${membership.publicUserData.userId} in org ${org.id}:`,
+								error
+							)
+						}
 					}
 				}
 			} catch (error) {
@@ -95,13 +109,13 @@ export async function runFullReconciliation() {
 			}
 		}
 
-		console.log(
+		console.info(
 			`Successfully synced ${membershipCount} organization memberships`
 		)
 
 		// Done
 		const totalTime = (Date.now() - startTime) / 1000
-		console.log(`Reconciliation completed in ${totalTime.toFixed(2)} seconds`)
+		console.info(`Reconciliation completed in ${totalTime.toFixed(2)} seconds`)
 
 		return {
 			memberships: membershipCount,
@@ -131,7 +145,7 @@ export async function runFullReconciliation() {
  */
 export async function reconcileSpecificUser(clerkUserId: string) {
 	try {
-		console.log(`Starting reconciliation for user ${clerkUserId}`)
+		console.info(`Starting reconciliation for user ${clerkUserId}`)
 
 		// Get user data from Clerk
 		const clerkClientInstance = await clerkClient()
@@ -141,18 +155,22 @@ export async function reconcileSpecificUser(clerkUserId: string) {
 		await syncUserToPocketBase(clerkUser)
 
 		// Find all organizations this user belongs to
-		const memberships =
+		const membershipsResponse =
 			await clerkClientInstance.users.getOrganizationMembershipList({
 				userId: clerkUserId,
 			})
+
+		// Extract the data array
+		const memberships = membershipsResponse.data
 
 		// Sync each organization and membership
 		for (const membership of memberships) {
 			const orgId = membership.organization.id
 
 			// Sync the organization
-			const clerkOrg =
-				await clerkClientInstance.organizations.getOrganization(orgId)
+			const clerkOrg = await clerkClientInstance.organizations.getOrganization({
+				organizationId: orgId,
+			})
 			await syncOrganizationToPocketBase(clerkOrg)
 
 			// Sync the membership
@@ -184,25 +202,34 @@ export async function reconcileSpecificUser(clerkUserId: string) {
  */
 export async function reconcileSpecificOrganization(clerkOrgId: string) {
 	try {
-		console.log(`Starting reconciliation for organization ${clerkOrgId}`)
+		console.info(`Starting reconciliation for organization ${clerkOrgId}`)
 
 		// Get organization data from Clerk
 		const clerkClientInstance = await clerkClient()
-		const clerkOrg =
-			await clerkClientInstance.organizations.getOrganization(clerkOrgId)
+		const clerkOrg = await clerkClientInstance.organizations.getOrganization({
+			organizationId: clerkOrgId,
+		})
 
 		// Sync organization to PocketBase
 		await syncOrganizationToPocketBase(clerkOrg)
 
 		// Find all members of this organization
-		const memberships =
+		const membershipsResponse =
 			await clerkClientInstance.organizations.getOrganizationMembershipList({
 				organizationId: clerkOrgId,
 			})
 
+		// Extract the data array
+		const memberships = membershipsResponse.data
+
 		// Sync each user and membership
 		for (const membership of memberships) {
-			const userId = membership.publicUserData.userId
+			const userId = membership.publicUserData?.userId
+
+			if (!userId) {
+				console.error(`User ID not found for membership ${membership.id}`)
+				continue
+			}
 
 			// Sync the user
 			const clerkUser = await clerkClientInstance.users.getUser(userId)
