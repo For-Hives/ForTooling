@@ -9,10 +9,6 @@ import { getByClerkId } from '@/app/actions/services/pocketbase/app-user/interna
 import { ClerkUserWebhookData, WebhookProcessingResult } from '@/types/webhooks'
 
 /**
- * Webhook handlers for AppUser events from Clerk
- */
-
-/**
  * Handles a webhook event for user creation
  * @param {ClerkUserWebhookData} data - User data from Clerk
  * @param {boolean} elevated - Whether operation has elevated permissions
@@ -77,14 +73,21 @@ export async function handleWebhookUpdated(
 	elevated = true
 ): Promise<WebhookProcessingResult> {
 	try {
+		console.log('Processing user update webhook for clerkId:', data.id)
+
 		// Find existing user
 		const existing = await getByClerkId(data.id)
+
 		if (!existing) {
-			return {
-				message: `AppUser ${data.id} not found`,
-				success: false,
-			}
+			console.log(
+				`AppUser with clerkId ${data.id} not found, creating new user`
+			)
+			// If user doesn't exist, create it instead of updating
+			return await handleWebhookCreated(data, elevated)
 		}
+
+		// Continue with the update logic...
+		console.log(`Updating existing AppUser: ${existing.id}`)
 
 		// Get primary email if available
 		let email = existing.email // Default to existing
