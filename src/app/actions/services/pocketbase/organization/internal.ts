@@ -25,7 +25,7 @@ export async function _createOrganization(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		console.log('Creating new Organization with data:', data)
+		console.info('Creating new Organization with data:', data)
 
 		// Make sure clerkId is included
 		if (!data.clerkId) {
@@ -33,7 +33,7 @@ export async function _createOrganization(
 		}
 
 		const newOrg = await pb.collection('Organization').create(data)
-		console.log('New Organization created:', newOrg)
+		console.info('New Organization created:', newOrg)
 
 		return newOrg
 	} catch (error) {
@@ -57,10 +57,10 @@ export async function _updateOrganization(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		console.log(`Updating Organization ${id} with data:`, data)
+		console.info(`Updating Organization ${id} with data:`, data)
 
 		const updatedOrg = await pb.collection('Organization').update(id, data)
-		console.log('Organization updated:', updatedOrg)
+		console.info('Organization updated:', updatedOrg)
 
 		return updatedOrg
 	} catch (error) {
@@ -102,14 +102,14 @@ export async function getOrganizationByClerkId(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		console.log(`Searching for Organization with clerkId: ${clerkId}`)
+		console.info(`Searching for Organization with clerkId: ${clerkId}`)
 
 		try {
 			const org = await pb
 				.collection('Organization')
 				.getFirstListItem(`clerkId="${clerkId}"`)
 
-			console.log('Organization found:', org)
+			console.info('Organization found:', org)
 			return org
 		} catch (error) {
 			// Check if this is a "not found" error
@@ -117,7 +117,7 @@ export async function getOrganizationByClerkId(
 				error instanceof Error &&
 				(error.message.includes('404') || error.message.includes('not found'))
 			) {
-				console.log(`No organization found with clerkId: ${clerkId}`)
+				console.info(`No organization found with clerkId: ${clerkId}`)
 				return null
 			}
 			// Otherwise rethrow the error

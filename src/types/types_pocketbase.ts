@@ -14,10 +14,10 @@ export interface BaseModel {
  */
 export interface Organization extends BaseModel {
 	name: string
-	email: string | null
-	phone: string | null
-	address: string | null
-	settings: Record<string, unknown> | null
+	email?: string
+	phone?: string
+	address?: string
+	settings?: Record<string, unknown>
 
 	// Clerk integration fields
 	clerkId: string
@@ -27,9 +27,6 @@ export interface Organization extends BaseModel {
 	subscriptionId?: string
 	subscriptionStatus?: string
 	priceId?: string
-
-	// Expanded relations
-	expand?: Record<string, unknown>
 }
 
 /**
@@ -37,21 +34,19 @@ export interface Organization extends BaseModel {
  */
 export interface AppUser {
 	id: string
-	name: string
 	email: string
+	emailVisibility: boolean
+	verified: boolean
+	name: string
+	avatar?: string
 	phone?: string
 	role?: string
-	isAdmin?: boolean
-	verified?: boolean
-	emailVisibility?: boolean
-	clerkId?: string
+	isAdmin: boolean
 	lastLogin?: string
-	created?: string
-	updated?: string
-	expand?: {
-		organizations?: Organization[]
-	}
-	organizations?: string[] // Organization IDs
+	clerkId: string
+	organizations?: string
+	created: string
+	updated: string
 }
 
 /**

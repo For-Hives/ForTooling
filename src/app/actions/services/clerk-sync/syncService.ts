@@ -97,15 +97,17 @@ export async function syncUserToPocketBase(user: User): Promise<AppUser> {
 		const existingUser = await getByClerkId(clerkId)
 
 		// Prepare user data
-		const userDataToSync = {
+		const userDataToSync: Partial<AppUser> = {
 			clerkId,
 			email: primaryEmail.emailAddress,
+			emailVisibility: true, // Set default value
+			isAdmin: false, // Set default value
 			name:
 				firstName && lastName
 					? `${firstName} ${lastName}`
 					: (user.username ?? 'Unknown'),
 			verified: primaryEmail.verification?.status === 'verified',
-			// Add other fields as needed
+			// Leave organizations as empty for now
 		}
 
 		// Update or create
@@ -144,10 +146,11 @@ export async function syncOrganizationToPocketBase(
 		console.info('Existing org lookup result:', existingOrg)
 
 		// Prepare organization data
-		const orgDataToSync = {
+		const orgDataToSync: Partial<PBOrganization> = {
 			clerkId,
 			name: name ?? 'Unnamed Organization',
-			// Add other fields as needed
+			// Add default values for required fields based on schema
+			settings: {}, // Empty JSON object for settings
 		}
 
 		// Update or create
@@ -189,35 +192,17 @@ export async function linkUserToOrganization(
 		// Find the user in PocketBase by Clerk ID
 		const pbUser = await pb
 			.collection('AppUser')
-			.getFirstListItem(`clerkId=${userId}`)
+			.getFirstListItem(`clerkId="${userId}"`)
 
 		// Find the organization in PocketBase by Clerk ID
 		const pbOrg = await pb
 			.collection('Organization')
-			.getFirstListItem(`clerkId=${orgId}`)
+			.getFirstListItem(`clerkId=`${orgId}``)
 
-		// Check if the relation already exists
-		const existingRelations = await pb
-			.collection('user_organizations')
-			.getList(1, 1, {
-				filter: `user="${pbUser.id}" && organization="${pbOrg.id}"`,
-			})
-
-		// If the relation doesn't exist, create it
-		if (existingRelations.totalItems === 0) {
-			await pb.collection('user_organizations').create({
-				organization: pbOrg.id,
-				role: role ?? 'member',
-				user: pbUser.id,
-			})
-		} else {
-			// Update the existing relation if needed
-			await pb
-				.collection('user_organizations')
-				.update(existingRelations.items[0].id, {
-					role: role ?? 'member',
-				})
-		}
+		// Update the user with the organization relation
+		await pb.collection('AppUser').update(pbUser.id, {
+			organizations: pbOrg.id
+		});
 
 		// Update user if they're an admin in the organization
 		if (role === 'admin') {
