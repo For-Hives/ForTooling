@@ -79,8 +79,22 @@ type ClerkMembershipData = {
  */
 export async function syncUserToPocketBase(user: User): Promise<AppUser> {
 	try {
-		const { emailAddresses, firstName, id: clerkId, lastName } = user
+		const {
+			createdAt,
+			emailAddresses,
+			firstName,
+			id: clerkId,
+			imageUrl,
+			lastName,
+			lastSignInAt,
+			phoneNumbers,
+			primaryPhoneNumberId,
+			publicMetadata,
+			updatedAt,
+		} = user
 
+		console.log('clerkId', clerkId)
+		console.log('user', user)
 		if (!clerkId) {
 			throw new Error('Clerk user ID is required for syncing')
 		}
@@ -93,21 +107,31 @@ export async function syncUserToPocketBase(user: User): Promise<AppUser> {
 			throw new Error('User must have a primary email address')
 		}
 
+		// Get primary phone if available
+		const primaryPhone = phoneNumbers.find(
+			phone => phone.id === primaryPhoneNumberId
+		)
+
 		// Try to find existing AppUser
 		const existingUser = await getByClerkId(clerkId)
 
-		// Prepare user data
+		// Prepare user data with all available fields
 		const userDataToSync: Partial<AppUser> = {
 			clerkId,
 			email: primaryEmail.emailAddress,
-			emailVisibility: true, // Set default value
-			isAdmin: false, // Set default value
+			emailVisibility: true,
+			// Set admin status from metadata if available
+			isAdmin: publicMetadata?.isAdmin === true,
+			// Convert clerk's lastSignInAt to a format PocketBase understands
+			lastLogin: lastSignInAt ? new Date(lastSignInAt).toISOString() : '',
 			name:
 				firstName && lastName
 					? `${firstName} ${lastName}`
 					: (user.username ?? 'Unknown'),
+			phone: primaryPhone?.phoneNumber || '',
+			// Set role from metadata if available
+			role: typeof publicMetadata?.role === 'string' ? publicMetadata.role : '',
 			verified: primaryEmail.verification?.status === 'verified',
-			// Leave organizations as empty for now
 		}
 
 		// Update or create
@@ -133,7 +157,15 @@ export async function syncOrganizationToPocketBase(
 	organization: ClerkOrganizationData
 ): Promise<PBOrganization> {
 	try {
-		const { id: clerkId, name } = organization
+		const {
+			created_at,
+			email_address,
+			id: clerkId,
+			name,
+			phone_number,
+			public_metadata,
+			updated_at,
+		} = organization
 
 		if (!clerkId) {
 			throw new Error('Clerk organization ID is required for syncing')
@@ -145,12 +177,20 @@ export async function syncOrganizationToPocketBase(
 		const existingOrg = await getOrganizationByClerkId(clerkId)
 		console.info('Existing org lookup result:', existingOrg)
 
-		// Prepare organization data
+		// Prepare organization data with all available fields
 		const orgDataToSync: Partial<PBOrganization> = {
+			address: public_metadata?.address ?? '',
 			clerkId,
+			email: email_address ?? '',
 			name: name ?? 'Unnamed Organization',
-			// Add default values for required fields based on schema
-			settings: {}, // Empty JSON object for settings
+			phone: phone_number ?? '',
+			priceId: public_metadata?.priceId ?? '',
+			// Sync settings from metadata if available
+			settings: public_metadata?.settings ?? {},
+			// Sync stripe data if available in metadata
+			stripeCustomerId: public_metadata?.stripeCustomerId ?? '',
+			subscriptionId: public_metadata?.subscriptionId ?? '',
+			subscriptionStatus: public_metadata?.subscriptionStatus ?? '',
 		}
 
 		// Update or create
@@ -178,7 +218,10 @@ export async function linkUserToOrganization(
 	try {
 		const userId = membershipData.public_user_data?.user_id
 		const orgId = membershipData.organization.id
-		const role = membershipData.role // e.g., 'admin', 'member'
+		const role = membershipData.role // e.g., 'org:admin', 'org:member'
+
+		// Extract just the role part (remove 'org:' prefix if present)
+		const normalizedRole = role?.replace('org:', '') ?? 'member'
 
 		if (!userId || !orgId) {
 			throw new Error('Missing required IDs in membership data')
@@ -190,18 +233,18 @@ export async function linkUserToOrganization(
 		}
 
 		console.info(
-			`Linking user ${userId} to organization ${orgId} with role ${role ?? 'member'}`
+			`Linking user ${userId} to organization ${orgId} with role ${normalizedRole}`
 		)
 
 		// Find the user in PocketBase by Clerk ID
 		const pbUser = await pb
 			.collection('AppUser')
-			.getFirstListItem(`clerkId="` + userId + `"`)
+			.getFirstListItem(`clerkId="${userId}"`)
 
 		// Find the organization in PocketBase by Clerk ID
 		const pbOrg = await pb
 			.collection('Organization')
-			.getFirstListItem(`clerkId="` + orgId + `"`)
+			.getFirstListItem(`clerkId="${orgId}"`)
 
 		console.info(
 			`Found user ${pbUser.id} and organization ${pbOrg.id} in PocketBase`
@@ -213,13 +256,19 @@ export async function linkUserToOrganization(
 		})
 		console.info(`Updated user ${pbUser.id} with organization ${pbOrg.id}`)
 
-		// Update user if they're an admin in the organization
-		if (role === 'admin') {
+		// Update user role based on organization membership
+		if (normalizedRole === 'admin') {
 			await pb.collection('AppUser').update(pbUser.id, {
 				isAdmin: true,
 				role: 'admin',
 			})
 			console.info(`Updated user ${pbUser.id} to admin role`)
+		} else {
+			// Update the role even if not admin
+			await pb.collection('AppUser').update(pbUser.id, {
+				role: normalizedRole,
+			})
+			console.info(`Updated user ${pbUser.id} to ${normalizedRole} role`)
 		}
 
 		return true
@@ -271,5 +320,53 @@ export async function getClerkOrganizationById(
 	} catch (error) {
 		console.error('Error fetching organization from Clerk:', error)
 		throw error
+	}
+}
+
+/**
+ * Synchronizes user profile image from Clerk to PocketBase
+ * @param userId The PocketBase user ID
+ * @param imageUrl The Clerk image URL
+ * @returns Success status
+ */
+export async function syncUserProfileImage(
+	userId: string,
+	imageUrl: string
+): Promise<boolean> {
+	if (!imageUrl) return false
+
+	try {
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Fetch the image data
+		const response = await fetch(imageUrl)
+		if (!response.ok) {
+			throw new Error(`Failed to fetch image: ${response.statusText}`)
+		}
+
+		// Convert to blob
+		const imageBlob = await response.blob()
+
+		// Create a file object from the blob
+		const formData = new FormData()
+		formData.append('image', imageBlob, 'profile.jpg')
+		formData.append('title', 'Profile Photo')
+		formData.append('alt', 'User profile photo')
+
+		// Create the image record in PocketBase
+		const imageRecord = await pb.collection('Images').create(formData)
+
+		// Update the user with the image relation
+		await pb.collection('AppUser').update(userId, {
+			avatar: imageRecord.id,
+		})
+
+		return true
+	} catch (error) {
+		console.error('Error syncing user profile image:', error)
+		return false
 	}
 }
