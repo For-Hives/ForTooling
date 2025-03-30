@@ -33,6 +33,7 @@ erDiagram
         date lastLogin
         date created
         date updated
+        json metadata
     }
 
     Equipment {

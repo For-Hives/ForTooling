@@ -47,6 +47,8 @@ export interface AppUser {
 	organizations?: string
 	created: string
 	updated: string
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	metadata?: Record<string, any>
 }
 
 /**

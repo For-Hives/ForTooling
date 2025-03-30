@@ -84,7 +84,6 @@ export async function syncUserToPocketBase(user: User): Promise<AppUser> {
 			emailAddresses,
 			firstName,
 			id: clerkId,
-			imageUrl,
 			lastName,
 			lastSignInAt,
 			phoneNumbers,
@@ -93,8 +92,9 @@ export async function syncUserToPocketBase(user: User): Promise<AppUser> {
 			updatedAt,
 		} = user
 
-		console.log('clerkId', clerkId)
-		console.log('user', user)
+		console.info('Syncing user with clerkId:', clerkId)
+		console.info('User data:', JSON.stringify(user, null, 2))
+
 		if (!clerkId) {
 			throw new Error('Clerk user ID is required for syncing')
 		}
@@ -120,16 +120,31 @@ export async function syncUserToPocketBase(user: User): Promise<AppUser> {
 			clerkId,
 			email: primaryEmail.emailAddress,
 			emailVisibility: true,
-			// Set admin status from metadata if available
+			// Set admin status based on metadata
 			isAdmin: publicMetadata?.isAdmin === true,
-			// Convert clerk's lastSignInAt to a format PocketBase understands
+			// Convert Clerk's lastSignInAt to a format PocketBase understands
 			lastLogin: lastSignInAt ? new Date(lastSignInAt).toISOString() : '',
+			// Now correctly typed thanks to the interface update
+			metadata: {
+				createdAt: createdAt,
+				externalAccounts:
+					user.externalAccounts?.map(account => ({
+						email: account.emailAddress,
+						imageUrl: account.imageUrl,
+						provider: account.provider,
+						providerUserId: account.externalId,
+					})) ?? [], // Use ?? instead of || for better null handling
+				hasCompletedOnboarding: publicMetadata?.hasCompletedOnboarding === true,
+				lastActiveAt: user.lastActiveAt,
+				onboardingCompletedAt: publicMetadata?.onboardingCompletedAt,
+				public: publicMetadata ?? {}, // Use ?? instead of ||
+				updatedAt: updatedAt,
+			},
 			name:
 				firstName && lastName
 					? `${firstName} ${lastName}`
 					: (user.username ?? 'Unknown'),
-			phone: primaryPhone?.phoneNumber || '',
-			// Set role from metadata if available
+			phone: primaryPhone?.phoneNumber ?? '', // Use ?? instead of ||
 			role: typeof publicMetadata?.role === 'string' ? publicMetadata.role : '',
 			verified: primaryEmail.verification?.status === 'verified',
 		}
@@ -184,13 +199,20 @@ export async function syncOrganizationToPocketBase(
 			email: email_address ?? '',
 			name: name ?? 'Unnamed Organization',
 			phone: phone_number ?? '',
-			priceId: public_metadata?.priceId ?? '',
-			// Sync settings from metadata if available
-			settings: public_metadata?.settings ?? {},
-			// Sync stripe data if available in metadata
-			stripeCustomerId: public_metadata?.stripeCustomerId ?? '',
-			subscriptionId: public_metadata?.subscriptionId ?? '',
-			subscriptionStatus: public_metadata?.subscriptionStatus ?? '',
+			// Fix type issues - convert to string instead of empty object
+			priceId: (public_metadata?.priceId as string) ?? '', // Type correction
+			settings: {
+				...(public_metadata?.settings ?? {}),
+				clerkData: {
+					createdAt: created_at,
+					updatedAt: updated_at,
+					...(public_metadata ?? {}),
+				},
+			},
+			// Fix type issues - convert to string instead of empty object
+			stripeCustomerId: (public_metadata?.stripeCustomerId as string) ?? '', // Type correction
+			subscriptionId: (public_metadata?.subscriptionId as string) ?? '', // Type correction
+			subscriptionStatus: (public_metadata?.subscriptionStatus as string) ?? '', // Type correction
 		}
 
 		// Update or create
