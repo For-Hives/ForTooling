@@ -35,26 +35,23 @@ export interface Organization extends BaseModel {
 /**
  * User model (auth collection)
  */
-export interface AppUser extends BaseModel {
+export interface AppUser {
+	id: string
+	name: string
 	email: string
-	emailVisibility: boolean
-	verified: boolean
-	name: string | null
-	avatar?: string | null
-	phone: string | null
-	role: string | null
-	isAdmin: boolean
-	canLogin: boolean
-	lastLogin?: string
-
-	// Clerk integration field
+	phone?: string
+	role?: string
+	isAdmin?: boolean
+	verified?: boolean
+	emailVisibility?: boolean
 	clerkId?: string
-
-	// Expanded relations
-	// the user can be part of multiple organizations
+	lastLogin?: string
+	created?: string
+	updated?: string
 	expand?: {
-		organizationId?: Organization[]
+		organizations?: Organization[]
 	}
+	organizations?: string[] // Organization IDs
 }
 
 /**
@@ -109,7 +106,7 @@ export interface Assignment extends BaseModel {
 	expand?: {
 		organizationId?: Organization
 		equipmentId?: Equipment
-		assignedToUserId?: User
+		assignedToUserId?: AppUser
 		assignedToProjectId?: Project
 	}
 }

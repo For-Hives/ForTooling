@@ -1,5 +1,6 @@
 'use server'
 
+import * as appUserService from '@/app/actions/services/pocketbase/app-user'
 import {
 	createOrganization,
 	updateOrganization,
@@ -171,7 +172,9 @@ export async function handleMembershipWebhookCreated(
 			}
 		}
 
-		const user = await userService.getByClerkId(data.public_user_data.user_id)
+		const user = await appUserService.getByClerkId(
+			data.public_user_data.user_id
+		)
 		if (!user) {
 			return {
 				message: `User with Clerk ID ${data.public_user_data.user_id} not found`,
@@ -184,7 +187,7 @@ export async function handleMembershipWebhookCreated(
 
 		// Update user role if needed
 		if (data.role === 'admin') {
-			await userService.updateUser(
+			await appUserService.updateAppUser(
 				user.id,
 				{
 					role: 'admin',
@@ -226,7 +229,9 @@ export async function handleMembershipWebhookUpdated(
 			}
 		}
 
-		const user = await userService.getByClerkId(data.public_user_data.user_id)
+		const user = await appUserService.getByClerkId(
+			data.public_user_data.user_id
+		)
 		if (!user) {
 			return {
 				message: `User with Clerk ID ${data.public_user_data.user_id} not found`,
@@ -236,15 +241,15 @@ export async function handleMembershipWebhookUpdated(
 
 		// Update user role if needed
 		if (data.role === 'admin') {
-			await userService.updateUser(
+			await appUserService.updateAppUser(
 				user.id,
 				{
 					role: 'admin',
 				},
 				elevated
 			)
-		} else if (data.role === 'basic_member') {
-			await userService.updateUser(
+		} else if (data.role === 'member') {
+			await appUserService.updateAppUser(
 				user.id,
 				{
 					role: 'member',
@@ -286,7 +291,9 @@ export async function handleMembershipWebhookDeleted(
 			}
 		}
 
-		const user = await userService.getByClerkId(data.public_user_data.user_id)
+		const user = await appUserService.getByClerkId(
+			data.public_user_data.user_id
+		)
 		if (!user) {
 			return {
 				message: `User with Clerk ID ${data.public_user_data.user_id} not found`,

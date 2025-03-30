@@ -9,7 +9,7 @@ import {
 	PermissionLevel,
 	SecurityError,
 } from '@/app/actions/services/pocketbase/securityUtils'
-import { User } from '@/types/types_pocketbase'
+import { AppUser } from '@/types/types_pocketbase'
 
 /**
  * Membership management functions for organizations
@@ -23,7 +23,7 @@ import { User } from '@/types/types_pocketbase'
 export async function _addUserToOrganization(
 	userId: string,
 	organizationId: string
-): Promise<User> {
+): Promise<AppUser> {
 	try {
 		const pb = await getPocketBase()
 		if (!pb) {
@@ -67,7 +67,7 @@ export async function _addUserToOrganization(
 export async function _removeUserFromOrganization(
 	userId: string,
 	organizationId: string
-): Promise<User> {
+): Promise<AppUser> {
 	try {
 		const pb = await getPocketBase()
 		if (!pb) {
@@ -107,7 +107,7 @@ export async function addUserToOrganization(
 	userId: string,
 	organizationId: string,
 	elevated = false
-): Promise<User> {
+): Promise<AppUser> {
 	try {
 		if (!elevated) {
 			// Security check - requires ADMIN permission for member management
@@ -133,7 +133,7 @@ export async function removeUserFromOrganization(
 	userId: string,
 	organizationId: string,
 	elevated = false
-): Promise<User> {
+): Promise<AppUser> {
 	try {
 		if (!elevated) {
 			// Security check - requires ADMIN permission for member management
@@ -157,7 +157,7 @@ export async function removeUserFromOrganization(
  */
 export async function getOrganizationUsers(
 	organizationId: string
-): Promise<User[]> {
+): Promise<AppUser[]> {
 	try {
 		// Security check - validates user has access to this organization
 		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
