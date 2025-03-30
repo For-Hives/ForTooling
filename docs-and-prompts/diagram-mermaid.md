@@ -1,3 +1,6 @@
+# Diagram
+
+```text
 erDiagram
 Organization {
     string id PK
@@ -91,3 +94,4 @@ Equipment }o--o{ Assignment : "is assigned via"
 Equipment }o--o{ Equipment : "parent/child"
 
 Project }o--o{ Assignment : includes
+```
