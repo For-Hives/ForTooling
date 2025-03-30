@@ -123,8 +123,8 @@ export async function getOrganizationEquipment(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		// Apply organization filter
-		const filter = `organization="${organizationId}"`
+		// Apply organization filter - fixed field name to match interface
+		const filter = `organizationId=${organizationId}`
 
 		return await pb.collection('equipment').getFullList({
 			filter,
@@ -146,14 +146,19 @@ export async function getOrganizationEquipment(
  */
 export async function createEquipment(
 	organizationId: string,
-	data: Omit<Partial<Equipment>, 'organization'>
+	data: Pick<
+		Partial<Equipment>,
+		| 'name'
+		| 'qrNfcCode'
+		| 'tags'
+		| 'notes'
+		| 'acquisitionDate'
+		| 'parentEquipmentId'
+	>
 ): Promise<Equipment> {
 	try {
-		// Security check - requires WRITE permission
-		const { user } = await validateOrganizationAccess(
-			organizationId,
-			PermissionLevel.WRITE
-		)
+		// Security check - requires WRITE permission - removed unused user variable
+		await validateOrganizationAccess(organizationId, PermissionLevel.WRITE)
 
 		const pb = await getPocketBase()
 		if (!pb) {
@@ -161,9 +166,10 @@ export async function createEquipment(
 		}
 
 		// Ensure organization ID is set and matches the authenticated user's org
+		// Fixed field name to match interface
 		return await pb.collection('equipment').create({
 			...data,
-			organization: organizationId, // Force the correct organization ID
+			organizationId, // Force the correct organization ID
 		})
 	} catch (error) {
 		if (error instanceof SecurityError) {
@@ -178,7 +184,15 @@ export async function createEquipment(
  */
 export async function updateEquipment(
 	id: string,
-	data: Omit<Partial<Equipment>, 'organization' | 'id'>
+	data: Pick<
+		Partial<Equipment>,
+		| 'name'
+		| 'qrNfcCode'
+		| 'tags'
+		| 'notes'
+		| 'acquisitionDate'
+		| 'parentEquipmentId'
+	>
 ): Promise<Equipment> {
 	try {
 		// Security check - validates organization and requires WRITE permission
@@ -195,7 +209,8 @@ export async function updateEquipment(
 
 		// Never allow changing the organization
 		const sanitizedData = { ...data }
-		delete sanitizedData.organization
+		// Fixed 'any' type and field name
+		delete (sanitizedData as Record<string, unknown>).organizationId
 
 		return await pb.collection('equipment').update(id, sanitizedData)
 	} catch (error) {
@@ -252,10 +267,10 @@ export async function getChildEquipment(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		// Apply organization filter for security
+		// Apply organization filter for security - fixed field name
 		const filter = createOrganizationFilter(
 			organizationId,
-			`parentEquipment="${parentId}"`
+			`parentEquipmentId="${parentId}"`
 		)
 
 		return await pb.collection('equipment').getFullList({
@@ -296,7 +311,7 @@ export async function getEquipmentCount(
 		}
 
 		const result = await pb.collection('equipment').getList(1, 1, {
-			filter: `organization=${organizationId}`,
+			filter: `organizationId="${organizationId}"`, // Fixed field name
 			skipTotal: false,
 		})
 		return result.totalItems
@@ -326,10 +341,10 @@ export async function searchEquipment(
 
 		return await pb.collection('equipment').getFullList({
 			filter: pb.filter(
-				'organization = {:orgId} && (name ~ {:query} || tags ~ {:query} || qrNfcCode = {:query})',
+				'organizationId = {:orgId} && (name ~ {:query} || tags ~ {:query} || qrNfcCode = {:query})',
 				{
 					orgId: organizationId,
-					query: query,
+					query,
 				}
 			),
 			sort: 'name',

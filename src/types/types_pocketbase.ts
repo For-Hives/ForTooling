@@ -64,7 +64,7 @@ export interface Equipment extends BaseModel {
 	organizationId: string // References Organization.id
 	name: string | null
 	qrNfcCode: string | null
-	tags: string | null // Consider parsing this as string[]
+	tags: string[]
 	notes: string | null
 	acquisitionDate: string | null // ISO date string
 	parentEquipmentId: string | null // Self-reference

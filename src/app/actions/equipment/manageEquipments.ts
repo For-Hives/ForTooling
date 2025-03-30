@@ -33,6 +33,14 @@ export type EquipmentActionResult = {
 }
 
 /**
+ * Convert tags array to string for PocketBase storage
+ */
+function convertTagsForStorage(tags?: string[]): string | null {
+	if (!tags || tags.length === 0) return null
+	return JSON.stringify(tags)
+}
+
+/**
  * Create a new equipment item
  */
 export async function createEquipmentAction(
@@ -48,8 +56,12 @@ export async function createEquipmentAction(
 
 		// Create the equipment with security checks built into the service
 		const newEquipment = await createEquipment(organizationId, {
-			...validatedData,
+			acquisitionDate: validatedData.acquisitionDate || null,
+			name: validatedData.name,
+			notes: validatedData.notes || null,
+			parentEquipmentId: validatedData.parentEquipment || null,
 			qrNfcCode,
+			tags: convertTagsForStorage(validatedData.tags),
 		})
 
 		// Revalidate relevant paths to refresh data
@@ -109,7 +121,13 @@ export async function updateEquipmentAction(
 		const validatedData = equipmentSchema.parse(formData)
 
 		// Update the equipment with security checks built into the service
-		const updatedEquipment = await updateEquipment(equipmentId, validatedData)
+		const updatedEquipment = await updateEquipment(equipmentId, {
+			acquisitionDate: validatedData.acquisitionDate || null,
+			name: validatedData.name,
+			notes: validatedData.notes || null,
+			parentEquipmentId: validatedData.parentEquipment || null,
+			tags: convertTagsForStorage(validatedData.tags),
+		})
 
 		// Revalidate relevant paths to refresh data
 		revalidatePath('/dashboard/equipment')

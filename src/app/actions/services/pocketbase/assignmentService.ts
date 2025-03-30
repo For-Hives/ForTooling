@@ -97,9 +97,9 @@ export async function getActiveAssignments(
 		const now = new Date().toISOString()
 
 		return await pb.collection('assignments').getFullList({
-			expand: 'equipment,assignedToUser,assignedToProject',
+			expand: 'equipmentId,assignedToUserId,assignedToProjectId',
 			filter: pb.filter(
-				'organization = {:orgId} && startDate <= {:now} && (endDate = "" || endDate >= {:now})',
+				'organizationId = {:orgId} && startDate <= {:now} && (endDate = "" || endDate >= {:now})',
 				{ now, orgId: organizationId }
 			),
 			sort: '-created',
@@ -138,16 +138,17 @@ export async function getCurrentEquipmentAssignment(
 
 		// Include organization check for extra security
 		const assignments = await pb.collection('assignments').getList(1, 1, {
-			expand: 'equipment,assignedToUser,assignedToProject',
+			expand: 'equipmentId,assignedToUserId,assignedToProjectId',
 			filter: pb.filter(
-				'organization = {:orgId} && equipment = {:equipId} && startDate <= {:now} && (endDate = "" || endDate >= {:now})',
+				'organizationId = {:orgId} && equipmentId = {:equipId} && startDate <= {:now} && (endDate = "" || endDate >= {:now})',
 				{ equipId: equipmentId, now, orgId: organizationId }
 			),
 			sort: '-created',
 		})
 
-		// todo: fix type error
-		return assignments.items.length > 0 ? assignments.items[0] : null
+		return assignments.items.length > 0
+			? (assignments.items[0] as Assignment)
+			: null
 	} catch (error) {
 		if (error instanceof SecurityError) {
 			throw error
@@ -180,10 +181,10 @@ export async function getUserAssignments(
 
 		// Include organization filter for security
 		return await pb.collection('assignments').getFullList({
-			expand: 'equipment,assignedToProject',
+			expand: 'equipmentId,assignedToProjectId',
 			filter: createOrganizationFilter(
 				organizationId,
-				`assignedToUser="${userId}"`
+				`assignedToUserId="${userId}"`
 			),
 			sort: '-created',
 		})
@@ -216,10 +217,10 @@ export async function getProjectAssignments(
 
 		// Include organization filter for security
 		return await pb.collection('assignments').getFullList({
-			expand: 'equipment,assignedToUser',
+			expand: 'equipmentId,assignedToUserId',
 			filter: createOrganizationFilter(
 				organizationId,
-				`assignedToProject="${projectId}"`
+				`assignedToProjectId=${projectId}`
 			),
 			sort: '-created',
 		})
@@ -239,38 +240,43 @@ export async function getProjectAssignments(
  */
 export async function createAssignment(
 	organizationId: string,
-	data: Omit<Partial<Assignment>, 'organization'>
+	data: Pick<
+		Partial<Assignment>,
+		| 'equipmentId'
+		| 'assignedToUserId'
+		| 'assignedToProjectId'
+		| 'startDate'
+		| 'endDate'
+		| 'notes'
+	>
 ): Promise<Assignment> {
 	try {
 		// Security check - requires WRITE permission
-		const { user } = await validateOrganizationAccess(
-			organizationId,
-			PermissionLevel.WRITE
-		)
+		await validateOrganizationAccess(organizationId, PermissionLevel.WRITE)
 
 		// If equipment is provided, verify access to it
-		if (data.equipment) {
+		if (data.equipmentId) {
 			await validateResourceAccess(
 				ResourceType.EQUIPMENT,
-				data.equipment,
+				data.equipmentId,
 				PermissionLevel.READ
 			)
 		}
 
 		// If assignedToUser is provided, verify access to that user
-		if (data.assignedToUser) {
+		if (data.assignedToUserId) {
 			await validateResourceAccess(
 				ResourceType.USER,
-				data.assignedToUser,
+				data.assignedToUserId,
 				PermissionLevel.READ
 			)
 		}
 
 		// If assignedToProject is provided, verify access to that project
-		if (data.assignedToProject) {
+		if (data.assignedToProjectId) {
 			await validateResourceAccess(
 				ResourceType.PROJECT,
-				data.assignedToProject,
+				data.assignedToProjectId,
 				PermissionLevel.READ
 			)
 		}
@@ -283,7 +289,7 @@ export async function createAssignment(
 		// Ensure organization ID is set correctly
 		return await pb.collection('assignments').create({
 			...data,
-			organization: organizationId, // Force the correct organization ID
+			organizationId, // Force the correct organization ID
 		})
 	} catch (error) {
 		if (error instanceof SecurityError) {
@@ -298,37 +304,45 @@ export async function createAssignment(
  */
 export async function updateAssignment(
 	id: string,
-	data: Omit<Partial<Assignment>, 'organization' | 'id'>
+	data: Pick<
+		Partial<Assignment>,
+		| 'equipmentId'
+		| 'assignedToUserId'
+		| 'assignedToProjectId'
+		| 'startDate'
+		| 'endDate'
+		| 'notes'
+	>
 ): Promise<Assignment> {
 	try {
 		// Security check - requires WRITE permission for the assignment
-		const { organizationId } = await validateResourceAccess(
+		await validateResourceAccess(
 			ResourceType.ASSIGNMENT,
 			id,
 			PermissionLevel.WRITE
 		)
 
 		// Additional validations for related resources
-		if (data.equipment) {
+		if (data.equipmentId) {
 			await validateResourceAccess(
 				ResourceType.EQUIPMENT,
-				data.equipment,
+				data.equipmentId,
 				PermissionLevel.READ
 			)
 		}
 
-		if (data.assignedToUser) {
+		if (data.assignedToUserId) {
 			await validateResourceAccess(
 				ResourceType.USER,
-				data.assignedToUser,
+				data.assignedToUserId,
 				PermissionLevel.READ
 			)
 		}
 
-		if (data.assignedToProject) {
+		if (data.assignedToProjectId) {
 			await validateResourceAccess(
 				ResourceType.PROJECT,
-				data.assignedToProject,
+				data.assignedToProjectId,
 				PermissionLevel.READ
 			)
 		}
@@ -340,7 +354,8 @@ export async function updateAssignment(
 
 		// Never allow changing the organization
 		const sanitizedData = { ...data }
-		delete (sanitizedData as any).organization
+		// Use type assertion with more specific type
+		delete (sanitizedData as Record<string, unknown>).organizationId
 
 		return await pb.collection('assignments').update(id, sanitizedData)
 	} catch (error) {
@@ -427,10 +442,10 @@ export async function getEquipmentAssignmentHistory(
 
 		// Include organization filter for security
 		return await pb.collection('assignments').getFullList({
-			expand: 'assignedToUser,assignedToProject',
+			expand: 'assignedToUserId,assignedToProjectId',
 			filter: createOrganizationFilter(
 				organizationId,
-				`equipment=${equipmentId}`
+				`equipmentId="${equipmentId}"`
 			),
 			sort: '-startDate',
 		})
