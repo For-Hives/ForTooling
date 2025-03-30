@@ -1,13 +1,15 @@
+// src/middleware.ts
+import { ensureUserAndOrgSync } from '@/app/actions/services/clerk-sync/syncMiddleware'
 import {
 	clerkClient,
 	clerkMiddleware,
 	createRouteMatcher,
 } from '@clerk/nextjs/server'
+
 const isProtectedRoute = createRouteMatcher(['/app(.*)'])
 
 const isPublicRoute = createRouteMatcher([
 	'/',
-	'/app(.*)',
 	'/pricing(.*)',
 	'/legals(.*)',
 	'/marketing-components(.*)',
@@ -22,7 +24,15 @@ const isPublicRoute = createRouteMatcher([
 
 const isAdminRoute = createRouteMatcher(['/admin(.*)'])
 
+// Exclude webhook routes from sync middleware to prevent circular dependencies
+const isWebhookRoute = createRouteMatcher(['/api/webhook/(.*)'])
+
 export default clerkMiddleware(async (auth, req) => {
+	// For webhook routes, bypass sync to prevent loops
+	if (isWebhookRoute(req)) {
+		return
+	}
+
 	if (isPublicRoute(req)) {
 		return
 	}
@@ -41,6 +51,18 @@ export default clerkMiddleware(async (auth, req) => {
 
 	if (!authAwaited.orgId) {
 		return Response.redirect(new URL('/onboarding', req.url))
+	}
+
+	// Synchronize user and organization data
+	try {
+		// Only perform sync for protected routes and non-webhook routes
+		if (isProtectedRoute(req) && !isWebhookRoute(req)) {
+			await ensureUserAndOrgSync(authAwaited.userId, authAwaited.orgId)
+		}
+	} catch (error) {
+		console.error('Sync error in middleware:', error)
+		// Continue with the request even if sync fails
+		// This prevents the application from being unusable if sync fails
 	}
 
 	const clerkClientInstance = await clerkClient()
