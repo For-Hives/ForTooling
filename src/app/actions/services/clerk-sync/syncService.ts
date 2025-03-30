@@ -197,12 +197,12 @@ export async function linkUserToOrganization(
 		// Find the organization in PocketBase by Clerk ID
 		const pbOrg = await pb
 			.collection('Organization')
-			.getFirstListItem(`clerkId=`${orgId}``)
+			.getFirstListItem(`clerkId=${orgId}`)
 
 		// Update the user with the organization relation
 		await pb.collection('AppUser').update(pbUser.id, {
-			organizations: pbOrg.id
-		});
+			organizations: pbOrg.id,
+		})
 
 		// Update user if they're an admin in the organization
 		if (role === 'admin') {
