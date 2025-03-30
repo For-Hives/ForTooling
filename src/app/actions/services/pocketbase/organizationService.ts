@@ -3,6 +3,7 @@
 import {
 	getPocketBase,
 	handlePocketBaseError,
+	RecordData,
 } from '@/app/actions/services/pocketbase/baseService'
 import {
 	validateCurrentUser,
@@ -10,14 +11,176 @@ import {
 	PermissionLevel,
 	SecurityError,
 } from '@/app/actions/services/pocketbase/securityUtils'
-import { Organization, ListOptions, ListResult } from '@/types/types_pocketbase'
+import { userService } from '@/app/actions/services/pocketbase/userService'
+import {
+	Organization,
+	User,
+	ListOptions,
+	ListResult,
+} from '@/types/types_pocketbase'
 import {
 	ClerkOrganizationWebhookData,
 	ClerkMembershipWebhookData,
 	WebhookProcessingResult,
 } from '@/types/webhooks'
 
-import { userService } from './userService'
+// ============================
+// Internal methods (no security checks)
+// ============================
+
+/**
+ * Internal: Create organization without security checks
+ * @param data Organization data
+ */
+async function _createOrganization(
+	data: Partial<Organization>
+): Promise<Organization> {
+	try {
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		return await pb.collection('organizations').create(data)
+	} catch (error) {
+		return handlePocketBaseError(
+			error,
+			'OrganizationService._createOrganization'
+		)
+	}
+}
+
+/**
+ * Internal: Update organization without security checks
+ * @param id Organization ID
+ * @param data Updated organization data
+ */
+async function _updateOrganization(
+	id: string,
+	data: Partial<Organization>
+): Promise<Organization> {
+	try {
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		return await pb.collection('organizations').update(id, data)
+	} catch (error) {
+		return handlePocketBaseError(
+			error,
+			'OrganizationService._updateOrganization'
+		)
+	}
+}
+
+/**
+ * Internal: Delete organization without security checks
+ * @param id Organization ID
+ */
+async function _deleteOrganization(id: string): Promise<boolean> {
+	try {
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		await pb.collection('organizations').delete(id)
+		return true
+	} catch (error) {
+		handlePocketBaseError(error, 'OrganizationService._deleteOrganization')
+		return false
+	}
+}
+
+/**
+ * Internal: Add user to organization without security checks
+ * @param userId User ID
+ * @param organizationId Organization ID
+ */
+async function _addUserToOrganization(
+	userId: string,
+	organizationId: string
+): Promise<User> {
+	try {
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Get the user
+		const user = await pb.collection('users').getOne(userId, {
+			expand: 'organizations',
+		})
+
+		// Get current organizations
+		let currentOrgs = user.organizations || []
+		if (typeof currentOrgs === 'string') {
+			currentOrgs = [currentOrgs]
+		}
+
+		// Check if user is already in organization
+		if (!currentOrgs.includes(organizationId)) {
+			// Add organization to user's organizations list
+			currentOrgs.push(organizationId)
+		}
+
+		// Update user with new organizations list
+		return await pb.collection('users').update(userId, {
+			organizations: currentOrgs,
+		})
+	} catch (error) {
+		return handlePocketBaseError(
+			error,
+			'OrganizationService._addUserToOrganization'
+		)
+	}
+}
+
+/**
+ * Internal: Remove user from organization without security checks
+ * @param userId User ID
+ * @param organizationId Organization ID
+ */
+async function _removeUserFromOrganization(
+	userId: string,
+	organizationId: string
+): Promise<User> {
+	try {
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Get the user
+		const user = await pb.collection('users').getOne(userId, {
+			expand: 'organizations',
+		})
+
+		// Get current organizations
+		let currentOrgs = user.organizations || []
+		if (typeof currentOrgs === 'string') {
+			currentOrgs = [currentOrgs]
+		}
+
+		// Remove organization from user's organizations list
+		const updatedOrgs = currentOrgs.filter(orgId => orgId !== organizationId)
+
+		// Update user with new organizations list
+		return await pb.collection('users').update(userId, {
+			organizations: updatedOrgs,
+		})
+	} catch (error) {
+		return handlePocketBaseError(
+			error,
+			'OrganizationService._removeUserFromOrganization'
+		)
+	}
+}
+
+// ============================
+// Public API methods (with security)
+// ============================
 
 /**
  * Get a single organization by ID with security validation
@@ -49,8 +212,7 @@ export async function getOrganizationByClerkId(
 	clerkId: string
 ): Promise<Organization> {
 	try {
-		// This endpoint is typically called during authentication
-		// We still validate the current user is authenticated
+		// Validate current user is authenticated
 		const user = await validateCurrentUser()
 
 		const pb = await getPocketBase()
@@ -58,31 +220,27 @@ export async function getOrganizationByClerkId(
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		// Fixed the template literal syntax
 		const organization = await pb
 			.collection('organizations')
-			.getFirstListItem(`clerkId=${clerkId}`)
+			.getFirstListItem(`clerkId="${clerkId}"`)
 
-		// After fetching, verify that the user belongs to this organization
-		// The user can have multiple organizations, so we need to check if the requested org
-		// is in their list of organizations
-		if (
-			!user.expand?.organizationId ||
-			!Array.isArray(user.expand.organizationId)
-		) {
-			throw new SecurityError('User has no associated organizations')
-		}
+		// Check if user has access to this organization
+		// Get the user with expanded organizations
+		const userWithOrgs = await pb.collection('users').getOne(user.id, {
+			expand: 'organizations',
+		})
 
-		// Check if the requested organization is in the user's list of organizations
-		const hasAccess = user.expand.organizationId.some(
-			org => org.id === organization.id
-		)
+		// Check if the user has access to this organization
+		const hasAccess =
+			userWithOrgs.organizations &&
+			userWithOrgs.organizations.some(
+				(orgId: string) => orgId === organization.id
+			)
 
 		if (!hasAccess) {
 			throw new SecurityError('User does not belong to this organization')
 		}
 
-		// todo: fix type
 		return organization
 	} catch (error) {
 		if (error instanceof SecurityError) {
@@ -96,40 +254,27 @@ export async function getOrganizationByClerkId(
 }
 
 /**
- * Get organizations list with pagination for the current user
+ * Get organizations list for the current user
  */
 export async function getUserOrganizations(): Promise<Organization[]> {
 	try {
 		const user = await validateCurrentUser()
 
-		// If the user's organizations are already expanded, return them
-		if (
-			user.expand?.organizationId &&
-			Array.isArray(user.expand.organizationId)
-		) {
-			return user.expand.organizationId
-		}
-
-		// Otherwise, we need to fetch them
 		const pb = await getPocketBase()
 		if (!pb) {
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		// Assuming there's a relation field in the users collection that points to organizations
 		// Fetch the user with expanded organizations
 		const userWithOrgs = await pb.collection('users').getOne(user.id, {
-			expand: 'organizationId',
+			expand: 'organizations',
 		})
 
-		if (
-			userWithOrgs.expand?.organizationId &&
-			Array.isArray(userWithOrgs.expand.organizationId)
-		) {
-			return userWithOrgs.expand.organizationId
+		if (!userWithOrgs.expand?.organizations) {
+			return []
 		}
 
-		return []
+		return userWithOrgs.expand.organizations
 	} catch (error) {
 		if (error instanceof SecurityError) {
 			throw error
@@ -142,29 +287,107 @@ export async function getUserOrganizations(): Promise<Organization[]> {
 }
 
 /**
- * Get organizations list with pagination
- * This should only be accessible to super-admins, so we don't implement it
- * in a regular multi-tenant app
+ * Get all users in an organization
  */
-export async function getOrganizationsList(
-	options: ListOptions = {}
-): Promise<ListResult<Organization>> {
-	// This function should be restricted to super-admins only
-	throw new SecurityError(
-		'This operation is restricted to super administrators'
-	)
+export async function getOrganizationUsers(
+	organizationId: string
+): Promise<User[]> {
+	try {
+		// Security check - validates user has access to this organization
+		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		// Query users with this organization in their organizations list
+		const result = await pb.collection('users').getList(1, 100, {
+			filter: `organizations ~ "${organizationId}"`,
+		})
+
+		return result.items
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(
+			error,
+			'OrganizationService.getOrganizationUsers'
+		)
+	}
 }
 
 /**
- * Create a new organization
- * This should only be done during onboarding or by super-admins
+ * Get organizations list with pagination
+ * This should only be accessible to super-admins in regular operation
+ */
+export async function getOrganizationsList(
+	options: ListOptions = {},
+	elevated = false
+): Promise<ListResult<Organization>> {
+	try {
+		if (!elevated) {
+			// For regular access, verify super-admin status
+			const user = await validateCurrentUser()
+			if (!user.isAdmin) {
+				throw new SecurityError(
+					'This operation is restricted to super administrators'
+				)
+			}
+		}
+
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		return await pb
+			.collection('organizations')
+			.getList(options.page || 1, options.perPage || 50, {
+				filter: options.filter,
+				sort: options.sort,
+			})
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(
+			error,
+			'OrganizationService.getOrganizationsList'
+		)
+	}
+}
+
+/**
+ * Create a new organization - supports both regular and elevated access
  */
 export async function createOrganization(
-	data: Partial<Organization>
+	data: Partial<Organization>,
+	elevated = false
 ): Promise<Organization> {
-	// For creating organizations, we typically handle this specially
-	// during onboarding with Clerk. This should not be exposed to regular users.
-	throw new SecurityError('This operation is restricted')
+	try {
+		if (!elevated) {
+			// For regular access, verify super-admin status
+			const user = await validateCurrentUser()
+			if (!user.isAdmin) {
+				throw new SecurityError(
+					'This operation is restricted to super administrators'
+				)
+			}
+		}
+
+		// For elevated access (webhooks), we bypass additional security checks
+		return await _createOrganization(data)
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(
+			error,
+			'OrganizationService.createOrganization'
+		)
+	}
 }
 
 /**
@@ -172,31 +395,31 @@ export async function createOrganization(
  */
 export async function updateOrganization(
 	id: string,
-	data: Partial<Organization>
+	data: Partial<Organization>,
+	elevated = false
 ): Promise<Organization> {
 	try {
-		// Security check - requires ADMIN permission for organization updates
-		await validateOrganizationAccess(id, PermissionLevel.ADMIN)
+		if (!elevated) {
+			// Security check - requires ADMIN permission for organization updates
+			await validateOrganizationAccess(id, PermissionLevel.ADMIN)
 
-		const pb = await getPocketBase()
-		if (!pb) {
-			throw new Error('Failed to connect to PocketBase')
+			// Sanitize sensitive fields for regular users
+			const sanitizedData = { ...data }
+
+			// Never allow changing the clerkId - that's a special binding
+			delete sanitizedData.clerkId
+
+			// Don't allow changing Stripe-related fields directly
+			delete sanitizedData.stripeCustomerId
+			delete sanitizedData.subscriptionId
+			delete sanitizedData.subscriptionStatus
+			delete sanitizedData.priceId
+
+			return await _updateOrganization(id, sanitizedData)
 		}
 
-		// Sanitize sensitive fields
-		const sanitizedData = { ...data }
-
-		// Never allow changing the clerkId - that's a special binding
-		delete sanitizedData.clerkId
-
-		// Don't allow changing Stripe-related fields directly
-		// These should only be updated by the Stripe webhook
-		delete sanitizedData.stripeCustomerId
-		delete sanitizedData.subscriptionId
-		delete sanitizedData.subscriptionStatus
-		delete sanitizedData.priceId
-
-		return await pb.collection('organizations').update(id, sanitizedData)
+		// For elevated access, use the data as provided
+		return await _updateOrganization(id, data)
 	} catch (error) {
 		if (error instanceof SecurityError) {
 			throw error
@@ -209,13 +432,32 @@ export async function updateOrganization(
 }
 
 /**
- * Delete an organization
- * This should only be accessible to super-admins or during account cancellation flows
+ * Delete an organization - supports both regular and elevated access
  */
-export async function deleteOrganization(id: string): Promise<boolean> {
-	// This function should be restricted to super-admins only
-	// or be part of a special account cancellation flow
-	throw new SecurityError('This operation is restricted')
+export async function deleteOrganization(
+	id: string,
+	elevated = false
+): Promise<boolean> {
+	try {
+		if (!elevated) {
+			// For regular access, verify super-admin status
+			const user = await validateCurrentUser()
+			if (!user.isAdmin) {
+				throw new SecurityError(
+					'This operation is restricted to super administrators'
+				)
+			}
+		}
+
+		// For elevated access (webhooks), we bypass additional security checks
+		return await _deleteOrganization(id)
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		handlePocketBaseError(error, 'OrganizationService.deleteOrganization')
+		return false
+	}
 }
 
 /**
@@ -229,15 +471,17 @@ export async function updateSubscription(
 		subscriptionId?: string
 		subscriptionStatus?: string
 		priceId?: string
-	}
+	},
+	elevated = false
 ): Promise<Organization> {
 	try {
-		// This function should verify it's being called from a valid webhook
-		// For demo purposes, we'll implement a basic check
-		// In production, you'd add a webhook secret validation
-
-		// We'll skip full security checks since this is called from webhooks
-		// but we still validate the organization exists
+		if (!elevated) {
+			// For regular access, verify super-admin status
+			const user = await validateCurrentUser()
+			if (!user.isAdmin) {
+				throw new SecurityError('This operation is restricted')
+			}
+		}
 
 		const pb = await getPocketBase()
 		if (!pb) {
@@ -252,6 +496,9 @@ export async function updateSubscription(
 
 		return await pb.collection('organizations').update(id, subscriptionData)
 	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
 		return handlePocketBaseError(
 			error,
 			'OrganizationService.updateSubscription'
@@ -261,7 +508,7 @@ export async function updateSubscription(
 
 /**
  * Get current organization settings for the authenticated user
- * If the user belongs to multiple organizations, takes the first active one or prompts selection
+ * If the user belongs to multiple organizations, takes the first active one
  */
 export async function getCurrentOrganizationSettings(): Promise<Organization> {
 	try {
@@ -273,7 +520,6 @@ export async function getCurrentOrganizationSettings(): Promise<Organization> {
 		}
 
 		// For simplicity, we're returning the first organization
-		// In a real application, you might want to use the last selected org or prompt for selection
 		const firstOrgId = userOrganizations[0].id
 
 		// Fetch full organization details with validated access
@@ -302,10 +548,7 @@ export async function isCurrentUserOrgAdmin(
 		// Check if user has admin role
 		const isAdmin = user.isAdmin || user.role === 'admin'
 
-		// If they're not an admin by role, we need to check if they're an admin of this specific org
 		if (!isAdmin) {
-			// This would need additional checks in a real application
-			// For example, checking a userOrganizationRole table
 			return false
 		}
 
@@ -323,9 +566,61 @@ export async function isCurrentUserOrgAdmin(
 }
 
 /**
+ * Add a user to an organization
+ */
+export async function addUserToOrganization(
+	userId: string,
+	organizationId: string,
+	elevated = false
+): Promise<User> {
+	try {
+		if (!elevated) {
+			// Security check - requires ADMIN permission for member management
+			await validateOrganizationAccess(organizationId, PermissionLevel.ADMIN)
+		}
+
+		return await _addUserToOrganization(userId, organizationId)
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(
+			error,
+			'OrganizationService.addUserToOrganization'
+		)
+	}
+}
+
+/**
+ * Remove a user from an organization
+ */
+export async function removeUserFromOrganization(
+	userId: string,
+	organizationId: string,
+	elevated = false
+): Promise<User> {
+	try {
+		if (!elevated) {
+			// Security check - requires ADMIN permission for member management
+			await validateOrganizationAccess(organizationId, PermissionLevel.ADMIN)
+		}
+
+		return await _removeUserFromOrganization(userId, organizationId)
+	} catch (error) {
+		if (error instanceof SecurityError) {
+			throw error
+		}
+		return handlePocketBaseError(
+			error,
+			'OrganizationService.removeUserFromOrganization'
+		)
+	}
+}
+
+/**
  * Gets an organization by Clerk ID
  * @param {string} clerkId - Clerk organization ID
- * @returns {Promise<OrganizationRecord | null>} Organization record or null if not found
+ * @returns {Promise<Organization | null>} Organization record or null if not found
  */
 export async function getByClerkId(
 	clerkId: string
@@ -338,7 +633,7 @@ export async function getByClerkId(
 
 		const organization = await pb
 			.collection('organizations')
-			.getFirstListItem(`clerkId="${clerkId}"`)
+			.getFirstListItem(`clerkId=${clerkId}`)
 		return organization as Organization
 	} catch (error) {
 		// If organization not found, return null instead of throwing
@@ -350,33 +645,9 @@ export async function getByClerkId(
 	}
 }
 
-/**
- * Gets a membership by Clerk membership ID
- * @param {string} clerkMembershipId - Clerk membership ID
- * @returns {Promise<MembershipRecord | null>} Membership record or null if not found
- */
-export async function getMembershipByClerkId(
-	clerkMembershipId: string
-): Promise<MembershipRecord | null> {
-	try {
-		const pb = await getPocketBase()
-		if (!pb) {
-			throw new Error('Failed to connect to PocketBase')
-		}
-
-		const membership = await pb
-			.collection('organization_memberships')
-			.getFirstListItem(`clerkMembershipId="${clerkMembershipId}"`)
-		return membership as MembershipRecord
-	} catch (error) {
-		// If membership not found, return null instead of throwing
-		if (error instanceof Error && error.message.includes('404')) {
-			return null
-		}
-		console.error('Error fetching membership by clerk ID:', error)
-		return null
-	}
-}
+// ============================
+// Webhook handler methods
+// ============================
 
 /**
  * Handles a webhook event for organization creation
@@ -399,17 +670,23 @@ export async function handleWebhookCreated(
 		}
 
 		// Create new organization
-		await createOrganization({
-			clerkId: data.id,
-			name: data.name,
-			settings: {
-				imageUrl: data.image_url || null,
-				logoUrl: data.logo_url || null,
-				slug: data.slug || null,
+		await createOrganization(
+			{
+				clerkId: data.id,
+				name: data.name,
+				settings: {
+					imageUrl: data.image_url || null,
+					logoUrl: data.logo_url || null,
+					slug: data.slug || null,
+				},
 			},
-		})
+			elevated
+		)
 
-		return { message: `Created organization ${data.id}`, success: true }
+		return {
+			message: `Created organization ${data.id}`,
+			success: true,
+		}
 	} catch (error) {
 		console.error('Failed to process organization creation webhook:', error)
 		return {
@@ -433,21 +710,31 @@ export async function handleWebhookUpdated(
 		// Find existing organization
 		const existing = await getByClerkId(data.id)
 		if (!existing) {
-			return { message: `Organization ${data.id} not found`, success: false }
+			return {
+				message: `Organization ${data.id} not found`,
+				success: false,
+			}
 		}
 
 		// Update organization
-		await updateOrganization(existing.id, {
-			name: data.name,
-			settings: {
-				...existing.settings,
-				imageUrl: data.image_url || existing.settings?.imageUrl || null,
-				logoUrl: data.logo_url || existing.settings?.logoUrl || null,
-				slug: data.slug || existing.settings?.slug || null,
+		await updateOrganization(
+			existing.id,
+			{
+				name: data.name,
+				settings: {
+					...existing.settings,
+					imageUrl: data.image_url || existing.settings?.imageUrl || null,
+					logoUrl: data.logo_url || existing.settings?.logoUrl || null,
+					slug: data.slug || existing.settings?.slug || null,
+				},
 			},
-		})
+			elevated
+		)
 
-		return { message: `Updated organization ${data.id}`, success: true }
+		return {
+			message: `Updated organization ${data.id}`,
+			success: true,
+		}
 	} catch (error) {
 		console.error('Failed to process organization update webhook:', error)
 		return {
@@ -478,9 +765,12 @@ export async function handleWebhookDeleted(
 		}
 
 		// Delete organization
-		await deleteOrganization(existing.id)
+		await deleteOrganization(existing.id, elevated)
 
-		return { message: `Deleted organization ${data.id}`, success: true }
+		return {
+			message: `Deleted organization ${data.id}`,
+			success: true,
+		}
 	} catch (error) {
 		console.error('Failed to process organization deletion webhook:', error)
 		return {
@@ -501,7 +791,7 @@ export async function handleMembershipWebhookCreated(
 	elevated = true
 ): Promise<WebhookProcessingResult> {
 	try {
-		// Get organization and user IDs
+		// Get organization and user
 		const organization = await getByClerkId(data.organization.id)
 		if (!organization) {
 			return {
@@ -518,24 +808,24 @@ export async function handleMembershipWebhookCreated(
 			}
 		}
 
-		// Check if membership already exists
-		const existingMembership = await getMembershipByClerkId(data.id)
-		if (existingMembership) {
-			return { message: `Membership ${data.id} already exists`, success: true }
+		// Add user to organization
+		await addUserToOrganization(user.id, organization.id, elevated)
+
+		// Update user role if needed
+		if (data.role === 'admin') {
+			await userService.updateUser(
+				user.id,
+				{
+					role: 'admin',
+				},
+				elevated
+			)
 		}
 
-		// Create membership
-		await addMember(
-			{
-				clerkMembershipId: data.id,
-				organizationId: organization.id,
-				role: data.role,
-				userId: user.id,
-			},
-			elevated
-		)
-
-		return { message: `Created membership ${data.id}`, success: true }
+		return {
+			message: `Added user ${user.id} to organization ${organization.id}`,
+			success: true,
+		}
 	} catch (error) {
 		console.error('Failed to process membership creation webhook:', error)
 		return {
@@ -556,22 +846,46 @@ export async function handleMembershipWebhookUpdated(
 	elevated = true
 ): Promise<WebhookProcessingResult> {
 	try {
-		// Check if membership exists
-		const existingMembership = await getMembershipByClerkId(data.id)
-		if (!existingMembership) {
-			return { message: `Membership ${data.id} not found`, success: false }
+		// Get organization and user
+		const organization = await getByClerkId(data.organization.id)
+		if (!organization) {
+			return {
+				message: `Organization with Clerk ID ${data.organization.id} not found`,
+				success: false,
+			}
 		}
 
-		// Update membership
-		await updateMembership(
-			existingMembership.id,
-			{
-				role: data.role,
-			},
-			elevated
-		)
+		const user = await userService.getByClerkId(data.public_user_data.user_id)
+		if (!user) {
+			return {
+				message: `User with Clerk ID ${data.public_user_data.user_id} not found`,
+				success: false,
+			}
+		}
 
-		return { message: `Updated membership ${data.id}`, success: true }
+		// Update user role if needed
+		if (data.role === 'admin') {
+			await userService.updateUser(
+				user.id,
+				{
+					role: 'admin',
+				},
+				elevated
+			)
+		} else if (data.role === 'basic_member') {
+			await userService.updateUser(
+				user.id,
+				{
+					role: 'member',
+				},
+				elevated
+			)
+		}
+
+		return {
+			message: `Updated user ${user.id} role in organization ${organization.id}`,
+			success: true,
+		}
 	} catch (error) {
 		console.error('Failed to process membership update webhook:', error)
 		return {
@@ -592,19 +906,30 @@ export async function handleMembershipWebhookDeleted(
 	elevated = true
 ): Promise<WebhookProcessingResult> {
 	try {
-		// Check if membership exists
-		const existingMembership = await getMembershipByClerkId(data.id)
-		if (!existingMembership) {
+		// Get organization and user
+		const organization = await getByClerkId(data.organization.id)
+		if (!organization) {
 			return {
-				message: `Membership ${data.id} already deleted or not found`,
+				message: `Organization with Clerk ID ${data.organization.id} not found`,
 				success: true,
 			}
 		}
 
-		// Delete membership
-		await removeMember(existingMembership.id, elevated)
+		const user = await userService.getByClerkId(data.public_user_data.user_id)
+		if (!user) {
+			return {
+				message: `User with Clerk ID ${data.public_user_data.user_id} not found`,
+				success: true,
+			}
+		}
 
-		return { message: `Deleted membership ${data.id}`, success: true }
+		// Remove user from organization
+		await removeUserFromOrganization(user.id, organization.id, elevated)
+
+		return {
+			message: `Removed user ${user.id} from organization ${organization.id}`,
+			success: true,
+		}
 	} catch (error) {
 		console.error('Failed to process membership deletion webhook:', error)
 		return {
