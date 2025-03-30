@@ -44,3 +44,9 @@ template-radiant-tailwindui
 
 # export
 v0-context/
+
+.cursor/rules/rules-technique-prompt.mdc
+.cursor/rules/rules-stack-technique.mdc
+.cursor/rules/rules-cahier-des-charges.mdc
+tsconfig.tsbuildinfo
+bun.lock
