@@ -1,5 +1,5 @@
+import { createOrganization } from '@/app/actions/services/pocketbase/organizationService'
 import { verifyClerkWebhook } from '@/lib/webhookUtils'
-import { log } from 'console'
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
@@ -18,8 +18,9 @@ export async function POST(req: NextRequest) {
 	}
 
 	try {
-		// Get the request body
-		const body = await req.json()
+		// Get the request body (clone request since body was consumed by verification)
+		const clone = req.clone()
+		const body = await clone.json()
 		const { data, type } = body
 
 		console.log(`Processing organization webhook: ${type}`)
@@ -51,38 +52,95 @@ export async function POST(req: NextRequest) {
 
 /**
  * Handles organization creation event
- * @param data - Organization data from Clerk webhook
  */
 async function handleOrganizationCreated(data: any) {
-	const { id: clerkId, name } = data
-	console.log(data)
+	const { id: clerkId, logo_url, name, public_metadata, slug } = data
 
-	// TODO: Implement organization creation in your database
-	// Example: Create organization in PocketBase with the Clerk ID
+	console.log(`Organization created: ${clerkId} (${name})`)
+
+	try {
+		await createOrganization({
+			clerkId,
+			logoUrl: logo_url,
+			name,
+			publicMetadata: public_metadata || {},
+			slug: slug || name.toLowerCase().replace(/\s+/g, '-'),
+		})
+
+		console.log(`Successfully created organization in PocketBase: ${clerkId}`)
+	} catch (error) {
+		console.error(
+			`Failed to create organization in PocketBase: ${clerkId}`,
+			error
+		)
+		throw error
+	}
 }
 
 /**
  * Handles organization update event
- * @param data - Organization data from Clerk webhook
  */
 async function handleOrganizationUpdated(data: any) {
 	const { id: clerkId, image_url, logo_url, name, public_metadata, slug } = data
 
 	console.log(`Organization updated: ${clerkId} (${name})`)
 
-	// TODO: Implement organization update in your database
-	// Example: Update organization details in PocketBase
+	try {
+		const organization = await organizationService.findByClerkId(clerkId)
+
+		if (!organization) {
+			console.error(
+				`Organization not found in PocketBase for clerkId: ${clerkId}`
+			)
+			return
+		}
+
+		await organizationService.updateOrganization(organization.id, {
+			imageUrl: image_url,
+			logoUrl: logo_url,
+			name,
+			publicMetadata: public_metadata || {},
+			slug,
+		})
+
+		console.log(`Successfully updated organization in PocketBase: ${clerkId}`)
+	} catch (error) {
+		console.error(
+			`Failed to update organization in PocketBase: ${clerkId}`,
+			error
+		)
+		throw error
+	}
 }
 
 /**
  * Handles organization deletion event
- * @param data - Organization data from Clerk webhook
  */
 async function handleOrganizationDeleted(data: any) {
 	const { id: clerkId } = data
 
 	console.log(`Organization deleted: ${clerkId}`)
 
-	// TODO: Implement organization deletion in your database
-	// Example: Mark organization as deleted in PocketBase
+	try {
+		const organization = await organizationService.findByClerkId(clerkId)
+
+		if (!organization) {
+			console.log(
+				`Organization not found in PocketBase for clerkId: ${clerkId}`
+			)
+			return
+		}
+
+		await organizationService.softDeleteOrganization(organization.id)
+
+		console.log(
+			`Successfully marked organization as deleted in PocketBase: ${clerkId}`
+		)
+	} catch (error) {
+		console.error(
+			`Failed to mark organization as deleted in PocketBase: ${clerkId}`,
+			error
+		)
+		throw error
+	}
 }

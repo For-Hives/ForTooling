@@ -11,6 +11,13 @@ import {
 	SecurityError,
 } from '@/app/actions/services/pocketbase/securityUtils'
 import { Organization, ListOptions, ListResult } from '@/types/types_pocketbase'
+import {
+	ClerkOrganizationWebhookData,
+	ClerkMembershipWebhookData,
+	WebhookProcessingResult,
+} from '@/types/webhooks'
+
+import { userService } from './userService'
 
 /**
  * Get a single organization by ID with security validation
@@ -312,5 +319,297 @@ export async function isCurrentUserOrgAdmin(
 			throw error
 		}
 		return false
+	}
+}
+
+/**
+ * Gets an organization by Clerk ID
+ * @param {string} clerkId - Clerk organization ID
+ * @returns {Promise<OrganizationRecord | null>} Organization record or null if not found
+ */
+export async function getByClerkId(
+	clerkId: string
+): Promise<Organization | null> {
+	try {
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		const organization = await pb
+			.collection('organizations')
+			.getFirstListItem(`clerkId="${clerkId}"`)
+		return organization as Organization
+	} catch (error) {
+		// If organization not found, return null instead of throwing
+		if (error instanceof Error && error.message.includes('404')) {
+			return null
+		}
+		console.error('Error fetching organization by clerk ID:', error)
+		return null
+	}
+}
+
+/**
+ * Gets a membership by Clerk membership ID
+ * @param {string} clerkMembershipId - Clerk membership ID
+ * @returns {Promise<MembershipRecord | null>} Membership record or null if not found
+ */
+export async function getMembershipByClerkId(
+	clerkMembershipId: string
+): Promise<MembershipRecord | null> {
+	try {
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to connect to PocketBase')
+		}
+
+		const membership = await pb
+			.collection('organization_memberships')
+			.getFirstListItem(`clerkMembershipId="${clerkMembershipId}"`)
+		return membership as MembershipRecord
+	} catch (error) {
+		// If membership not found, return null instead of throwing
+		if (error instanceof Error && error.message.includes('404')) {
+			return null
+		}
+		console.error('Error fetching membership by clerk ID:', error)
+		return null
+	}
+}
+
+/**
+ * Handles a webhook event for organization creation
+ * @param {ClerkOrganizationWebhookData} data - Organization data from Clerk
+ * @param {boolean} elevated - Whether operation has elevated permissions
+ * @returns {Promise<WebhookProcessingResult>} Processing result
+ */
+export async function handleWebhookCreated(
+	data: ClerkOrganizationWebhookData,
+	elevated = true
+): Promise<WebhookProcessingResult> {
+	try {
+		// Check if already exists
+		const existing = await getByClerkId(data.id)
+		if (existing) {
+			return {
+				message: `Organization ${data.id} already exists`,
+				success: true,
+			}
+		}
+
+		// Create new organization
+		await createOrganization({
+			clerkId: data.id,
+			name: data.name,
+			settings: {
+				imageUrl: data.image_url || null,
+				logoUrl: data.logo_url || null,
+				slug: data.slug || null,
+			},
+		})
+
+		return { message: `Created organization ${data.id}`, success: true }
+	} catch (error) {
+		console.error('Failed to process organization creation webhook:', error)
+		return {
+			message: `Failed to process organization creation: ${error instanceof Error ? error.message : 'Unknown error'}`,
+			success: false,
+		}
+	}
+}
+
+/**
+ * Handles a webhook event for organization update
+ * @param {ClerkOrganizationWebhookData} data - Organization data from Clerk
+ * @param {boolean} elevated - Whether operation has elevated permissions
+ * @returns {Promise<WebhookProcessingResult>} Processing result
+ */
+export async function handleWebhookUpdated(
+	data: ClerkOrganizationWebhookData,
+	elevated = true
+): Promise<WebhookProcessingResult> {
+	try {
+		// Find existing organization
+		const existing = await getByClerkId(data.id)
+		if (!existing) {
+			return { message: `Organization ${data.id} not found`, success: false }
+		}
+
+		// Update organization
+		await updateOrganization(existing.id, {
+			name: data.name,
+			settings: {
+				...existing.settings,
+				imageUrl: data.image_url || existing.settings?.imageUrl || null,
+				logoUrl: data.logo_url || existing.settings?.logoUrl || null,
+				slug: data.slug || existing.settings?.slug || null,
+			},
+		})
+
+		return { message: `Updated organization ${data.id}`, success: true }
+	} catch (error) {
+		console.error('Failed to process organization update webhook:', error)
+		return {
+			message: `Failed to process organization update: ${error instanceof Error ? error.message : 'Unknown error'}`,
+			success: false,
+		}
+	}
+}
+
+/**
+ * Handles a webhook event for organization deletion
+ * @param {ClerkOrganizationWebhookData} data - Organization deletion data from Clerk
+ * @param {boolean} elevated - Whether operation has elevated permissions
+ * @returns {Promise<WebhookProcessingResult>} Processing result
+ */
+export async function handleWebhookDeleted(
+	data: ClerkOrganizationWebhookData,
+	elevated = true
+): Promise<WebhookProcessingResult> {
+	try {
+		// Find existing organization
+		const existing = await getByClerkId(data.id)
+		if (!existing) {
+			return {
+				message: `Organization ${data.id} already deleted or not found`,
+				success: true,
+			}
+		}
+
+		// Delete organization
+		await deleteOrganization(existing.id)
+
+		return { message: `Deleted organization ${data.id}`, success: true }
+	} catch (error) {
+		console.error('Failed to process organization deletion webhook:', error)
+		return {
+			message: `Failed to process organization deletion: ${error instanceof Error ? error.message : 'Unknown error'}`,
+			success: false,
+		}
+	}
+}
+
+/**
+ * Handles membership creation from webhook
+ * @param {ClerkMembershipWebhookData} data - Membership data from Clerk
+ * @param {boolean} elevated - Whether operation has elevated permissions
+ * @returns {Promise<WebhookProcessingResult>} Processing result
+ */
+export async function handleMembershipWebhookCreated(
+	data: ClerkMembershipWebhookData,
+	elevated = true
+): Promise<WebhookProcessingResult> {
+	try {
+		// Get organization and user IDs
+		const organization = await getByClerkId(data.organization.id)
+		if (!organization) {
+			return {
+				message: `Organization with Clerk ID ${data.organization.id} not found`,
+				success: false,
+			}
+		}
+
+		const user = await userService.getByClerkId(data.public_user_data.user_id)
+		if (!user) {
+			return {
+				message: `User with Clerk ID ${data.public_user_data.user_id} not found`,
+				success: false,
+			}
+		}
+
+		// Check if membership already exists
+		const existingMembership = await getMembershipByClerkId(data.id)
+		if (existingMembership) {
+			return { message: `Membership ${data.id} already exists`, success: true }
+		}
+
+		// Create membership
+		await addMember(
+			{
+				clerkMembershipId: data.id,
+				organizationId: organization.id,
+				role: data.role,
+				userId: user.id,
+			},
+			elevated
+		)
+
+		return { message: `Created membership ${data.id}`, success: true }
+	} catch (error) {
+		console.error('Failed to process membership creation webhook:', error)
+		return {
+			message: `Failed to process membership creation: ${error instanceof Error ? error.message : 'Unknown error'}`,
+			success: false,
+		}
+	}
+}
+
+/**
+ * Handles membership update from webhook
+ * @param {ClerkMembershipWebhookData} data - Membership data from Clerk
+ * @param {boolean} elevated - Whether operation has elevated permissions
+ * @returns {Promise<WebhookProcessingResult>} Processing result
+ */
+export async function handleMembershipWebhookUpdated(
+	data: ClerkMembershipWebhookData,
+	elevated = true
+): Promise<WebhookProcessingResult> {
+	try {
+		// Check if membership exists
+		const existingMembership = await getMembershipByClerkId(data.id)
+		if (!existingMembership) {
+			return { message: `Membership ${data.id} not found`, success: false }
+		}
+
+		// Update membership
+		await updateMembership(
+			existingMembership.id,
+			{
+				role: data.role,
+			},
+			elevated
+		)
+
+		return { message: `Updated membership ${data.id}`, success: true }
+	} catch (error) {
+		console.error('Failed to process membership update webhook:', error)
+		return {
+			message: `Failed to process membership update: ${error instanceof Error ? error.message : 'Unknown error'}`,
+			success: false,
+		}
+	}
+}
+
+/**
+ * Handles membership deletion from webhook
+ * @param {ClerkMembershipWebhookData} data - Membership data from Clerk
+ * @param {boolean} elevated - Whether operation has elevated permissions
+ * @returns {Promise<WebhookProcessingResult>} Processing result
+ */
+export async function handleMembershipWebhookDeleted(
+	data: ClerkMembershipWebhookData,
+	elevated = true
+): Promise<WebhookProcessingResult> {
+	try {
+		// Check if membership exists
+		const existingMembership = await getMembershipByClerkId(data.id)
+		if (!existingMembership) {
+			return {
+				message: `Membership ${data.id} already deleted or not found`,
+				success: true,
+			}
+		}
+
+		// Delete membership
+		await removeMember(existingMembership.id, elevated)
+
+		return { message: `Deleted membership ${data.id}`, success: true }
+	} catch (error) {
+		console.error('Failed to process membership deletion webhook:', error)
+		return {
+			message: `Failed to process membership deletion: ${error instanceof Error ? error.message : 'Unknown error'}`,
+			success: false,
+		}
 	}
 }

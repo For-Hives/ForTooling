@@ -53,3 +53,130 @@ export const handlePocketBaseError = (
 
 	throw new Error(`Unknown PocketBase error${contextMsg}`)
 }
+
+/**
+ * Base method for creating records with permission handling
+ * @param collection - Collection name
+ * @param data - Record data
+ * @param elevated - Whether this operation has elevated permissions (e.g., from webhook)
+ */
+export async function createRecord(
+	collection: string,
+	data: any,
+	elevated = false
+) {
+	try {
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to initialize PocketBase client')
+		}
+
+		// Create the record with the PocketBase instance
+		return await pb.collection(collection).create(data)
+	} catch (error) {
+		console.error(`Error creating record in ${collection}:`, error)
+		throw error
+	}
+}
+
+/**
+ * Base method for updating records with permission handling
+ * @param collection - Collection name
+ * @param id - Record ID
+ * @param data - Updated data
+ * @param elevated - Whether this operation has elevated permissions
+ */
+export async function updateRecord(
+	collection: string,
+	id: string,
+	data: any,
+	elevated = false
+) {
+	try {
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to initialize PocketBase client')
+		}
+
+		// Update the record with the PocketBase instance
+		return await pb.collection(collection).update(id, data)
+	} catch (error) {
+		console.error(`Error updating record in ${collection}:`, error)
+		throw error
+	}
+}
+
+/**
+ * Base method for deleting records with permission handling
+ * @param collection - Collection name
+ * @param id - Record ID
+ * @param elevated - Whether this operation has elevated permissions
+ */
+export async function deleteRecord(
+	collection: string,
+	id: string,
+	elevated = false
+) {
+	try {
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to initialize PocketBase client')
+		}
+
+		// Delete the record with the PocketBase instance
+		return await pb.collection(collection).delete(id)
+	} catch (error) {
+		console.error(`Error deleting record in ${collection}:`, error)
+		throw error
+	}
+}
+
+/**
+ * Base method for retrieving a single record by ID
+ * @param collection - Collection name
+ * @param id - Record ID
+ */
+export async function getRecordById(collection: string, id: string) {
+	try {
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to initialize PocketBase client')
+		}
+
+		return await pb.collection(collection).getOne(id)
+	} catch (error) {
+		console.error(`Error getting record by ID in ${collection}:`, error)
+		throw error
+	}
+}
+
+/**
+ * Base method for listing records with filters
+ * @param collection - Collection name
+ * @param page - Page number
+ * @param perPage - Items per page
+ * @param filter - Filter string
+ * @param sort - Sort string
+ */
+export async function listRecords(
+	collection: string,
+	page = 1,
+	perPage = 50,
+	filter = '',
+	sort = ''
+) {
+	try {
+		const pb = await getPocketBase()
+		if (!pb) {
+			throw new Error('Failed to initialize PocketBase client')
+		}
+
+		return await pb.collection(collection).getList(page, perPage, {
+			filter,
+			sort,
+		})
+	} catch (error) {
+		console.error(`Error listing records in ${collection}:`, error)
+		throw error
+	}
+}

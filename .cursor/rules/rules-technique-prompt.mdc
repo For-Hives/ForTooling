@@ -40,6 +40,7 @@ Si il y a besoin de schémas, il faut les les créer avec [Mermaid](mdc:https:/m
 - **Imports**: Groupés et ordonnés (1. React/Next, 2. Libs externes, 3. Components, 4. Utils)
 - **Nommage**: camelCase pour variables/fonctions, PascalCase pour composants/types
 - **État**: Préférer `useState`, `useReducer` localement, Zustand globalement, et éviter absolument le props drilling.
+- **Types**: les types seront regroupés correctement au même endroit dans /types, pour éviter toute redondances et duplications des types et du code
 
 ### Documentation
 
@@ -82,7 +83,7 @@ Si il y a besoin de schémas, il faut les les créer avec [Mermaid](mdc:https:/m
 - Éviter d'exposer des données sensibles dans le frontend
 - Ne pas dupliquer la logique d'authentification et de validation
 - Éviter de créer des Server Actions sans utiliser le middleware de protection
-- Tout les imports doivent utiliser le format '@app/.....' et pas de chemin relatif ou absolu direct
+- Tout les imports doivent utiliser le format '@/...' et pas de chemin relatif ou absolu direct
 
 ## 🔄 Processus de Travail
 
