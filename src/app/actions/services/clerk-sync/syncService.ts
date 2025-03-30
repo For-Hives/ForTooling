@@ -10,8 +10,11 @@ import {
 	_createOrganization,
 	_updateOrganization,
 } from '@/app/actions/services/pocketbase/organization/internal'
-import { User, Organization } from '@/types/types_pocketbase'
-import { clerkClient } from '@clerk/nextjs/server'
+import {
+	AppUser,
+	Organization as PBOrganization,
+} from '@/types/types_pocketbase'
+import { clerkClient, User } from '@clerk/nextjs/server'
 
 /**
  * Type definitions for Clerk user data
@@ -71,18 +74,12 @@ type ClerkMembershipData = {
 
 /**
  * Synchronizes Clerk user data to PocketBase
- * @param userData The user data from Clerk webhook or API
+ * @param user The user data from Clerk webhook or API
  * @returns The created or updated user
  */
 export async function syncUserToPocketBase(user: User): Promise<AppUser> {
 	try {
-		const {
-			emailAddresses,
-			firstName,
-			id: clerkId,
-			lastName,
-			...otherUserData
-		} = user
+		const { emailAddresses, firstName, id: clerkId, lastName } = user
 
 		if (!clerkId) {
 			throw new Error('Clerk user ID is required for syncing')
@@ -106,7 +103,7 @@ export async function syncUserToPocketBase(user: User): Promise<AppUser> {
 			name:
 				firstName && lastName
 					? `${firstName} ${lastName}`
-					: user.username || 'Unknown',
+					: (user.username ?? 'Unknown'),
 			verified: primaryEmail.verification?.status === 'verified',
 			// Add other fields as needed
 		}
@@ -127,23 +124,29 @@ export async function syncUserToPocketBase(user: User): Promise<AppUser> {
 
 /**
  * Synchronizes Clerk organization data to PocketBase
- * @param orgData The organization data from Clerk webhook or API
+ * @param organization The organization data from Clerk webhook or API
  * @returns The created or updated organization
  */
 export async function syncOrganizationToPocketBase(
-	organization: ClerkOrganization
-): Promise<Organization> {
+	organization: ClerkOrganizationData
+): Promise<PBOrganization> {
 	try {
-		const { id: clerkId, name, ...otherOrgData } = organization
+		const { id: clerkId, name } = organization
 
 		if (!clerkId) {
 			throw new Error('Clerk organization ID is required for syncing')
 		}
 
+		console.info(`Attempting to sync organization with clerkId: ${clerkId}`)
+
+		// Try to find existing Organization
+		const existingOrg = await getOrganizationByClerkId(clerkId)
+		console.info('Existing org lookup result:', existingOrg)
+
 		// Prepare organization data
 		const orgDataToSync = {
 			clerkId,
-			name: name || 'Unnamed Organization',
+			name: name ?? 'Unnamed Organization',
 			// Add other fields as needed
 		}
 
@@ -185,12 +188,12 @@ export async function linkUserToOrganization(
 
 		// Find the user in PocketBase by Clerk ID
 		const pbUser = await pb
-			.collection('users')
+			.collection('AppUser')
 			.getFirstListItem(`clerkId=${userId}`)
 
 		// Find the organization in PocketBase by Clerk ID
 		const pbOrg = await pb
-			.collection('organizations')
+			.collection('Organization')
 			.getFirstListItem(`clerkId=${orgId}`)
 
 		// Check if the relation already exists
@@ -204,7 +207,7 @@ export async function linkUserToOrganization(
 		if (existingRelations.totalItems === 0) {
 			await pb.collection('user_organizations').create({
 				organization: pbOrg.id,
-				role: role || 'member',
+				role: role ?? 'member',
 				user: pbUser.id,
 			})
 		} else {
@@ -212,13 +215,13 @@ export async function linkUserToOrganization(
 			await pb
 				.collection('user_organizations')
 				.update(existingRelations.items[0].id, {
-					role: role || 'member',
+					role: role ?? 'member',
 				})
 		}
 
 		// Update user if they're an admin in the organization
 		if (role === 'admin') {
-			await pb.collection('users').update(pbUser.id, {
+			await pb.collection('AppUser').update(pbUser.id, {
 				isAdmin: true,
 				role: 'admin',
 			})
@@ -243,15 +246,8 @@ export async function getClerkUserById(
 		const clerkClientInstance = await clerkClient()
 		const user = await clerkClientInstance.users.getUser(clerkId)
 		return {
-			// email_addresses: user.emailAddresses.map(email => ({
-			// 	email_address: email.emailAddress,
-			// 	verification: email.verification,
-			// })),
-			// first_name: user.firstName,
 			id: user.id,
 			image_url: user.imageUrl,
-			// last_name: user.lastName,
-			// username: user.username,
 		}
 	} catch (error) {
 		console.error('Error fetching user from Clerk:', error)
@@ -274,10 +270,8 @@ export async function getClerkOrganizationById(
 				organizationId: clerkId,
 			})
 		return {
-			// email_address: organization.email_address,
 			id: organization.id,
 			name: organization.name,
-			// phone_number: organization.phone_number,
 		}
 	} catch (error) {
 		console.error('Error fetching organization from Clerk:', error)
