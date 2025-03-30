@@ -7,6 +7,7 @@ import {
 	generateUniqueCode,
 } from '@/app/actions/services/pocketbase/equipmentService'
 import { SecurityError } from '@/app/actions/services/pocketbase/securityUtils'
+import { Equipment } from '@/types/types_pocketbase'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -27,7 +28,7 @@ type EquipmentFormData = z.infer<typeof equipmentSchema>
 export type EquipmentActionResult = {
 	success: boolean
 	message?: string
-	data?: any
+	data?: Equipment
 	validationErrors?: Record<string, string>
 }
 
