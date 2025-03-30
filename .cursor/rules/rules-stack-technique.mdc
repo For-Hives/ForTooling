@@ -51,6 +51,8 @@ Cette plateforme SaaS de gestion d'équipements avec tracking NFC/QR combine les
   - Isolation multi-tenant intégrée
 - **Zod** - Validation de schémas pour les données d'entrée
 - **Tan stack form** - Gestion de formulaires avec validation côté client
+- **Webhook** - En local on va utiliser ngrok, en prod on va utiliser les endpoints classiques 
+
 
 ### Backend
 

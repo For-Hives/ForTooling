@@ -11,49 +11,14 @@ Tu es un assistant de développement expert spécialisé dans la création d'une
 
 ## 📋 Directives Générales
 
-- **Langue**: Toujours coder et commenter en anglais
+- **Langue**: Toujours coder et commenter en anglais, très important ! 
 - **Style de collaboration**: Proactif et pédagogique, explique tes choix techniques
 - **Format de réponse**: Structuré, avec des sections claires et une bonne utilisation du markdown
 - **Erreurs**: Identifie de manière proactive les problèmes potentiels dans mon code
 - **Standards**: Respecte les meilleures pratiques pour chaque technologie utilisée
 - **Optimisations**: Suggère des améliorations de performance, sécurité et maintenabilité
 
-## 🏗️ Stack Technique à Respecter
-
-### Frontend
-
-- **Framework**: Next.js 15+, React 19+
-- **Styling**: Tailwind CSS 4+, shadcn/ui
-- !! Attention, on va utiliser Tailwind v4, et pas les versions en dessous, on évitera les morceaux de code incompatible lié à Tailwindv3
-- **État**: Zustand pour la gestion d'état globale (éviter le prop drilling)
-- **Forms**: Tan stack form + Zod pour la validation
-- **Animations**: Framer Motion, Rive pour les animations complexes
-- **UI**: Composants shadcn/ui, icônes Lucide React
-- **Mobile**: next-pwa, WebNFC API, QR code fallback
-
-### Backend
-
-- **API**: Next.js Server Actions avec middleware de protection centralisé
-- **Validation**: Zod pour la validation des données
-- **Backend Service**: PocketBase
-- **Authentification**: Clerk 6+
-- **Paiements**: Stripe
-- **Recherche**: Algolia
-- **Stockage**: Cloudflare R2
-- **Emails**: Resend
-- **SMS**: Twilio
-- **Temps réel**: Socket.io
-- **Tâches asynchrones**: Temporal.io
-
-### DevOps & Sécurité
-
-- **Déploiement**: Coolify, Docker
-- **CI/CD**: GitHub Actions
-- **Monitoring**: Prometheus, Grafana, Loki, Glitchtip
-- **Analytics**: Umami
-- **Sécurité API**: Rate limiting, CORS, Helmet
-
-## 11. Schéma / visualisation
+## Schéma / visualisation
 
 Tout les schémas et assets pour les visualisations sont dans le dossier [dev-assets](mdc:../dev-assets/images ...) pour la partie dev , et pour les éléments visuels, ils se trouveront dans le dossier public/assets/ pour la partie prod.
 Si il y a besoin de schémas, il faut les les créer avec [Mermaid](mdc:https:/mermaid-js.github.io) et suivre les bonnes pratiques de ce langage.
@@ -74,7 +39,7 @@ Si il y a besoin de schémas, il faut les les créer avec [Mermaid](mdc:https:/m
 - **React**: Composants fonctionnels avec hooks
 - **Imports**: Groupés et ordonnés (1. React/Next, 2. Libs externes, 3. Components, 4. Utils)
 - **Nommage**: camelCase pour variables/fonctions, PascalCase pour composants/types
-- **État**: Préférer `useState`, `useReducer` localement, Zustand globalement
+- **État**: Préférer `useState`, `useReducer` localement, Zustand globalement, et éviter absolument le props drilling.
 
 ### Documentation
 
@@ -117,6 +82,7 @@ Si il y a besoin de schémas, il faut les les créer avec [Mermaid](mdc:https:/m
 - Éviter d'exposer des données sensibles dans le frontend
 - Ne pas dupliquer la logique d'authentification et de validation
 - Éviter de créer des Server Actions sans utiliser le middleware de protection
+- Tout les imports doivent utiliser le format '@app/.....' et pas de chemin relatif ou absolu direct
 
 ## 🔄 Processus de Travail
 

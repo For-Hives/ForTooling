@@ -1,127 +1,88 @@
-import {
-	syncUserToPocketBase,
-	syncOrganizationToPocketBase,
-	linkUserToOrganization,
-} from '@/app/actions/services/clerk-sync/syncService'
-import { logData } from '@/lib/testingHelpers'
-import { WebhookEvent } from '@clerk/nextjs/server'
-import { headers } from 'next/headers'
-// src/app/api/webhook/clerk/route.ts
+import { verifyClerkWebhook } from '@/lib/webhookUtils'
+import { log } from 'console'
 import { NextRequest, NextResponse } from 'next/server'
-import { Webhook } from 'svix'
 
 /**
- * Webhook handler for Clerk events.
- * This endpoint receives and processes events from Clerk to keep PocketBase data in sync.
- *
- * @param req The incoming request containing the webhook payload
- * @returns Response indicating success or error
+ * Handles webhook events from Clerk related to organizations
  */
 export async function POST(req: NextRequest) {
-	logData('🚀 Webhook received', { timestamp: new Date().toISOString() }, true)
+	// Verify webhook signature
+	const isValid = await verifyClerkWebhook(
+		req,
+		process.env.CLERK_WEBHOOK_SECRET_ORGANIZATION
+	)
 
-	// Verify the webhook signature to ensure it's from Clerk
-	const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
-
-	if (!WEBHOOK_SECRET) {
-		console.error('Missing CLERK_WEBHOOK_SECRET')
-		return new NextResponse('Webhook secret not configured', { status: 500 })
-	}
-
-	// Get the signature and timestamp from the Svix headers
-	const headerPayload = await headers()
-	const svixId = headerPayload.get('svix-id')
-	const svixTimestamp = headerPayload.get('svix-timestamp')
-	const svixSignature = headerPayload.get('svix-signature')
-
-	// If there are missing Svix headers, reject the request
-	if (!svixId || !svixTimestamp || !svixSignature) {
-		return new NextResponse('Missing Svix headers', { status: 400 })
+	if (!isValid) {
+		console.error('Invalid webhook signature for organization event')
+		return new NextResponse('Invalid signature', { status: 401 })
 	}
 
 	try {
-		// Get the raw request body
-		const payload = await req.text()
-		logData('🚀 Webhook payload', payload, true)
+		// Get the request body
+		const body = await req.json()
+		const { data, type } = body
 
-		// Create a new Svix instance with our webhook secret
-		const webhook = new Webhook(WEBHOOK_SECRET)
+		console.log(`Processing organization webhook: ${type}`)
 
-		// Verify the signature
-		const evt = webhook.verify(payload, {
-			'svix-id': svixId,
-			'svix-signature': svixSignature,
-			'svix-timestamp': svixTimestamp,
-		}) as WebhookEvent
-		logData('🚀 Webhook event', evt, true)
-
-		// Get the ID of the webhook for idempotency
-		const eventId = evt.data.id || svixId
-
-		// Check if this event was already processed (implement this function)
-		if (await hasProcessedEvent(eventId)) {
-			return NextResponse.json(
-				{ message: 'Event already processed' },
-				{ status: 200 }
-			)
+		// Handle different organization events
+		switch (type) {
+			case 'organization.created':
+				await handleOrganizationCreated(data)
+				break
+			case 'organization.updated':
+				await handleOrganizationUpdated(data)
+				break
+			case 'organization.deleted':
+				await handleOrganizationDeleted(data)
+				break
+			default:
+				console.log(`Unhandled organization event type: ${type}`)
 		}
-
-		// Handle different event types
-		const eventType = evt.type
-
-		if (eventType === 'user.created') {
-			logData('🚀 User created', evt.data, true)
-			await syncUserToPocketBase(evt.data)
-		} else if (eventType === 'user.updated') {
-			await syncUserToPocketBase(evt.data)
-		} else if (eventType === 'organization.created') {
-			await syncOrganizationToPocketBase(evt.data)
-		} else if (eventType === 'organization.updated') {
-			await syncOrganizationToPocketBase(evt.data)
-		} else if (eventType === 'organizationMembership.created') {
-			await linkUserToOrganization(evt.data)
-		}
-		// Add additional event handlers as needed
-
-		// Mark the event as processed
-		await markEventAsProcessed(eventId)
 
 		return NextResponse.json({ success: true })
 	} catch (error) {
-		console.error('Error processing webhook:', error)
-		return new NextResponse('Webhook verification failed', { status: 400 })
+		console.error('Error processing organization webhook:', error)
+		return NextResponse.json(
+			{ error: 'Internal server error' },
+			{ status: 500 }
+		)
 	}
 }
 
 /**
- * Check if an event has already been processed to ensure idempotency
- * @param eventId The unique ID of the event
- * @returns Boolean indicating if the event was already processed
+ * Handles organization creation event
+ * @param data - Organization data from Clerk webhook
  */
-async function hasProcessedEvent(eventId: string): Promise<boolean> {
-	try {
-		// Implementation could use PocketBase to store processed events
-		// For now, we'll return false to process all events
-		// TODO: Implement proper event tracking
+async function handleOrganizationCreated(data: any) {
+	const { id: clerkId, name } = data
+	console.log(data)
 
-		return false
-	} catch (error) {
-		console.error('Error checking processed event:', error)
-		return false
-	}
+	// TODO: Implement organization creation in your database
+	// Example: Create organization in PocketBase with the Clerk ID
 }
 
 /**
- * Mark an event as processed to avoid duplicate processing
- * @param eventId The unique ID of the event to mark as processed
+ * Handles organization update event
+ * @param data - Organization data from Clerk webhook
  */
-async function markEventAsProcessed(eventId: string): Promise<void> {
-	try {
-		// Implementation would store the event ID with a timestamp
-		// TODO: Implement proper event tracking
+async function handleOrganizationUpdated(data: any) {
+	const { id: clerkId, image_url, logo_url, name, public_metadata, slug } = data
 
-		console.log(`Event ${eventId} processed successfully`)
-	} catch (error) {
-		console.error('Error marking event as processed:', error)
-	}
+	console.log(`Organization updated: ${clerkId} (${name})`)
+
+	// TODO: Implement organization update in your database
+	// Example: Update organization details in PocketBase
+}
+
+/**
+ * Handles organization deletion event
+ * @param data - Organization data from Clerk webhook
+ */
+async function handleOrganizationDeleted(data: any) {
+	const { id: clerkId } = data
+
+	console.log(`Organization deleted: ${clerkId}`)
+
+	// TODO: Implement organization deletion in your database
+	// Example: Mark organization as deleted in PocketBase
 }
