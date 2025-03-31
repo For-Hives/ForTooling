@@ -75,8 +75,8 @@ export async function _deleteAppUser(id: string): Promise<boolean> {
 		await pb.collection('AppUser').delete(id)
 		return true
 	} catch (error) {
-		handlePocketBaseError(error, 'AppUserService._deleteAppUser')
-		return false
+		console.error('Error deleting app user:', error)
+		throw error
 	}
 }
 

@@ -19,7 +19,7 @@
         "canvas-confetti": "1.9.3",
         "class-variance-authority": "0.7.1",
         "clsx": "2.1.1",
-        "crypto": "^1.0.1",
+        "crypto": "1.0.1",
         "dayjs": "1.11.13",
         "framer-motion": "12.6.2",
         "heroicons": "2.2.0",

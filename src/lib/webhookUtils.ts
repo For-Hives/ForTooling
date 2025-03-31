@@ -37,6 +37,11 @@ export async function verifyClerkWebhook(
 			'svix-timestamp': svix_timestamp,
 		})
 
+		if (!event) {
+			console.error('Invalid webhook signature')
+			return { success: false }
+		}
+
 		// If we reach here, the verification succeeded
 		return { payload: JSON.parse(payload), success: true }
 	} catch (error) {

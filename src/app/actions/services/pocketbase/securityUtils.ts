@@ -30,8 +30,8 @@ export async function validateCurrentUser(userId?: string): Promise<AppUser> {
 	try {
 		// Find the user by Clerk ID
 		const user = await pb
-			.collection('users')
-			.getFirstListItem(`clerkId=${clerkUserId}`)
+			.collection('AppUser')
+			.getFirstListItem(`clerkId=${'"' + clerkUserId + '"'}`)
 
 		// If a specific user ID was provided, verify it matches the current user
 		if (userId && user.id !== userId) {
@@ -60,7 +60,7 @@ export async function validateOrganizationAccess(
 	const user = await validateCurrentUser()
 
 	// Check organization membership
-	if (user.expand?.organizationId !== organizationId) {
+	if (user.organizations?.some(org => org.id === organizationId)) {
 		throw new SecurityError('Unauthorized access to organization data')
 	}
 

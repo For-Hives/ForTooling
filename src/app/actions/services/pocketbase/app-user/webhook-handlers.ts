@@ -73,13 +73,13 @@ export async function handleWebhookUpdated(
 	elevated = true
 ): Promise<WebhookProcessingResult> {
 	try {
-		console.log('Processing user update webhook for clerkId:', data.id)
+		console.info('Processing user update webhook for clerkId:', data.id)
 
 		// Find existing user
 		const existing = await getByClerkId(data.id)
 
 		if (!existing) {
-			console.log(
+			console.info(
 				`AppUser with clerkId ${data.id} not found, creating new user`
 			)
 			// If user doesn't exist, create it instead of updating
@@ -87,7 +87,7 @@ export async function handleWebhookUpdated(
 		}
 
 		// Continue with the update logic...
-		console.log(`Updating existing AppUser: ${existing.id}`)
+		console.info(`Updating existing AppUser: ${existing.id}`)
 
 		// Get primary email if available
 		let email = existing.email // Default to existing
@@ -121,30 +121,46 @@ export async function handleWebhookUpdated(
 }
 
 /**
- * Handles a webhook event for user deletion
- * @param {ClerkUserWebhookData} data - User deletion data from Clerk
- * @param {boolean} elevated - Whether operation has elevated permissions
- * @returns {Promise<WebhookProcessingResult>} Processing result
+ * Handles the user.deleted webhook event from Clerk
+ * @param data The webhook data from Clerk
+ * @param elevated Whether to use elevated permissions
+ * @returns Result of the operation
  */
 export async function handleWebhookDeleted(
 	data: ClerkUserWebhookData,
 	elevated = true
 ): Promise<WebhookProcessingResult> {
 	try {
+		const clerkId = data.id
+		console.info(`Processing user deletion webhook for clerkId: ${clerkId}`)
+
 		// Find existing user
-		const existing = await getByClerkId(data.id)
+		const existing = await getByClerkId(clerkId)
+
+		// If user doesn't exist in PocketBase, just log and return success
 		if (!existing) {
+			console.info(
+				`AppUser with clerkId ${clerkId} not found in PocketBase. Nothing to delete.`
+			)
 			return {
-				message: `AppUser ${data.id} already deleted or not found`,
+				message: `No user found with clerkId ${clerkId}. No action needed.`,
 				success: true,
 			}
 		}
 
-		// Delete user
+		console.info(
+			`Found AppUser with id ${existing.id} and clerkId ${clerkId}. Deleting...`
+		)
+
+		// Delete the user from PocketBase
 		await deleteAppUser(existing.id, elevated)
 
+		console.info(
+			`Successfully deleted AppUser with id ${existing.id} and clerkId ${clerkId}`
+		)
+
 		return {
-			message: `Deleted AppUser ${data.id}`,
+			message: `Successfully deleted user with clerkId ${clerkId}`,
 			success: true,
 		}
 	} catch (error) {

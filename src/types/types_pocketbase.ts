@@ -44,7 +44,7 @@ export interface AppUser {
 	isAdmin: boolean
 	lastLogin?: string
 	clerkId: string
-	organizations?: string
+	organizations?: Organization[]
 	created: string
 	updated: string
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any

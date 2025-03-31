@@ -1,161 +1,100 @@
-import * as appUserService from '@/app/actions/services/pocketbase/app-user'
+import {
+	handleWebhookCreated,
+	handleWebhookDeleted,
+	handleWebhookUpdated,
+} from '@/app/actions/services/pocketbase/app-user/webhook-handlers'
 import { verifyClerkWebhook } from '@/lib/webhookUtils'
 import { NextRequest, NextResponse } from 'next/server'
+
+// Define types for Clerk webhook payload
+interface ClerkWebhookData {
+	id: string
+	[key: string]: unknown
+}
+
+interface ClerkWebhookEvent {
+	type: string
+	data: ClerkWebhookData
+}
+
 /**
- * Handles webhook events from Clerk related to users
+ * Handles Clerk webhook requests for user-related events
  */
 export async function POST(req: NextRequest) {
-	console.log('Received Clerk webhook request')
-
-	const webhookSecret = process.env.CLERK_WEBHOOK_SECRET_USER
-
-	// Verify the webhook
-	const { payload, success } = await verifyClerkWebhook(
-		req.clone(),
-		webhookSecret
-	)
-
-	if (!success || !payload) {
-		console.error('Invalid webhook signature for user event')
-		return new NextResponse('Unauthorized', { status: 401 })
-	}
+	console.info('Received Clerk webhook request')
 
 	try {
-		// Process based on event type
-		const { data, type } = payload
+		// Parse the request body
+		const body = (await req.json()) as ClerkWebhookEvent
 
-		console.log('Webhook verified successfully:', { type })
+		// Get the Svix headers for verification
+		const svixId = req.headers.get('svix-id')
+		const svixTimestamp = req.headers.get('svix-timestamp')
+		const svixSignature = req.headers.get('svix-signature')
 
-		if (type.startsWith('user.')) {
-			if (type === 'user.created') {
-				const result = await appUserService.handleWebhookCreated(data, true)
-				return NextResponse.json(result)
-			} else if (type === 'user.updated') {
-				const result = await appUserService.handleWebhookUpdated(data, true)
-				return NextResponse.json(result)
-			} else if (type === 'user.deleted') {
-				const result = await appUserService.handleWebhookDeleted(data, true)
-				return NextResponse.json(result)
-			}
+		// Validate that we have all required headers
+		if (!svixId || !svixTimestamp || !svixSignature) {
+			console.error('Missing required Svix headers')
+			return new NextResponse('Unauthorized: Missing verification headers', {
+				status: 401,
+			})
 		}
 
-		return NextResponse.json({
-			message: `Unhandled event type: ${type}`,
-			success: false,
-		})
+		// Verify the webhook signature
+		const isValid = await verifyClerkWebhook(
+			req,
+			process.env.CLERK_WEBHOOK_SECRET_USER
+		)
+
+		if (!isValid) {
+			console.error('Invalid webhook signature for user event')
+			return new NextResponse('Unauthorized: Invalid signature', {
+				status: 401,
+			})
+		}
+
+		console.info('Webhook verified successfully:', { type: body.type })
+
+		// Process the webhook based on its type
+		let result
+
+		switch (body.type) {
+			case 'user.created':
+				console.info('Processing user.created event')
+				result = await handleWebhookCreated(body.data)
+				break
+
+			case 'user.updated':
+				console.info('Processing user.updated event')
+				result = await handleWebhookUpdated(body.data)
+				break
+
+			case 'user.deleted':
+				console.info('Processing user.deleted event')
+				result = await handleWebhookDeleted(body.data)
+				break
+
+			default:
+				console.info(`Ignoring unsupported webhook type: ${body.type}`)
+				return NextResponse.json({
+					message: `Webhook type ${body.type} is not supported`,
+					success: false,
+				})
+		}
+
+		return NextResponse.json(result)
 	} catch (error) {
+		const errorMessage =
+			error instanceof Error ? error.message : 'Unknown error'
 		console.error('Error processing webhook:', error)
+
 		return NextResponse.json(
-			{ message: 'Error processing webhook', success: false },
+			{
+				error: 'Failed to process webhook',
+				message: errorMessage,
+				success: false,
+			},
 			{ status: 500 }
 		)
-	}
-}
-
-/**
- * Handles user creation event
- */
-async function handleUserCreated(data: any) {
-	const {
-		email_addresses,
-		first_name,
-		id: clerkId,
-		last_name,
-		profile_image_url,
-		public_metadata,
-	} = data
-
-	// Find primary email
-	const primaryEmail = email_addresses.find(
-		(email: any) => email.id === data.primary_email_address_id
-	)?.email_address
-
-	console.log(`User created: ${clerkId} (${primaryEmail})`)
-
-	try {
-		await userService.createUser({
-			clerkId,
-			email: primaryEmail,
-			firstName: first_name || '',
-			lastName: last_name || '',
-			profileImageUrl: profile_image_url,
-			publicMetadata: public_metadata || {},
-		})
-
-		console.log(`Successfully created user in PocketBase: ${clerkId}`)
-	} catch (error) {
-		console.error(`Failed to create user in PocketBase: ${clerkId}`, error)
-		throw error
-	}
-}
-
-/**
- * Handles user update event
- */
-async function handleUserUpdated(data: any) {
-	const {
-		email_addresses,
-		first_name,
-		id: clerkId,
-		last_name,
-		profile_image_url,
-		public_metadata,
-	} = data
-
-	// Find primary email
-	const primaryEmail = email_addresses.find(
-		(email: any) => email.id === data.primary_email_address_id
-	)?.email_address
-
-	console.log(`User updated: ${clerkId} (${primaryEmail})`)
-
-	try {
-		const user = await userService.findByClerkId(clerkId)
-
-		if (!user) {
-			console.error(`User not found in PocketBase for clerkId: ${clerkId}`)
-			return
-		}
-
-		await userService.updateUser(user.id, {
-			email: primaryEmail,
-			firstName: first_name || '',
-			lastName: last_name || '',
-			profileImageUrl: profile_image_url,
-			publicMetadata: public_metadata || {},
-		})
-
-		console.log(`Successfully updated user in PocketBase: ${clerkId}`)
-	} catch (error) {
-		console.error(`Failed to update user in PocketBase: ${clerkId}`, error)
-		throw error
-	}
-}
-
-/**
- * Handles user deletion event
- */
-async function handleUserDeleted(data: any) {
-	const { id: clerkId } = data
-
-	console.log(`User deleted: ${clerkId}`)
-
-	try {
-		const user = await userService.findByClerkId(clerkId)
-
-		if (!user) {
-			console.log(`User not found in PocketBase for clerkId: ${clerkId}`)
-			return
-		}
-
-		await userService.softDeleteUser(user.id)
-
-		console.log(`Successfully marked user as deleted in PocketBase: ${clerkId}`)
-	} catch (error) {
-		console.error(
-			`Failed to mark user as deleted in PocketBase: ${clerkId}`,
-			error
-		)
-		throw error
 	}
 }

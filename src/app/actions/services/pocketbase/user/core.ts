@@ -8,16 +8,18 @@ import {
 	validateCurrentUser,
 	validateOrganizationAccess,
 	validateResourceAccess,
-	SecurityError,
-	ResourceType,
-	PermissionLevel,
 } from '@/app/actions/services/pocketbase/securityUtils'
 import {
 	_updateUser,
 	_createUser,
 	_deleteUser,
 } from '@/app/actions/services/pocketbase/user/internal'
-import { User } from '@/types/types_pocketbase'
+import {
+	PermissionLevel,
+	ResourceType,
+	SecurityError,
+} from '@/app/actions/services/securyUtilsTools'
+import { AppUser } from '@/types/types_pocketbase'
 
 /**
  * Core user operations with security validations
@@ -26,7 +28,7 @@ import { User } from '@/types/types_pocketbase'
 /**
  * Get a single user by ID with security validation
  */
-export async function getUser(id: string): Promise<User> {
+export async function getUser(id: string): Promise<AppUser> {
 	try {
 		// Security check - validates user has access to this resource
 		await validateResourceAccess(ResourceType.USER, id, PermissionLevel.READ)
@@ -48,7 +50,7 @@ export async function getUser(id: string): Promise<User> {
 /**
  * Get current authenticated user profile
  */
-export async function getCurrentUser(): Promise<User> {
+export async function getCurrentUser(): Promise<AppUser> {
 	try {
 		// This function automatically validates the current user
 		return await validateCurrentUser()
@@ -63,7 +65,7 @@ export async function getCurrentUser(): Promise<User> {
 /**
  * Get a user by Clerk ID - typically used during authentication
  */
-export async function getUserByClerkId(clerkId: string): Promise<User> {
+export async function getUserByClerkId(clerkId: string): Promise<AppUser> {
 	// This is primarily used during authentication flows where
 	// standard security checks aren't possible yet.
 	// However, requests should still come from server-side code only.
@@ -85,21 +87,9 @@ export async function getUserByClerkId(clerkId: string): Promise<User> {
  */
 export async function createUser(
 	organizationId: string,
-	data: Pick<
-		Partial<User>,
-		| 'name'
-		| 'email'
-		| 'emailVisibility'
-		| 'verified'
-		| 'avatar'
-		| 'phone'
-		| 'role'
-		| 'isAdmin'
-		| 'canLogin'
-		| 'clerkId'
-	>,
+	data: AppUser,
 	elevated = false
-): Promise<User> {
+): Promise<AppUser> {
 	try {
 		if (!elevated) {
 			// Security check - requires ADMIN permission to create users
@@ -124,22 +114,9 @@ export async function createUser(
  */
 export async function updateUser(
 	id: string,
-	data: Pick<
-		Partial<User>,
-		| 'name'
-		| 'email'
-		| 'emailVisibility'
-		| 'verified'
-		| 'avatar'
-		| 'phone'
-		| 'role'
-		| 'isAdmin'
-		| 'canLogin'
-		| 'lastLogin'
-		| 'clerkId'
-	>,
+	data: AppUser,
 	elevated = false
-): Promise<User> {
+): Promise<AppUser> {
 	try {
 		if (!elevated) {
 			// Get current authenticated user
@@ -159,7 +136,7 @@ export async function updateUser(
 				if (data.role || data.isAdmin !== undefined) {
 					// If trying to change role or admin status, require admin permission
 					// Get the user's organization ID - handling possible multiple organizations
-					const userOrgs = currentUser.expand?.organizations
+					const userOrgs = currentUser.organizations
 
 					if (!userOrgs || !Array.isArray(userOrgs) || userOrgs.length === 0) {
 						throw new SecurityError('User does not belong to any organization')
@@ -179,7 +156,7 @@ export async function updateUser(
 
 		if (!elevated) {
 			// Only elevated calls (webhooks) can change the clerkId
-			delete sanitizedData.clerkId
+			delete (sanitizedData as Record<string, unknown>).clerkId
 		}
 
 		return await _updateUser(id, sanitizedData)

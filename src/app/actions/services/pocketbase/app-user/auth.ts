@@ -5,7 +5,7 @@ import {
 	getPocketBase,
 	handlePocketBaseError,
 } from '@/app/actions/services/pocketbase/baseService'
-import { SecurityError } from '@/app/actions/services/pocketbase/securityUtils'
+import { SecurityError } from '@/app/actions/services/securyUtilsTools'
 import { AppUser } from '@/types/types_pocketbase'
 
 /**
