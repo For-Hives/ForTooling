@@ -31,36 +31,36 @@ A SaaS platform for managing equipment inventory and tracking using QR codes and
 
 The project follows a modular structure with clear separation of concerns:
 
-### Types Organization
+### Models Organization
 
-All types are centralized in the `/types` directory to avoid duplication and maintain DRY principles:
-
-```
-/types
-  /pocketbase         # PocketBase related types
-    /base.ts          # Base types (BaseRecord, ListResult, etc.)
-    /collections.ts   # Collection name constants
-    /equipment.ts     # Equipment specific types
-    /index.ts         # Re-exports for easier imports
-  # Other type categories can be added here
-```
-
-### Validation Schemas
-
-Zod validation schemas are centralized in the `/schemas` directory:
+All models are centralized in the `/models` directory, combining types and validation schemas in a cohesive location:
 
 ```
-/schemas
-  /pocketbase         # PocketBase related schemas
-    /base.ts          # Base schemas and utility functions
-    /equipment.ts     # Equipment specific schemas
-    /index.ts         # Re-exports for easier imports
-  # Other schema categories can be added here
+/models
+  /pocketbase                  # PocketBase related models
+    /base.model.ts             # Base types, schemas and utilities
+    /collections.model.ts      # Collection name constants
+    /equipment.model.ts        # Equipment specific types and schemas
+    /index.ts                  # Re-exports for easier imports
+  # Other model categories can be added here
 ```
+
+Each model file follows a consistent pattern:
+
+1. Type definitions section (interfaces, types)
+2. Schema definitions section (Zod validation schemas)
+3. Helper functions (if needed)
+
+This approach offers several benefits:
+
+- **Colocation** - Types and their validation schemas are kept together
+- **Discoverability** - Easy to find both the type and its validation in one place
+- **Maintainability** - Changes to a model only require editing a single file
+- **Consistency** - Consistent naming convention with `.model.ts` suffix
 
 ### Services
 
-Services use the centralized types and schemas:
+Services use the centralized models:
 
 ```
 /app/actions/services
@@ -76,3 +76,4 @@ This structure ensures:
 - Clear separation of concerns
 - Easy maintenance and refactoring
 - Type safety across the application
+- Logical grouping of related code
