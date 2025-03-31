@@ -10,9 +10,6 @@ export async function POST(req: NextRequest) {
 	console.info('Received Clerk organization membership webhook request')
 
 	try {
-		// Parse the request body
-		const body = (await req.json()) as WebhookEvent
-
 		// Get the Svix headers for verification
 		const svixId = req.headers.get('svix-id')
 		const svixTimestamp = req.headers.get('svix-timestamp')
@@ -26,13 +23,13 @@ export async function POST(req: NextRequest) {
 			})
 		}
 
-		// Verify the webhook signature
-		const isValid = await verifyClerkWebhook(
+		// Verify the webhook signature and get the parsed body
+		const verificationResult = await verifyClerkWebhook(
 			req,
-			process.env.CLERK_WEBHOOK_SECRET_ORGANIZATION
+			process.env.CLERK_WEBHOOK_SECRET_ORGANIZATION_MEMBERSHIP
 		)
 
-		if (!isValid) {
+		if (!verificationResult.success || !verificationResult.payload) {
 			console.error(
 				'Invalid webhook signature for organization membership event'
 			)
@@ -41,6 +38,8 @@ export async function POST(req: NextRequest) {
 			})
 		}
 
+		// Use the parsed payload from the verification
+		const body = verificationResult.payload as WebhookEvent
 		console.info('Webhook verified successfully:', { type: body.type })
 
 		// Process the webhook using our central handler

@@ -185,15 +185,6 @@
 			},
 			{
 				"hidden": false,
-				"id": "bool2165931080",
-				"name": "isAdmin",
-				"presentable": false,
-				"required": false,
-				"system": false,
-				"type": "bool"
-			},
-			{
-				"hidden": false,
 				"id": "date2697416787",
 				"max": "",
 				"min": "",
@@ -261,7 +252,9 @@
 				"type": "autodate"
 			}
 		],
-		"indexes": [],
+		"indexes": [
+			"CREATE UNIQUE INDEX `idx_Tg6zFyQpbw` ON `AppUser` (`clerkId`)"
+		],
 		"system": false
 	},
 	{

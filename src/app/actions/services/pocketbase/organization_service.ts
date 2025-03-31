@@ -1,5 +1,3 @@
-'use server'
-
 import { BaseService } from '@/app/actions/services/pocketbase/api_client'
 import {
 	Collections,
