@@ -1,5 +1,6 @@
 'use server'
 
+import { BaseService } from '@/app/actions/services/pocketbase/api_client'
 import {
 	Collections,
 	Equipment,
@@ -9,8 +10,6 @@ import {
 	equipmentSchema,
 	equipmentUpdateSchema,
 } from '@/models/pocketbase'
-
-import { BaseService } from './api_client'
 
 // Re-export types for convenience
 export type { Equipment, EquipmentCreateInput, EquipmentUpdateInput }
@@ -27,7 +26,7 @@ export class EquipmentService extends BaseService<
 	constructor() {
 		super(
 			Collections.EQUIPMENT,
-			// @ts-expect-error - Types are compatible but TypeScript cannot verify it [ :) ]
+			// @eslint-disable-next-line @typescript-eslint/ban-ts-comment @ts-expect-error - Types are compatible but TypeScript cannot verify it [ :) ]
 			equipmentSchema,
 			equipmentCreateSchema,
 			equipmentUpdateSchema

@@ -1,5 +1,6 @@
 'use server'
 
+import { BaseService } from '@/app/actions/services/pocketbase/api_client'
 import {
 	AppUser,
 	AppUserCreateInput,
@@ -9,8 +10,6 @@ import {
 	appUserSchema,
 	appUserUpdateSchema,
 } from '@/models/pocketbase'
-
-import { BaseService } from './api_client'
 
 // Re-export types for convenience
 export type { AppUser, AppUserCreateInput, AppUserUpdateInput }
@@ -24,9 +23,9 @@ export class AppUserService extends BaseService<
 	AppUserUpdateInput
 > {
 	constructor() {
-		// @ts-expect-error - Types are compatible but TypeScript cannot verify it
 		super(
 			Collections.APP_USERS,
+			// @ts-expect-error - Types are compatible but TypeScript cannot verify it [ :) ]
 			appUserSchema,
 			appUserCreateSchema,
 			appUserUpdateSchema

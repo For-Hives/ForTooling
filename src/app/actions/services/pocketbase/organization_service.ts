@@ -1,5 +1,6 @@
 'use server'
 
+import { BaseService } from '@/app/actions/services/pocketbase/api_client'
 import {
 	Collections,
 	Organization,
@@ -9,8 +10,6 @@ import {
 	organizationSchema,
 	organizationUpdateSchema,
 } from '@/models/pocketbase'
-
-import { BaseService } from './api_client'
 
 // Re-export types for convenience
 export type { Organization, OrganizationCreateInput, OrganizationUpdateInput }

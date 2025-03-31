@@ -2,16 +2,15 @@
  * Generic base service for PocketBase CRUD operations
  */
 
-import { z } from 'zod'
-
 import {
 	getPocketBase,
 	handlePocketBaseError,
 	CollectionMethodOptions,
 	defaultCollectionMethodOptions,
 	validateWithZod,
-} from './client'
-import { ListResult, QueryParams } from './types'
+} from '@/app/actions/services/pocketbase/api_client/client'
+import { ListResult, QueryParams } from '@/models/pocketbase'
+import { z } from 'zod'
 
 /**
  * Base service class for PocketBase collections

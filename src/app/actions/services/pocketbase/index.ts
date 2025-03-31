@@ -2,17 +2,15 @@
  * PocketBase Services
  * Central export point for all PocketBase services and utilities
  */
+import { z } from 'zod'
 
 // Export API client core
-export * from './api_client'
+export * from '@/app/actions/services/pocketbase/api_client'
 
 // Export individual services
-export * from './organization_service'
-export * from './app_user_service'
-export * from './equipment_service'
-
-// Re-export common validation utility
-import { z } from 'zod'
+export * from '@/app/actions/services/pocketbase/organization_service'
+export * from '@/app/actions/services/pocketbase/app_user_service'
+export * from '@/app/actions/services/pocketbase/equipment_service'
 
 /**
  * Validate organization ID format
