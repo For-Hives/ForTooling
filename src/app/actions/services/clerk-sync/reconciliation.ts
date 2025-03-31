@@ -5,7 +5,7 @@ import type { Organization, User } from '@clerk/nextjs/server'
 import {
 	syncUserToPocketBase,
 	syncOrganizationToPocketBase,
-	linkUserToOrganization,
+	linkUserToOrganizationFromClerk,
 } from '@/app/actions/services/clerk-sync/syncService'
 // src/app/actions/services/clerk-sync/reconciliation.ts
 import { clerkClient } from '@clerk/nextjs/server'
@@ -84,13 +84,16 @@ export async function runFullReconciliation() {
 
 				for (const membership of memberships) {
 					try {
+						// Skip if userId is undefined
+						if (!membership.publicUserData?.userId) continue
+
 						const membershipData = {
 							organization: { id: org.id },
-							public_user_data: { user_id: membership.publicUserData?.userId },
+							public_user_data: { user_id: membership.publicUserData.userId },
 							role: membership.role,
 						}
 
-						await linkUserToOrganization(membershipData)
+						await linkUserToOrganizationFromClerk(membershipData)
 						membershipCount++
 					} catch (error) {
 						if (membership.publicUserData) {
@@ -180,7 +183,7 @@ export async function reconcileSpecificUser(clerkUserId: string) {
 				role: membership.role,
 			}
 
-			await linkUserToOrganization(membershipData)
+			await linkUserToOrganizationFromClerk(membershipData)
 		}
 
 		return {
@@ -242,7 +245,7 @@ export async function reconcileSpecificOrganization(clerkOrgId: string) {
 				role: membership.role,
 			}
 
-			await linkUserToOrganization(membershipData)
+			await linkUserToOrganizationFromClerk(membershipData)
 		}
 
 		return {

@@ -1,6 +1,6 @@
 'use server'
 
-import { getPocketBase } from '@/app/actions/services/pocketbase/baseService'
+import { getPocketBase } from '@/app/actions/services/pocketbase/api_client/client'
 import {
 	SecurityError,
 	PermissionLevel,
@@ -22,7 +22,7 @@ export async function validateCurrentUser(userId?: string): Promise<AppUser> {
 		throw new SecurityError('Unauthenticated access')
 	}
 
-	const pb = await getPocketBase()
+	const pb = getPocketBase()
 	if (!pb) {
 		throw new SecurityError('Database connection error')
 	}
@@ -98,7 +98,7 @@ export async function validateResourceAccess(
 	resourceId: string,
 	permission: PermissionLevel = PermissionLevel.READ
 ): Promise<{ user: AppUser; organizationId: string }> {
-	const pb = await getPocketBase()
+	const pb = getPocketBase()
 	if (!pb) {
 		throw new SecurityError('Database connection error')
 	}

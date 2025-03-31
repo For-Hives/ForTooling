@@ -1,7 +1,7 @@
 import {
 	syncUserToPocketBase,
 	syncOrganizationToPocketBase,
-	linkUserToOrganization,
+	linkUserToOrganizationFromClerk,
 } from '@/app/actions/services/clerk-sync/syncService'
 import { auth, clerkClient } from '@clerk/nextjs/server'
 
@@ -50,7 +50,7 @@ export async function importOrganizationAfterCreation(clerkOrgId: string) {
 		}
 
 		// Link the user to the organization
-		await linkUserToOrganization(membershipData)
+		await linkUserToOrganizationFromClerk(membershipData)
 
 		return {
 			organization,

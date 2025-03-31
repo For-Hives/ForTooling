@@ -1,31 +1,17 @@
-import {
-	handleWebhookCreated,
-	handleWebhookDeleted,
-	handleWebhookUpdated,
-} from '@/app/actions/services/pocketbase/app-user/webhook-handlers'
+import { processWebhookEvent } from '@/app/actions/services/clerk-sync/webhook-handler'
 import { verifyClerkWebhook } from '@/lib/webhookUtils'
+import { WebhookEvent } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
-
-// Define types for Clerk webhook payload
-interface ClerkWebhookData {
-	id: string
-	[key: string]: unknown
-}
-
-interface ClerkWebhookEvent {
-	type: string
-	data: ClerkWebhookData
-}
 
 /**
  * Handles Clerk webhook requests for user-related events
  */
 export async function POST(req: NextRequest) {
-	console.info('Received Clerk webhook request')
+	console.info('Received Clerk user webhook request')
 
 	try {
 		// Parse the request body
-		const body = (await req.json()) as ClerkWebhookEvent
+		const body = (await req.json()) as WebhookEvent
 
 		// Get the Svix headers for verification
 		const svixId = req.headers.get('svix-id')
@@ -55,33 +41,8 @@ export async function POST(req: NextRequest) {
 
 		console.info('Webhook verified successfully:', { type: body.type })
 
-		// Process the webhook based on its type
-		let result
-
-		switch (body.type) {
-			case 'user.created':
-				console.info('Processing user.created event')
-				result = await handleWebhookCreated(body.data)
-				break
-
-			case 'user.updated':
-				console.info('Processing user.updated event')
-				result = await handleWebhookUpdated(body.data)
-				break
-
-			case 'user.deleted':
-				console.info('Processing user.deleted event')
-				result = await handleWebhookDeleted(body.data)
-				break
-
-			default:
-				console.info(`Ignoring unsupported webhook type: ${body.type}`)
-				return NextResponse.json({
-					message: `Webhook type ${body.type} is not supported`,
-					success: false,
-				})
-		}
-
+		// Process the webhook using our central handler
+		const result = await processWebhookEvent(body)
 		return NextResponse.json(result)
 	} catch (error) {
 		const errorMessage =

@@ -1,13 +1,14 @@
 'use server'
 
-import { secureCache } from '@/app/actions/services/clerk-sync/cacheService'
+import { auth, clerkClient } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
+
 import {
 	syncUserToPocketBase,
 	syncOrganizationToPocketBase,
-	linkUserToOrganization,
-} from '@/app/actions/services/clerk-sync/syncService'
-import { auth, clerkClient } from '@clerk/nextjs/server'
-import { NextResponse } from 'next/server'
+	linkUserToOrganizationFromClerk,
+	ClerkMembershipData,
+} from './syncService'
 
 /**
  * Type for any data accepted by server actions
@@ -21,10 +22,6 @@ type ActionData = Record<string, unknown>
  * @returns The modified response
  */
 export async function syncMiddleware() {
-	// we will probably need to add :
-	// todo: add a check to see if the request is for the webhook
-	// * @param request The incoming request -> to be able to check if the request is for the webhook
-
 	// Only run this middleware for authenticated routes
 	const { orgId, userId } = await auth()
 
@@ -34,25 +31,8 @@ export async function syncMiddleware() {
 	}
 
 	try {
-		const cacheKey = `sync:${userId}:${orgId || 'none'}`
-
-		// Check if we've recently synced this user to avoid excessive checks
-		// This is critical for performance in high-traffic scenarios
-		const cachedSync = secureCache.get(cacheKey, userId)
-
-		if (!cachedSync) {
-			// If no cached result, perform the sync
-			await ensureUserAndOrgSync(userId, orgId)
-
-			// Cache the result to avoid frequent syncs
-			// TTL of 5 minutes is a good balance between security and performance
-			secureCache.set(
-				cacheKey,
-				{ synced: true, timestamp: Date.now() },
-				userId,
-				5 * 60 * 1000
-			)
-		}
+		// Perform the sync without using cache
+		await ensureUserAndOrgSync(userId, orgId)
 	} catch (error) {
 		// Log error but don't block the request
 		// This ensures the app remains functional even if sync fails
@@ -75,41 +55,40 @@ export async function ensureUserAndOrgSync(
 	clerkOrgId?: string | null
 ) {
 	// 1. First, try to get fresh data from Clerk
-	const clerkClientInstance = await clerkClient()
-	const clerkUser = await clerkClientInstance.users.getUser(clerkUserId)
+	const clerkAPI = await clerkClient()
+	const clerkUser = await clerkAPI.users.getUser(clerkUserId)
 
 	// 2. Sync the user to PocketBase
 	await syncUserToPocketBase(clerkUser)
 
 	// 3. If an organization ID is provided, sync that too
 	if (clerkOrgId) {
-		const clerkOrg = await clerkClientInstance.organizations.getOrganization({
+		const clerkOrg = await clerkAPI.organizations.getOrganization({
 			organizationId: clerkOrgId,
 		})
 
-		// todo : fix types
 		await syncOrganizationToPocketBase(clerkOrg)
 
 		// 4. Ensure the user-organization relationship exists
-		// This uses data available in the membership EndpointSecretOut
 		const memberships =
-			await clerkClientInstance.organizations.getOrganizationMembershipList({
+			await clerkAPI.organizations.getOrganizationMembershipList({
 				organizationId: clerkOrgId,
 			})
 
+		// Trouver le membership pour cet utilisateur
 		const membership = memberships.data.find(
 			m => m.publicUserData?.userId === clerkUserId
 		)
 
 		if (membership) {
 			// Prepare membership data in the format expected by linkUserToOrganization
-			const membershipData = {
+			const membershipData: ClerkMembershipData = {
 				organization: { id: clerkOrgId },
 				public_user_data: { user_id: clerkUserId },
 				role: membership.role,
 			}
 
-			await linkUserToOrganization(membershipData)
+			await linkUserToOrganizationFromClerk(membershipData)
 		}
 	}
 
