@@ -1,6 +1,7 @@
 # Stores Directory Overview
 
 This directory contains Zustand stores for global state management across the application. These stores provide a lightweight alternative to React Context for sharing state between components.
+We need to avoid all the React context use. so we use Zustand stores when it's needed (we avoid props drilling with this strategie)
 
 ## Key Concepts
 
@@ -12,7 +13,7 @@ This directory contains Zustand stores for global state management across the ap
 ## Best Practices
 
 - Keep stores focused on specific domains
-- Use TypeScript interfaces for store state and actions
+- Use TypeScript interfaces for store state and actions, avoid duplicate with types already defined in other layers ( models / types )
 - Follow the established patterns for store creation
 - Separate actions from state in the store definition
 

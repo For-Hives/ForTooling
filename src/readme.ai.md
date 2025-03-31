@@ -24,7 +24,7 @@ This directory contains the main source code for the SaaS Platform for Equipment
 ### Do
 
 - Use relative imports with the `@/` prefix (e.g., `import { Button } from '@/components/ui/button'`)
-- Add proper TypeScript type definitions for all new code
+- Add proper TypeScript type definitions for all new code, in the models/types folder
 - Place business logic in appropriate server actions
 - Reuse existing components and hooks where possible
 

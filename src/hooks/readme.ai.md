@@ -38,7 +38,6 @@ When working with this directory:
 
 - Understand that hooks encapsulate reusable logic, not UI
 - Note that hooks should follow React's rules of hooks
-- Be aware of the naming convention (use\* prefix)
 - Remember that hooks should have proper TypeScript types
 - Follow the established patterns for error handling
 - Consider that hooks may use Zustand stores for global state

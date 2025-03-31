@@ -13,6 +13,8 @@ This directory follows the Next.js App Router structure and contains the main ap
 ## Key Concepts
 
 - Routes are organized by access level using route groups (`(application)` and `(marketing)`)
+- (application) is used for the main app part (/app(\*))
+- (marketing) is used only for the front end marketing / business part (/(\*))
 - Server components are used by default for better performance and security
 - Server actions handle data mutations with proper authorization checks
 - API routes handle webhooks and external integrations
