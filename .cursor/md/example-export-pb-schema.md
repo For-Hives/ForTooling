@@ -170,20 +170,6 @@
 				"type": "text"
 			},
 			{
-				"autogeneratePattern": "",
-				"hidden": false,
-				"id": "text1466534506",
-				"max": 0,
-				"min": 0,
-				"name": "role",
-				"pattern": "",
-				"presentable": false,
-				"primaryKey": false,
-				"required": false,
-				"system": false,
-				"type": "text"
-			},
-			{
 				"hidden": false,
 				"id": "date2697416787",
 				"max": "",
@@ -209,19 +195,6 @@
 				"type": "text"
 			},
 			{
-				"cascadeDelete": false,
-				"collectionId": "pbc_2387082370",
-				"hidden": false,
-				"id": "relation1115430015",
-				"maxSelect": 1,
-				"minSelect": 0,
-				"name": "organizations",
-				"presentable": false,
-				"required": false,
-				"system": false,
-				"type": "relation"
-			},
-			{
 				"hidden": false,
 				"id": "json1326724116",
 				"maxSize": 0,
@@ -230,6 +203,19 @@
 				"required": false,
 				"system": false,
 				"type": "json"
+			},
+			{
+				"cascadeDelete": false,
+				"collectionId": "pbc_461999422",
+				"hidden": false,
+				"id": "relation1115430015",
+				"maxSelect": 999,
+				"minSelect": 0,
+				"name": "organizations",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "relation"
 			},
 			{
 				"hidden": false,
@@ -813,7 +799,99 @@
 				"type": "autodate"
 			}
 		],
-		"indexes": [],
+		"indexes": [
+			"CREATE UNIQUE INDEX `idx_MHRKs66UDJ` ON `Organization` (`clerkId`)"
+		],
+		"system": false
+	},
+	{
+		"id": "pbc_461999422",
+		"listRule": null,
+		"viewRule": null,
+		"createRule": null,
+		"updateRule": null,
+		"deleteRule": null,
+		"name": "OrganizationAppUser",
+		"type": "base",
+		"fields": [
+			{
+				"autogeneratePattern": "[a-z0-9]{15}",
+				"hidden": false,
+				"id": "text3208210256",
+				"max": 15,
+				"min": 15,
+				"name": "id",
+				"pattern": "^[a-z0-9]+$",
+				"presentable": false,
+				"primaryKey": true,
+				"required": true,
+				"system": true,
+				"type": "text"
+			},
+			{
+				"cascadeDelete": false,
+				"collectionId": "pbc_2387082370",
+				"hidden": false,
+				"id": "relation3253625724",
+				"maxSelect": 1,
+				"minSelect": 0,
+				"name": "organization",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "relation"
+			},
+			{
+				"cascadeDelete": false,
+				"collectionId": "pbc_879879449",
+				"hidden": false,
+				"id": "relation1320735562",
+				"maxSelect": 1,
+				"minSelect": 0,
+				"name": "appUser",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "relation"
+			},
+			{
+				"autogeneratePattern": "",
+				"hidden": false,
+				"id": "text1466534506",
+				"max": 0,
+				"min": 0,
+				"name": "role",
+				"pattern": "",
+				"presentable": false,
+				"primaryKey": false,
+				"required": false,
+				"system": false,
+				"type": "text"
+			},
+			{
+				"hidden": false,
+				"id": "autodate2990389176",
+				"name": "created",
+				"onCreate": true,
+				"onUpdate": false,
+				"presentable": false,
+				"system": false,
+				"type": "autodate"
+			},
+			{
+				"hidden": false,
+				"id": "autodate3332085495",
+				"name": "updated",
+				"onCreate": true,
+				"onUpdate": true,
+				"presentable": false,
+				"system": false,
+				"type": "autodate"
+			}
+		],
+		"indexes": [
+			"CREATE UNIQUE INDEX `idx_QDEdzobtpm` ON `OrganizationAppUser` (\n  `organization`,\n  `appUser`\n)"
+		],
 		"system": false
 	},
 	{
