@@ -5,6 +5,7 @@ import {
 	clerkMiddleware,
 	createRouteMatcher,
 } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
 
 const isProtectedRoute = createRouteMatcher(['/app(.*)'])
 
@@ -38,19 +39,22 @@ export default clerkMiddleware(async (auth, req) => {
 	}
 
 	const authAwaited = await auth()
-	if (!authAwaited.userId) {
-		return Response.redirect(new URL('/sign-in', req.url))
+
+	if (isProtectedRoute(req)) {
+		if (!authAwaited.userId) {
+			return NextResponse.redirect(new URL('/sign-in', req.url))
+		}
 	}
 
 	if (isAdminRoute(req)) {
 		const userData = authAwaited.orgRole
 		if (userData !== 'admin') {
-			return Response.redirect(new URL('/', req.url))
+			return NextResponse.redirect(new URL('/', req.url))
 		}
 	}
 
 	if (!authAwaited.orgId) {
-		return Response.redirect(new URL('/onboarding', req.url))
+		return NextResponse.redirect(new URL('/onboarding', req.url))
 	}
 
 	// Synchronize user and organization data
@@ -74,7 +78,7 @@ export default clerkMiddleware(async (auth, req) => {
 		isProtectedRoute(req) &&
 		!userMetadata?.publicMetadata?.hasCompletedOnboarding
 	) {
-		return Response.redirect(new URL('/onboarding', req.url))
+		return NextResponse.redirect(new URL('/onboarding', req.url))
 	}
 
 	if (isProtectedRoute(req)) await auth.protect()
