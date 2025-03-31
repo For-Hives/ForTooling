@@ -44,7 +44,7 @@ export async function _createAppUser(data: Partial<AppUser>): Promise<AppUser> {
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		console.log('Creating new AppUser with data:', data)
+		console.info('Creating new AppUser with data:', data)
 
 		// Make sure clerkId is included
 		if (!data.clerkId) {
@@ -52,9 +52,10 @@ export async function _createAppUser(data: Partial<AppUser>): Promise<AppUser> {
 		}
 
 		const newUser = await pb.collection('AppUser').create(data)
-		console.log('New AppUser created:', newUser)
+		console.info('New AppUser created:', newUser)
 
-		return newUser
+		// todo : fix types
+		return newUser as unknown as AppUser
 	} catch (error) {
 		console.error('Error creating app user:', error)
 		throw error
@@ -92,7 +93,7 @@ export async function getByClerkId(clerkId: string): Promise<AppUser | null> {
 			throw new Error('Failed to connect to PocketBase')
 		}
 
-		console.log(`Searching for AppUser with clerkId: ${clerkId}`)
+		console.info(`Searching for AppUser with clerkId: ${clerkId}`)
 
 		// Try to find the user
 		try {
@@ -100,15 +101,17 @@ export async function getByClerkId(clerkId: string): Promise<AppUser | null> {
 				.collection('AppUser')
 				.getFirstListItem(`clerkId="${clerkId}"`)
 
-			console.log('User found:', user)
-			return user
+			console.info('User found:', user)
+
+			// todo : fix types
+			return user as unknown as AppUser
 		} catch (error) {
 			// Check if this is a "not found" error
 			if (
 				error instanceof Error &&
 				(error.message.includes('404') || error.message.includes('not found'))
 			) {
-				console.log(`No user found with clerkId: ${clerkId}`)
+				console.info(`No user found with clerkId: ${clerkId}`)
 				return null
 			}
 			// Otherwise rethrow the error

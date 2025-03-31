@@ -86,6 +86,8 @@ export async function ensureUserAndOrgSync(
 		const clerkOrg = await clerkClientInstance.organizations.getOrganization({
 			organizationId: clerkOrgId,
 		})
+
+		// todo : fix types
 		await syncOrganizationToPocketBase(clerkOrg)
 
 		// 4. Ensure the user-organization relationship exists

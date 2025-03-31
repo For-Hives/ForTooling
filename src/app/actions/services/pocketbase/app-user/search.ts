@@ -4,8 +4,8 @@ import {
 	getPocketBase,
 	handlePocketBaseError,
 } from '@/app/actions/services/pocketbase/baseService'
+import { validateOrganizationAccess } from '@/app/actions/services/pocketbase/securityUtils'
 import {
-	validateOrganizationAccess,
 	PermissionLevel,
 	SecurityError,
 } from '@/app/actions/services/securyUtilsTools'

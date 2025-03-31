@@ -2,14 +2,13 @@
 // Import types for Clerk entities
 import type { Organization, User } from '@clerk/nextjs/server'
 
-// src/app/actions/services/clerk-sync/reconciliation.ts
-import { clerkClient } from '@clerk/nextjs/server'
-
 import {
 	syncUserToPocketBase,
 	syncOrganizationToPocketBase,
 	linkUserToOrganization,
-} from './syncService'
+} from '@/app/actions/services/clerk-sync/syncService'
+// src/app/actions/services/clerk-sync/reconciliation.ts
+import { clerkClient } from '@clerk/nextjs/server'
 
 /**
  * Full reconciliation between Clerk and PocketBase

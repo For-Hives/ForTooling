@@ -13,10 +13,12 @@ import {
 	validateCurrentUser,
 	validateOrganizationAccess,
 	validateResourceAccess,
-	SecurityError,
-	ResourceType,
-	PermissionLevel,
 } from '@/app/actions/services/pocketbase/securityUtils'
+import {
+	PermissionLevel,
+	ResourceType,
+	SecurityError,
+} from '@/app/actions/services/securyUtilsTools'
 import { AppUser } from '@/types/types_pocketbase'
 
 /**
@@ -107,10 +109,11 @@ export async function createAppUser(
 			await validateOrganizationAccess(organizationId, PermissionLevel.ADMIN)
 		}
 
+		// todo : fix types
 		// Ensure organization ID is set correctly with the proper field name
 		return await _createAppUser({
 			...data,
-			organizations: organizationId ? [organizationId] : [], // Force the correct organization ID using the relation field
+			organizations: organizationId ? [{ id: organizationId }] : [], // Force the correct organization ID using the relation field
 		})
 	} catch (error) {
 		if (error instanceof SecurityError) {
@@ -148,7 +151,7 @@ export async function updateAppUser(
 				if (data.role || data.isAdmin !== undefined) {
 					// If trying to change role or admin status, require admin permission
 					// Get the user's organization ID - handling possible multiple organizations
-					const userOrgs = currentAppUser.expand?.organizations
+					const userOrgs = currentAppUser.organizations
 
 					if (!userOrgs || !Array.isArray(userOrgs) || userOrgs.length === 0) {
 						throw new SecurityError('User does not belong to any organization')
