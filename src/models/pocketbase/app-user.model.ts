@@ -2,6 +2,7 @@ import {
 	BaseRecord,
 	baseRecordSchema,
 	createServiceSchemas,
+	normalizeDateTime,
 } from '@/models/pocketbase/base.model'
 import { z } from 'zod'
 
@@ -20,12 +21,11 @@ export interface AppUser extends BaseRecord {
 	verified: boolean
 	name: string
 	role: string
-	isAdmin: boolean
 	lastLogin: string
 	clerkId: string
 	organizations: string
 	metadata: {
-		createdAt: number
+		createdAt: string
 		externalAccounts?: Array<{
 			email: string
 			imageUrl: string
@@ -33,13 +33,13 @@ export interface AppUser extends BaseRecord {
 			providerUserId: string
 		}>
 		hasCompletedOnboarding?: boolean
-		lastActiveAt?: number
+		lastActiveAt?: string
 		onboardingCompletedAt?: string
 		public?: {
 			hasCompletedOnboarding: boolean
 			onboardingCompletedAt: string
 		}
-		updatedAt?: number
+		updatedAt?: string
 	}
 }
 
@@ -52,12 +52,11 @@ export interface AppUserCreateInput {
 	verified?: boolean
 	name?: string
 	role?: string
-	isAdmin?: boolean
 	lastLogin?: string
 	clerkId: string
 	organizations?: string
 	metadata?: {
-		createdAt: number
+		createdAt: string
 		externalAccounts?: Array<{
 			email: string
 			imageUrl: string
@@ -65,13 +64,13 @@ export interface AppUserCreateInput {
 			providerUserId: string
 		}>
 		hasCompletedOnboarding?: boolean
-		lastActiveAt?: number
+		lastActiveAt?: string
 		onboardingCompletedAt?: string
 		public?: {
 			hasCompletedOnboarding: boolean
 			onboardingCompletedAt: string
 		}
-		updatedAt?: number
+		updatedAt?: string
 	}
 }
 
@@ -87,38 +86,33 @@ export type AppUserUpdateInput = Partial<AppUserCreateInput>
  */
 
 /**
- * External account schema (for metadata)
- */
-const externalAccountSchema = z.object({
-	email: z.string().email(),
-	imageUrl: z.string().url(),
-	provider: z.string(),
-	providerUserId: z.string(),
-})
-
-/**
- * Metadata public schema (for metadata)
- */
-const metadataPublicSchema = z.object({
-	hasCompletedOnboarding: z.boolean(),
-	onboardingCompletedAt: z.string(),
-})
-
-/**
  * Metadata schema for app user
  */
-const metadataSchema = z
+const appUserMetadataSchema = z
 	.object({
-		createdAt: z.number().optional(),
-		externalAccounts: z.array(externalAccountSchema).optional(),
+		createdAt: z.union([z.number(), z.string()]),
+		externalAccounts: z
+			.array(
+				z.object({
+					email: z.string().optional(),
+					imageUrl: z.string().optional(),
+					provider: z.string(),
+					providerUserId: z.string(),
+				})
+			)
+			.optional(),
 		hasCompletedOnboarding: z.boolean().optional(),
-		lastActiveAt: z.number().optional(),
+		lastActiveAt: z.union([z.number(), z.string()]),
 		onboardingCompletedAt: z.string().optional(),
-		public: metadataPublicSchema.optional(),
-		updatedAt: z.number().optional(),
+		public: z
+			.object({
+				hasCompletedOnboarding: z.boolean().optional(),
+				onboardingCompletedAt: z.string().optional(),
+			})
+			.optional(),
+		updatedAt: z.union([z.number(), z.string()]),
 	})
-	.optional()
-	.default({})
+	.passthrough()
 
 /**
  * AppUser schema for validation
@@ -127,9 +121,15 @@ export const appUserSchema = baseRecordSchema.extend({
 	clerkId: z.string(),
 	email: z.string().email(),
 	emailVisibility: z.boolean().default(true),
-	isAdmin: z.boolean().default(false),
-	lastLogin: z.string().optional().or(z.literal('')),
-	metadata: metadataSchema,
+	lastLogin: z
+		.string()
+		.optional()
+		.or(z.literal(''))
+		.transform((val: string | undefined | '') => {
+			if (!val) return ''
+			return normalizeDateTime(val)
+		}),
+	metadata: appUserMetadataSchema,
 	name: z.string().optional().or(z.literal('')),
 	organizations: z.string().optional().or(z.literal('')),
 	role: z.string().optional().or(z.literal('')),
@@ -149,7 +149,6 @@ export const appUserCreateSchema = createSchema.transform(data => {
 	return {
 		...data,
 		emailVisibility: data.emailVisibility ?? true,
-		isAdmin: data.isAdmin ?? false,
 		lastLogin: data.lastLogin || '',
 		metadata: data.metadata || { createdAt: Date.now() },
 		name: data.name || '',

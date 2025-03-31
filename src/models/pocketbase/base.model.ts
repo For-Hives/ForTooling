@@ -47,15 +47,28 @@ export interface QueryParams {
  */
 
 /**
- * Base schema for all PocketBase records
- * Contains validation for system fields present in all records
+ * Normalizes a datetime string to ISO format by replacing space with 'T'
+ */
+export function normalizeDateTime(dateString: string): string {
+	if (!dateString) return ''
+
+	// Replace space with 'T' to ensure ISO 8601 format
+	if (dateString.includes(' ') && dateString.includes('Z')) {
+		return dateString.replace(' ', 'T')
+	}
+
+	return dateString
+}
+
+/**
+ * Base record schema with common PocketBase fields
  */
 export const baseRecordSchema = z.object({
 	collectionId: z.string().optional(),
 	collectionName: z.string().optional(),
-	created: z.string().datetime(),
+	created: z.string().transform(normalizeDateTime),
 	id: z.string(),
-	updated: z.string().datetime(),
+	updated: z.string().transform(normalizeDateTime),
 })
 
 /**

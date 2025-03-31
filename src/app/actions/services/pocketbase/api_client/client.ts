@@ -37,20 +37,11 @@ export const getPocketBase = cache(() => {
 	// Create a new PocketBase instance
 	const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL)
 
-	// In a server context, we'll need to use an admin auth
-	// We don't use cookie auth on the server side to avoid issues with next/headers cookies
-	if (
-		process.env.POCKETBASE_ADMIN_EMAIL &&
-		process.env.POCKETBASE_ADMIN_PASSWORD
-	) {
-		pb.admins
-			.authWithPassword(
-				process.env.POCKETBASE_ADMIN_EMAIL,
-				process.env.POCKETBASE_ADMIN_PASSWORD
-			)
-			.catch(error => {
-				console.error('Failed to authenticate with PocketBase admin:', error)
-			})
+	const token = process.env.PB_TOKEN_API_ADMIN
+	if (token) {
+		pb.authStore.save(token)
+	} else {
+		throw new Error('PB_TOKEN_API_ADMIN is not set')
 	}
 
 	return pb
@@ -94,6 +85,7 @@ export type CollectionName = (typeof Collections)[keyof typeof Collections]
  */
 export function validateWithZod<T>(schema: z.ZodType<T>, data: unknown): T {
 	try {
+		console.log('data', data)
 		return schema.parse(data)
 	} catch (error) {
 		if (error instanceof z.ZodError) {

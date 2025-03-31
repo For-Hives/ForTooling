@@ -65,12 +65,11 @@ export async function syncUserToPocketBase(clerkUser: User): Promise<AppUser> {
 		const userData = {
 			email: primaryEmail.emailAddress,
 			emailVisibility: true,
-			isAdmin: clerkUser.publicMetadata?.isAdmin === true,
 			lastLogin: clerkUser.lastSignInAt
 				? new Date(clerkUser.lastSignInAt).toISOString()
 				: '',
 			metadata: {
-				createdAt: clerkUser.createdAt,
+				createdAt: clerkUser.createdAt.toString(),
 				externalAccounts:
 					clerkUser.externalAccounts?.map(account => ({
 						email: account.emailAddress || '',
@@ -80,7 +79,9 @@ export async function syncUserToPocketBase(clerkUser: User): Promise<AppUser> {
 					})) || [],
 				hasCompletedOnboarding:
 					clerkUser.publicMetadata?.hasCompletedOnboarding === true,
-				lastActiveAt: clerkUser.lastActiveAt,
+				lastActiveAt: clerkUser.lastActiveAt
+					? clerkUser.lastActiveAt.toString()
+					: '',
 				onboardingCompletedAt: clerkUser.publicMetadata
 					?.onboardingCompletedAt as string,
 				public: {
@@ -89,7 +90,7 @@ export async function syncUserToPocketBase(clerkUser: User): Promise<AppUser> {
 					onboardingCompletedAt: clerkUser.publicMetadata
 						?.onboardingCompletedAt as string,
 				},
-				updatedAt: clerkUser.updatedAt,
+				updatedAt: clerkUser.updatedAt.toString(),
 			},
 			name:
 				`${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() ||
