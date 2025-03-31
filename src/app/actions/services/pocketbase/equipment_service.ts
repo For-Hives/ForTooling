@@ -1,23 +1,25 @@
 'use server'
 
-import { z } from 'zod'
+import {
+	equipmentCreateSchema,
+	equipmentSchema,
+	equipmentUpdateSchema,
+} from '@/schemas/pocketbase'
+import {
+	Collections,
+	Equipment,
+	EquipmentCreateInput,
+	EquipmentUpdateInput,
+} from '@/types/pocketbase'
 
-import { BaseService, Collections, createServiceSchemas } from './api_client'
-import { equipmentSchema } from './api_client/schemas'
-import { Equipment } from './api_client/types'
+import { BaseService } from './api_client'
 
-// Re-export Equipment type
-export type { Equipment }
-
-// Create schemas for equipment operations
-const { createSchema, updateSchema } = createServiceSchemas(equipmentSchema)
-
-// Types based on the schemas
-export type EquipmentCreateInput = z.infer<typeof createSchema>
-export type EquipmentUpdateInput = z.infer<typeof updateSchema>
+// Re-export types for convenience
+export type { Equipment, EquipmentCreateInput, EquipmentUpdateInput }
 
 /**
- * Service for Equipment-related operations
+ * Service for equipment-related operations
+ * Provides CRUD and search functionality for equipment records
  */
 export class EquipmentService extends BaseService<
 	Equipment,
@@ -25,7 +27,13 @@ export class EquipmentService extends BaseService<
 	EquipmentUpdateInput
 > {
 	constructor() {
-		super(Collections.EQUIPMENT, equipmentSchema, createSchema, updateSchema)
+		// @eslint-disable-next-line @typescript-eslint/ban-ts-comment @ts-expect-error - Types are compatible but TypeScript cannot verify it
+		super(
+			Collections.EQUIPMENT,
+			equipmentSchema,
+			equipmentCreateSchema,
+			equipmentUpdateSchema
+		)
 	}
 
 	/**
@@ -100,8 +108,20 @@ export class EquipmentService extends BaseService<
 			// Clean up search term for use in filter
 			const cleanTerm = searchTerm.trim().replace(/"/g, '\\"')
 
+			// Construct the filter as a string, properly escaping quotation marks
+			const filter =
+				'organization = "' +
+				organizationId +
+				'" && (name ~ "' +
+				cleanTerm +
+				'" || tags ~ "' +
+				cleanTerm +
+				'" || notes ~ "' +
+				cleanTerm +
+				'")'
+
 			const result = await this.getList({
-				filter: `organization = "${organizationId}" && (name ~ "${cleanTerm}" || tags ~ "${cleanTerm}" || notes ~ "${cleanTerm}")`,
+				filter,
 			})
 
 			return result.items
@@ -146,6 +166,7 @@ let equipmentServiceInstance: EquipmentService | null = null
 
 /**
  * Get the EquipmentService instance
+ * Uses singleton pattern to ensure only one instance exists
  *
  * @returns The EquipmentService instance
  */
@@ -158,6 +179,7 @@ export function getEquipmentService(): EquipmentService {
 
 /**
  * Find equipment by QR/NFC code
+ * Convenience function that uses the EquipmentService
  *
  * @param qrNfcCode - The QR/NFC code
  * @returns The equipment or null if not found
@@ -170,6 +192,7 @@ export async function findEquipmentByQrNfcCode(
 
 /**
  * Find all equipment for an organization
+ * Convenience function that uses the EquipmentService
  *
  * @param organizationId - The organization ID
  * @returns Array of equipment
@@ -182,6 +205,7 @@ export async function findEquipmentByOrganization(
 
 /**
  * Search equipment by name, tags or notes
+ * Convenience function that uses the EquipmentService
  *
  * @param organizationId - The organization ID
  * @param searchTerm - Term to search for
@@ -196,6 +220,7 @@ export async function searchEquipment(
 
 /**
  * Generate a new unique QR/NFC code
+ * Convenience function that uses the EquipmentService
  *
  * @returns A new unique code
  */

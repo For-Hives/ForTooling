@@ -37,6 +37,7 @@ export function tagsFromStorage(tagsString: string | null): string[] {
 				.map(tag => tag.trim())
 				.filter(Boolean)
 		}
+		console.error('Error parsing tags:', error)
 		return []
 	}
 }

@@ -7,7 +7,7 @@ import { Webhook } from 'svix'
 export async function verifyClerkWebhook(
 	req: NextRequest,
 	secret: string | undefined
-): Promise<{ success: boolean; payload?: any }> {
+): Promise<{ success: boolean; payload?: unknown }> {
 	if (!secret) {
 		console.error('Missing Clerk webhook secret')
 		return { success: false }
