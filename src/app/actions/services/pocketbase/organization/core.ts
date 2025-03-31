@@ -12,9 +12,11 @@ import {
 import {
 	validateCurrentUser,
 	validateOrganizationAccess,
+} from '@/app/actions/services/pocketbase/securityUtils'
+import {
 	PermissionLevel,
 	SecurityError,
-} from '@/app/actions/services/pocketbase/securityUtils'
+} from '@/app/actions/services/securyUtilsTools'
 import { Organization, ListOptions, ListResult } from '@/types/types_pocketbase'
 
 /**
@@ -80,7 +82,8 @@ export async function getOrganizationByClerkId(
 			throw new SecurityError('User does not belong to this organization')
 		}
 
-		return organization
+		// todo : fix types
+		return organization as Organization
 	} catch (error) {
 		if (error instanceof SecurityError) {
 			throw error

@@ -1,10 +1,8 @@
 'use server'
 
 import { getUserOrganizations } from '@/app/actions/services/pocketbase/organization/core'
-import {
-	validateCurrentUser,
-	SecurityError,
-} from '@/app/actions/services/pocketbase/securityUtils'
+import { validateCurrentUser } from '@/app/actions/services/pocketbase/securityUtils'
+import { SecurityError } from '@/app/actions/services/securyUtilsTools'
 
 /**
  * Organization-specific security functions

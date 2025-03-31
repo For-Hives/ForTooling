@@ -8,10 +8,12 @@ import {
 	validateOrganizationAccess,
 	validateResourceAccess,
 	createOrganizationFilter,
-	ResourceType,
-	PermissionLevel,
-	SecurityError,
 } from '@/app/actions/services/pocketbase/securityUtils'
+import {
+	PermissionLevel,
+	ResourceType,
+	SecurityError,
+} from '@/app/actions/services/securyUtilsTools'
 import { ListOptions, ListResult, Project } from '@/types/types_pocketbase'
 
 /**
@@ -60,7 +62,10 @@ export async function getProjectsList(
 		} = options
 
 		// Apply organization filter to ensure data isolation
-		const filter = createOrganizationFilter(organizationId, additionalFilter)
+		const filter = await createOrganizationFilter(
+			organizationId,
+			additionalFilter
+		)
 
 		return await pb.collection('projects').getList(page, perPage, {
 			...rest,

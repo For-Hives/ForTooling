@@ -8,10 +8,12 @@ import {
 	validateOrganizationAccess,
 	validateResourceAccess,
 	createOrganizationFilter,
-	ResourceType,
-	PermissionLevel,
-	SecurityError,
 } from '@/app/actions/services/pocketbase/securityUtils'
+import {
+	PermissionLevel,
+	ResourceType,
+	SecurityError,
+} from '@/app/actions/services/securyUtilsTools'
 import { Assignment, ListOptions, ListResult } from '@/types/types_pocketbase'
 
 /**
@@ -64,7 +66,10 @@ export async function getAssignmentsList(
 		} = options
 
 		// Apply organization filter to ensure data isolation
-		const filter = createOrganizationFilter(organizationId, additionalFilter)
+		const filter = await createOrganizationFilter(
+			organizationId,
+			additionalFilter
+		)
 
 		return await pb.collection('assignments').getList(page, perPage, {
 			...rest,
@@ -182,7 +187,7 @@ export async function getUserAssignments(
 		// Include organization filter for security
 		return await pb.collection('assignments').getFullList({
 			expand: 'equipmentId,assignedToProjectId',
-			filter: createOrganizationFilter(
+			filter: await createOrganizationFilter(
 				organizationId,
 				`assignedToUserId="${userId}"`
 			),
@@ -218,7 +223,7 @@ export async function getProjectAssignments(
 		// Include organization filter for security
 		return await pb.collection('assignments').getFullList({
 			expand: 'equipmentId,assignedToUserId',
-			filter: createOrganizationFilter(
+			filter: await createOrganizationFilter(
 				organizationId,
 				`assignedToProjectId=${projectId}`
 			),
@@ -443,7 +448,7 @@ export async function getEquipmentAssignmentHistory(
 		// Include organization filter for security
 		return await pb.collection('assignments').getFullList({
 			expand: 'assignedToUserId,assignedToProjectId',
-			filter: createOrganizationFilter(
+			filter: await createOrganizationFilter(
 				organizationId,
 				`equipmentId="${equipmentId}"`
 			),

@@ -4,11 +4,11 @@ import {
 	getPocketBase,
 	handlePocketBaseError,
 } from '@/app/actions/services/pocketbase/baseService'
+import { validateOrganizationAccess } from '@/app/actions/services/pocketbase/securityUtils'
 import {
-	validateOrganizationAccess,
 	PermissionLevel,
 	SecurityError,
-} from '@/app/actions/services/pocketbase/securityUtils'
+} from '@/app/actions/services/securyUtilsTools'
 import { AppUser } from '@/types/types_pocketbase'
 
 /**
@@ -86,7 +86,9 @@ export async function _removeUserFromOrganization(
 		}
 
 		// Remove organization from user's organizations list
-		const updatedOrgs = currentOrgs.filter(orgId => orgId !== organizationId)
+		const updatedOrgs = currentOrgs.filter(
+			(orgId: string) => orgId !== organizationId
+		)
 
 		// Update user with new organizations list
 		return await pb.collection('users').update(userId, {
@@ -172,6 +174,7 @@ export async function getOrganizationUsers(
 			filter: `organizations ~ "${organizationId}"`,
 		})
 
+		// todo : fix types
 		return result.items
 	} catch (error) {
 		if (error instanceof SecurityError) {

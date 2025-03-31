@@ -34,6 +34,3 @@ export {
 	handleMembershipWebhookUpdated,
 	handleMembershipWebhookDeleted,
 } from '@/app/actions/services/pocketbase/organization/webhook-handlers'
-
-// Internal functions for direct access when needed
-export { getByClerkId } from '@/app/actions/services/pocketbase/organization/internal'

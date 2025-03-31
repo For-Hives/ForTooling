@@ -35,6 +35,7 @@ export async function _createOrganization(
 		const newOrg = await pb.collection('Organization').create(data)
 		console.info('New Organization created:', newOrg)
 
+		// todo : fix types
 		return newOrg
 	} catch (error) {
 		console.error('Error creating organization:', error)
@@ -62,6 +63,7 @@ export async function _updateOrganization(
 		const updatedOrg = await pb.collection('Organization').update(id, data)
 		console.info('Organization updated:', updatedOrg)
 
+		// todo : fix types
 		return updatedOrg
 	} catch (error) {
 		console.error('Error updating organization:', error)
@@ -110,7 +112,9 @@ export async function getOrganizationByClerkId(
 				.getFirstListItem(`clerkId="${clerkId}"`)
 
 			console.info('Organization found:', org)
-			return org
+
+			// todo : fix types
+			return org as Organization
 		} catch (error) {
 			// Check if this is a "not found" error
 			if (

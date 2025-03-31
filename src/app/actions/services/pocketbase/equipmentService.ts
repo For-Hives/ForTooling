@@ -8,10 +8,12 @@ import {
 	validateOrganizationAccess,
 	validateResourceAccess,
 	createOrganizationFilter,
-	ResourceType,
-	PermissionLevel,
-	SecurityError,
 } from '@/app/actions/services/pocketbase/securityUtils'
+import {
+	PermissionLevel,
+	ResourceType,
+	SecurityError,
+} from '@/app/actions/services/securyUtilsTools'
 import { Equipment, ListOptions, ListResult } from '@/types/types_pocketbase'
 
 /**
@@ -57,7 +59,7 @@ export async function getEquipmentByCode(
 		}
 
 		// Apply organization filter for security
-		const filter = createOrganizationFilter(
+		const filter = await createOrganizationFilter(
 			organizationId,
 			`qrNfcCode="${qrNfcCode}"`
 		)
@@ -94,7 +96,10 @@ export async function getEquipmentList(
 		} = options
 
 		// Apply organization filter to ensure data isolation
-		const filter = createOrganizationFilter(organizationId, additionalFilter)
+		const filter = await createOrganizationFilter(
+			organizationId,
+			additionalFilter
+		)
 
 		return await pb.collection('equipment').getList(page, perPage, {
 			...rest,
@@ -268,7 +273,7 @@ export async function getChildEquipment(
 		}
 
 		// Apply organization filter for security - fixed field name
-		const filter = createOrganizationFilter(
+		const filter = await createOrganizationFilter(
 			organizationId,
 			`parentEquipmentId="${parentId}"`
 		)
