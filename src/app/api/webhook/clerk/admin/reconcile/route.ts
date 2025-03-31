@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
  * @param req The incoming request
  * @returns Whether the request is authenticated
  */
-async function checkAuthentication(req: NextRequest): Promise<boolean> {
+async function checkAuthentication(): Promise<boolean> {
 	// Option 1: Check admin user
 	const { orgRole, userId } = await auth()
 
