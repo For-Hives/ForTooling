@@ -5,15 +5,17 @@
  */
 
 // Base models
-export * from './base.model'
+export * from '@/models/pocketbase/base.model'
 
 // Collection names
-export * from './collections.model'
+export * from '@/models/pocketbase/collections.model'
 
 // Entity models
-export * from './equipment.model'
+export * from '@/models/pocketbase/app-user.model'
+export * from '@/models/pocketbase/equipment.model'
+export * from '@/models/pocketbase/organization.model'
 
 // Add other entity models as they are created:
-// export * from './organization.model'
-// export * from './app-user.model'
+// export * from './project.model'
+// export * from './assignment.model'
 // etc.

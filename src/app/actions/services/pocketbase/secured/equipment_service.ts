@@ -1,6 +1,5 @@
 'use server'
 
-import { Equipment } from '@/app/actions/services/pocketbase/api_client/types'
 import {
 	EquipmentCreateInput,
 	EquipmentUpdateInput,
@@ -12,6 +11,7 @@ import {
 	checkResourcePermission,
 	withSecurity,
 } from '@/app/actions/services/pocketbase/secured/security_middleware'
+import { Equipment } from '@/models/pocketbase'
 
 /**
  * Get equipment by ID with security checks

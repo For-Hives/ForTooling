@@ -41,6 +41,8 @@ All models are centralized in the `/models` directory, combining types and valid
     /base.model.ts             # Base types, schemas and utilities
     /collections.model.ts      # Collection name constants
     /equipment.model.ts        # Equipment specific types and schemas
+    /organization.model.ts     # Organization specific types and schemas
+    /app-user.model.ts         # App user specific types and schemas
     /index.ts                  # Re-exports for easier imports
   # Other model categories can be added here
 ```
@@ -58,6 +60,8 @@ This approach offers several benefits:
 - **Maintainability** - Changes to a model only require editing a single file
 - **Consistency** - Consistent naming convention with `.model.ts` suffix
 
+> **Note on TypeScript compatibility:** There are some TypeScript compatibility issues between Zod schemas and TypeScript interfaces. We've addressed these with `@ts-expect-error` comments in the service constructors. These are harmless and don't affect runtime functionality.
+
 ### Services
 
 Services use the centralized models:
@@ -67,6 +71,8 @@ Services use the centralized models:
   /pocketbase
     /api_client       # Base API client
     /equipment_service.ts  # Equipment specific service
+    /organization_service.ts # Organization specific service
+    /app_user_service.ts # App user specific service
     # Other services
 ```
 

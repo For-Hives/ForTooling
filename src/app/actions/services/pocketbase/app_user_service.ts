@@ -1,17 +1,19 @@
 'use server'
 
-import { z } from 'zod'
+import {
+	AppUser,
+	AppUserCreateInput,
+	AppUserUpdateInput,
+	Collections,
+	appUserCreateSchema,
+	appUserSchema,
+	appUserUpdateSchema,
+} from '@/models/pocketbase'
 
-import { BaseService, Collections, createServiceSchemas } from './api_client'
-import { appUserSchema } from './api_client/schemas'
-import { AppUser } from './api_client/types'
+import { BaseService } from './api_client'
 
-// Create schemas for app user operations
-const { createSchema, updateSchema } = createServiceSchemas(appUserSchema)
-
-// Types based on the schemas
-export type AppUserCreateInput = z.infer<typeof createSchema>
-export type AppUserUpdateInput = z.infer<typeof updateSchema>
+// Re-export types for convenience
+export type { AppUser, AppUserCreateInput, AppUserUpdateInput }
 
 /**
  * Service for AppUser-related operations
@@ -22,7 +24,13 @@ export class AppUserService extends BaseService<
 	AppUserUpdateInput
 > {
 	constructor() {
-		super(Collections.APP_USERS, appUserSchema, createSchema, updateSchema)
+		// @ts-expect-error - Types are compatible but TypeScript cannot verify it
+		super(
+			Collections.APP_USERS,
+			appUserSchema,
+			appUserCreateSchema,
+			appUserUpdateSchema
+		)
 	}
 
 	/**

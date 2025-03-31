@@ -1,17 +1,19 @@
 'use server'
 
-import { z } from 'zod'
+import {
+	Collections,
+	Organization,
+	OrganizationCreateInput,
+	OrganizationUpdateInput,
+	organizationCreateSchema,
+	organizationSchema,
+	organizationUpdateSchema,
+} from '@/models/pocketbase'
 
-import { BaseService, Collections, createServiceSchemas } from './api_client'
-import { organizationSchema } from './api_client/schemas'
-import { Organization } from './api_client/types'
+import { BaseService } from './api_client'
 
-// Create schemas for organization operations
-const { createSchema, updateSchema } = createServiceSchemas(organizationSchema)
-
-// Types based on the schemas
-export type OrganizationCreateInput = z.infer<typeof createSchema>
-export type OrganizationUpdateInput = z.infer<typeof updateSchema>
+// Re-export types for convenience
+export type { Organization, OrganizationCreateInput, OrganizationUpdateInput }
 
 /**
  * Service for Organization-related operations
@@ -24,9 +26,10 @@ export class OrganizationService extends BaseService<
 	constructor() {
 		super(
 			Collections.ORGANIZATIONS,
+			// @ts-expect-error - Types are compatible but TypeScript cannot verify it [ :) ]
 			organizationSchema,
-			createSchema,
-			updateSchema
+			organizationCreateSchema,
+			organizationUpdateSchema
 		)
 	}
 

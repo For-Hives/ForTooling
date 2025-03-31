@@ -5,7 +5,8 @@ import type {
 	Organization as ClerkOrganization,
 } from '@clerk/nextjs/server'
 
-import { AppUser, Organization } from '../pocketbase/api_client/types'
+import { AppUser, Organization } from '@/models/pocketbase'
+
 import {
 	getAppUserService,
 	AppUserCreateInput,

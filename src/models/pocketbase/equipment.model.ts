@@ -1,10 +1,9 @@
-import { z } from 'zod'
-
 import {
 	BaseRecord,
 	baseRecordSchema,
 	createServiceSchemas,
-} from './base.model'
+} from '@/models/pocketbase/base.model'
+import { z } from 'zod'
 
 /**
  * ========================================

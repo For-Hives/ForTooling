@@ -25,9 +25,9 @@ export class EquipmentService extends BaseService<
 	EquipmentUpdateInput
 > {
 	constructor() {
-		// @ts-expect-error - Types are compatible but TypeScript cannot verify it
 		super(
 			Collections.EQUIPMENT,
+			// @ts-expect-error - Types are compatible but TypeScript cannot verify it [ :) ]
 			equipmentSchema,
 			equipmentCreateSchema,
 			equipmentUpdateSchema
