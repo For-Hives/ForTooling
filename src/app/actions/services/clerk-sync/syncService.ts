@@ -12,6 +12,7 @@ import {
 	AppUserCreateInput,
 	createOrUpdateUserByClerkId,
 } from '../pocketbase/app_user_service'
+import { createOrUpdateOrganizationUserMapping } from '../pocketbase/organization_app_user_service'
 import {
 	getOrganizationService,
 	OrganizationCreateInput,
@@ -97,11 +98,6 @@ export async function syncUserToPocketBase(clerkUser: User): Promise<AppUser> {
 				clerkUser.username ||
 				'Unknown',
 			organizations: '',
-			role:
-				typeof clerkUser.publicMetadata?.role === 'string'
-					? (clerkUser.publicMetadata.role as string)
-					: 'member',
-			verified: primaryEmail.verification?.status === 'verified',
 		}
 
 		// Use the utility function to create/update the user
@@ -168,7 +164,7 @@ export async function syncOrganizationToPocketBase(
 /**
  * Links a user to an organization based on Clerk membership data
  * @param membershipData - The membership data from Clerk
- * @returns Success status
+ * @returns The updated user or null if linking failed
  */
 export async function linkUserToOrganizationFromClerk(
 	membershipData: ClerkMembershipData
@@ -203,8 +199,11 @@ export async function linkUserToOrganizationFromClerk(
 			`Found user ${user.id} and organization ${org.id} in PocketBase`
 		)
 
-		// Link the user to the organization
-		return await appUserService.linkToOrganization(user.id, org.id, role)
+		// Create or update the relation in the junction table
+		await createOrUpdateOrganizationUserMapping(user.id, org.id, role)
+
+		// Return the user record
+		return user
 	} catch (error) {
 		console.error('Error linking user to organization:', error)
 		return null

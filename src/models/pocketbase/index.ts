@@ -15,6 +15,12 @@ export * from '@/models/pocketbase/app-user.model'
 export * from '@/models/pocketbase/equipment.model'
 export * from '@/models/pocketbase/organization.model'
 
+// OrganizationAppUser
+export * from '@/models/pocketbase/organization-app-user.model'
+
+// AppUser
+export * from '@/models/pocketbase/app-user.model'
+
 // Add other entity models as they are created:
 // export * from './project.model'
 // export * from './assignment.model'

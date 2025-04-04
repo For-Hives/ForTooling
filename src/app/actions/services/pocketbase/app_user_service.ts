@@ -1,4 +1,5 @@
 import { BaseService } from '@/app/actions/services/pocketbase/api_client'
+import { getPocketBase } from '@/app/actions/services/pocketbase/api_client/client'
 import {
 	AppUser,
 	AppUserCreateInput,
@@ -38,11 +39,25 @@ export class AppUserService extends BaseService<
 	 */
 	async findByClerkId(clerkId: string): Promise<AppUser | null> {
 		try {
-			const result = await this.getList({
-				filter: `clerkId = "${clerkId}"`,
+			// Use getPocketBase directly to avoid validation issues
+			const pb = getPocketBase()
+			const records = await pb.collection(this.collectionName).getFullList({
+				filter: `clerkId="${clerkId}"`,
 			})
 
-			return result.items.length > 0 ? result.items[0] : null
+			if (records.length === 0) {
+				return null
+			}
+
+			// Clean and normalize the response data
+			const record = records[0]
+
+			// Fix organizations field if it's an array
+			if (Array.isArray(record.organizations)) {
+				record.organizations = ''
+			}
+
+			return record as unknown as AppUser
 		} catch (error) {
 			console.error('Error finding user by clerkId:', error)
 			return null
@@ -76,19 +91,34 @@ export class AppUserService extends BaseService<
 		clerkId: string,
 		data: Omit<AppUserCreateInput, 'clerkId'>
 	): Promise<AppUser> {
-		const existing = await this.findByClerkId(clerkId)
+		try {
+			const existing = await this.findByClerkId(clerkId)
 
-		if (existing) {
-			return this.update(existing.id, {
+			if (existing) {
+				console.info(`Updating existing user with clerkId: ${clerkId}`)
+				// When updating, ensure we don't overwrite organizations field with an empty string
+				// if the user already has organizations
+				const updateData = {
+					...data,
+					clerkId,
+				} as AppUserUpdateInput
+
+				return this.update(existing.id, updateData, { validateOutput: false })
+			}
+
+			console.info(`Creating new user with clerkId: ${clerkId}`)
+			// For new users, make sure organizations is a string
+			const createData = {
 				...data,
 				clerkId,
-			})
-		}
+				organizations: data.organizations || '',
+			} as AppUserCreateInput
 
-		return this.create({
-			...data,
-			clerkId,
-		})
+			return this.create(createData, { validateOutput: false })
+		} catch (error) {
+			console.error('Error in createOrUpdateByClerkId:', error)
+			throw error
+		}
 	}
 
 	/**

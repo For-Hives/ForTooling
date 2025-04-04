@@ -6,6 +6,7 @@ import {
 	linkUserToOrganizationFromClerk,
 	ClerkMembershipData,
 } from '@/app/actions/services/clerk-sync/syncService'
+import { createOrUpdateOrganizationUserMapping } from '@/app/actions/services/pocketbase/organization_app_user_service'
 import { WebhookEvent, clerkClient, User } from '@clerk/nextjs/server'
 
 /**
@@ -14,7 +15,7 @@ import { WebhookEvent, clerkClient, User } from '@clerk/nextjs/server'
 interface WebhookProcessingResult {
 	message: string
 	success: boolean
-	data?: any
+	data?: Record<string, unknown>
 	error?: string
 }
 
@@ -102,20 +103,64 @@ export async function processWebhookEvent(
 				}
 			}
 
-			const user = await linkUserToOrganizationFromClerk(membershipData)
-			if (user) {
-				return {
-					data: {
-						organizationId: membershipData.organization.id,
-						userId: user.id,
-					},
-					message: `User ${user.name} linked to organization successfully`,
-					success: true,
+			try {
+				const user = await linkUserToOrganizationFromClerk(membershipData)
+				if (user) {
+					return {
+						data: {
+							organizationId: membershipData.organization.id,
+							userId: user.id,
+						},
+						message: `User ${user.name} linked to organization successfully`,
+						success: true,
+					}
+				} else {
+					// Try to perform initial sync of user and organization if linking failed
+					const userId = membershipData.public_user_data.user_id
+					const orgId = membershipData.organization.id
+
+					console.info(
+						`Attempting to sync user ${userId} and org ${orgId} before linking`
+					)
+					const clerk = await clerkClient()
+
+					try {
+						// Get complete data from Clerk
+						const [clerkUser, clerkOrg] = await Promise.all([
+							clerk.users.getUser(userId),
+							clerk.organizations.getOrganization({ organizationId: orgId }),
+						])
+
+						// Sync both to PocketBase
+						const pbUser = await syncUserToPocketBase(clerkUser)
+						const pbOrg = await syncOrganizationToPocketBase(clerkOrg)
+
+						// Try linking again
+						await createOrUpdateOrganizationUserMapping(
+							pbUser.id,
+							pbOrg.id,
+							membershipData.role?.replace('org:', '') || 'member'
+						)
+
+						return {
+							data: { organizationId: pbOrg.id, userId: pbUser.id },
+							message: `User ${pbUser.name} linked to organization ${pbOrg.name} after sync`,
+							success: true,
+						}
+					} catch (syncError) {
+						console.error('Error syncing before linking:', syncError)
+						return {
+							error: 'SYNC_BEFORE_LINK_FAILED',
+							message: `Failed to link after sync attempt: ${syncError instanceof Error ? syncError.message : 'Unknown error'}`,
+							success: false,
+						}
+					}
 				}
-			} else {
+			} catch (error) {
+				console.error('Error linking user to organization:', error)
 				return {
 					error: 'LINK_FAILED',
-					message: `Failed to link user to organization`,
+					message: `Failed to link user to organization: ${error instanceof Error ? error.message : 'Unknown error'}`,
 					success: false,
 				}
 			}

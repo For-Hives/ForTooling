@@ -1,124 +1,240 @@
 'use server'
 
-import { auth, clerkClient } from '@clerk/nextjs/server'
-import { NextResponse } from 'next/server'
+import { AppUser, Organization } from '@/models/pocketbase'
+import { clerkClient, OrganizationMembership } from '@clerk/nextjs/server'
 
 import {
-	syncUserToPocketBase,
+	findUserByClerkId,
+	getAppUserService,
+} from '../pocketbase/app_user_service'
+import {
+	createOrUpdateOrganizationUserMapping,
+	getOrganizationAppUserService,
+} from '../pocketbase/organization_app_user_service'
+import { findOrganizationByClerkId } from '../pocketbase/organization_service'
+import {
 	syncOrganizationToPocketBase,
-	linkUserToOrganizationFromClerk,
-	ClerkMembershipData,
+	syncUserToPocketBase,
 } from './syncService'
 
 /**
- * Type for any data accepted by server actions
+ * Ensures a user is synchronized between Clerk and PocketBase
+ * @param clerkUserId - The Clerk user ID
+ * @returns The PocketBase user
  */
-type ActionData = Record<string, unknown>
-
-/**
- * Middleware function to ensure user and organization data is synced
- * Acts as a fallback in case webhooks fail
- *
- * @returns The modified response
- */
-export async function syncMiddleware() {
-	// Only run this middleware for authenticated routes
-	const { orgId, userId } = await auth()
-
-	if (!userId) {
-		// User is not authenticated, skip this middleware
-		return NextResponse.next()
+export async function ensureUserSync(clerkUserId: string): Promise<AppUser> {
+	// Check if user already exists in PocketBase
+	const existingUser = await findUserByClerkId(clerkUserId)
+	if (existingUser) {
+		return existingUser
 	}
 
-	try {
-		// Perform the sync without using cache
-		await ensureUserAndOrgSync(userId, orgId)
-	} catch (error) {
-		// Log error but don't block the request
-		// This ensures the app remains functional even if sync fails
-		console.error('Sync middleware error:', error)
-	}
+	// User not found, sync from Clerk
+	console.info(`User ${clerkUserId} not found in PocketBase, syncing...`)
+	const clerk = await clerkClient()
+	const clerkUser = await clerk.users.getUser(clerkUserId)
 
-	// Continue with the request
-	return NextResponse.next()
+	return syncUserToPocketBase(clerkUser)
 }
 
 /**
- * Ensures user and organization data is synchronized between Clerk and PocketBase
- *
- * @param clerkUserId The Clerk user ID
- * @param clerkOrgId The Clerk organization ID (optional)
- * @returns Object containing the synchronized user and organization
+ * Ensures an organization is synchronized between Clerk and PocketBase
+ * @param clerkOrgId - The Clerk organization ID
+ * @returns The PocketBase organization
+ */
+export async function ensureOrgSync(clerkOrgId: string): Promise<Organization> {
+	// Check if organization already exists in PocketBase
+	const existingOrg = await findOrganizationByClerkId(clerkOrgId)
+	if (existingOrg) {
+		return existingOrg
+	}
+
+	// Organization not found, sync from Clerk
+	console.info(`Organization ${clerkOrgId} not found in PocketBase, syncing...`)
+	const clerk = await clerkClient()
+	const clerkOrg = await clerk.organizations.getOrganization({
+		organizationId: clerkOrgId,
+	})
+
+	return syncOrganizationToPocketBase(clerkOrg)
+}
+
+/**
+ * Ensures a user and organization are synchronized and linked
+ * @param clerkUserId - The Clerk user ID
+ * @param clerkOrgId - The Clerk organization ID
+ * @returns The PocketBase user and organization
  */
 export async function ensureUserAndOrgSync(
 	clerkUserId: string,
-	clerkOrgId?: string | null
-) {
-	// 1. First, try to get fresh data from Clerk
-	const clerkAPI = await clerkClient()
-	const clerkUser = await clerkAPI.users.getUser(clerkUserId)
+	clerkOrgId: string
+): Promise<{ user: AppUser; org: Organization }> {
+	try {
+		// First ensure both user and org exist in PocketBase
+		const [user, org] = await Promise.all([
+			ensureUserSync(clerkUserId),
+			ensureOrgSync(clerkOrgId),
+		])
 
-	// 2. Sync the user to PocketBase
-	await syncUserToPocketBase(clerkUser)
+		if (!user || !org) {
+			console.error(
+				`Failed to sync user ${clerkUserId} or organization ${clerkOrgId}`
+			)
+			throw new Error('User or organization sync failed')
+		}
 
-	// 3. If an organization ID is provided, sync that too
-	if (clerkOrgId) {
-		const clerkOrg = await clerkAPI.organizations.getOrganization({
-			organizationId: clerkOrgId,
-		})
+		// Get the user's role in the organization from Clerk
+		const clerk = await clerkClient()
 
-		await syncOrganizationToPocketBase(clerkOrg)
-
-		// 4. Ensure the user-organization relationship exists
-		const memberships =
-			await clerkAPI.organizations.getOrganizationMembershipList({
+		// Get all memberships for the organization
+		const memberships = await clerk.organizations.getOrganizationMembershipList(
+			{
 				organizationId: clerkOrgId,
-			})
+			}
+		)
 
-		// Trouver le membership pour cet utilisateur
+		// Validate that the user is actually a member of this organization
 		const membership = memberships.data.find(
 			m => m.publicUserData?.userId === clerkUserId
 		)
 
-		if (membership) {
-			// Prepare membership data in the format expected by linkUserToOrganization
-			const membershipData: ClerkMembershipData = {
-				organization: { id: clerkOrgId },
-				public_user_data: { user_id: clerkUserId },
-				role: membership.role,
+		if (!membership) {
+			console.warn(
+				`User ${clerkUserId} is not a member of organization ${clerkOrgId} in Clerk`
+			)
+			// Get organization app user service
+			const orgAppUserService = getOrganizationAppUserService()
+
+			// Check if there's an incorrect mapping in PocketBase
+			const existingMapping =
+				await orgAppUserService.findByAppUserAndOrganization(user.id, org.id)
+
+			// If an incorrect mapping exists, remove it for security
+			if (existingMapping) {
+				console.warn(
+					`Removing unauthorized mapping for user ${user.id} in org ${org.id}`
+				)
+				await orgAppUserService.deleteMapping(user.id, org.id)
 			}
 
-			await linkUserToOrganizationFromClerk(membershipData)
+			throw new Error(
+				`User ${clerkUserId} is not authorized to access organization ${clerkOrgId}`
+			)
 		}
-	}
 
-	// Return the operation result
-	return {
-		status: 'success',
-		syncedAt: new Date().toISOString(),
+		// Default to 'member' if no specific role is found
+		const role = membership.role?.replace('org:', '') || 'member'
+
+		// Create or update the mapping in the junction table
+		await createOrUpdateOrganizationUserMapping(user.id, org.id, role)
+
+		// Verify all other memberships to ensure consistency between Clerk and PocketBase
+		await verifyAllOrganizationMemberships(clerkOrgId, org.id, memberships.data)
+
+		return { org, user }
+	} catch (error) {
+		console.error(
+			`Error ensuring user-org sync: ${error instanceof Error ? error.message : 'Unknown error'}`
+		)
+		throw error
 	}
 }
 
-// For server action use, we create a higher-order function
 /**
- * Higher-order function that wraps server actions to ensure sync before execution
- *
- * @param handler The server action handler function
- * @returns The wrapped handler with sync check
+ * Verifies that all memberships match between Clerk and PocketBase
+ * @param clerkOrgId - The Clerk organization ID
+ * @param pbOrgId - The PocketBase organization ID
+ * @param clerkMemberships - The list of memberships from Clerk
  */
-export function withSync<T>(handler: (data: ActionData) => Promise<T>) {
-	return async function syncProtectedAction(data: ActionData): Promise<T> {
-		'use server'
+async function verifyAllOrganizationMemberships(
+	clerkOrgId: string,
+	pbOrgId: string,
+	clerkMemberships: OrganizationMembership[]
+): Promise<void> {
+	try {
+		// Get the organization-app-user service
+		const orgAppUserService = getOrganizationAppUserService()
 
-		// Get auth context
-		const { orgId, userId } = await auth()
+		// Get all mappings for this organization in PocketBase
+		const pbMappings = await orgAppUserService.findByOrganizationId(pbOrgId)
 
-		if (userId) {
-			// Ensure data is synced before proceeding
-			await ensureUserAndOrgSync(userId, orgId)
+		// Get the app user service to look up users by clerk ID
+		const appUserService = getAppUserService()
+
+		// For each PocketBase mapping, verify it exists in Clerk
+		for (const pbMapping of pbMappings) {
+			// Get the app user from PocketBase
+			const appUser = await appUserService.getById(pbMapping.appUser)
+
+			if (!appUser || !appUser.clerkId) {
+				console.warn(
+					`User ${pbMapping.appUser} has no clerkId, skipping verification`
+				)
+				continue
+			}
+
+			// Check if this user is a member in Clerk
+			const clerkMembership = clerkMemberships.find(
+				m => m.publicUserData?.userId === appUser.clerkId
+			)
+
+			// If no membership exists in Clerk but exists in PocketBase, remove it
+			if (!clerkMembership) {
+				console.warn(
+					`User ${appUser.clerkId} is not a member of org ${clerkOrgId} in Clerk, removing from PocketBase`
+				)
+				await orgAppUserService.deleteMapping(pbMapping.appUser, pbOrgId)
+				continue
+			}
+
+			// If the roles don't match, update the PocketBase role
+			const clerkRole = clerkMembership.role?.replace('org:', '') || 'member'
+			if (pbMapping.role !== clerkRole) {
+				console.info(
+					`Updating role for user ${appUser.clerkId} in org ${clerkOrgId} from ${pbMapping.role} to ${clerkRole}`
+				)
+				await orgAppUserService.createOrUpdate(
+					pbMapping.appUser,
+					pbOrgId,
+					clerkRole
+				)
+			}
 		}
 
-		// Execute the original handler
-		return handler(data)
+		// For each Clerk membership, ensure it exists in PocketBase
+		for (const clerkMembership of clerkMemberships) {
+			const clerkUserId = clerkMembership.publicUserData?.userId
+			if (!clerkUserId) {
+				console.warn('Clerk membership has no userId, skipping')
+				continue
+			}
+
+			// Find the user in PocketBase
+			const pbUser = await appUserService.findByClerkId(clerkUserId)
+			if (!pbUser) {
+				console.info(
+					`User ${clerkUserId} not found in PocketBase, will be synced on next access`
+				)
+				continue
+			}
+
+			// Check if mapping exists
+			const pbMapping = await orgAppUserService.findByAppUserAndOrganization(
+				pbUser.id,
+				pbOrgId
+			)
+
+			// If no mapping exists in PocketBase but exists in Clerk, create it
+			if (!pbMapping) {
+				const role = clerkMembership.role?.replace('org:', '') || 'member'
+				console.info(
+					`Creating missing mapping for user ${clerkUserId} in org ${clerkOrgId}`
+				)
+				await orgAppUserService.createOrUpdate(pbUser.id, pbOrgId, role)
+			}
+		}
+	} catch (error) {
+		console.error('Error verifying organization memberships:', error)
+		// Don't throw, just log the error to prevent breaking the main sync flow
 	}
 }

@@ -131,7 +131,6 @@ Cette plateforme SaaS de gestion d'équipements avec tracking NFC/QR combine les
 ## 9. Documentation
 
 - **Swagger/OpenAPI** - Documentation d'API auto-générée
-- **Docusaurus** - Documentation utilisateur et technique
 
 ## 10. Structure du projet 
 ```

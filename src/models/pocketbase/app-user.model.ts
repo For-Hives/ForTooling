@@ -131,7 +131,12 @@ export const appUserSchema = baseRecordSchema.extend({
 		}),
 	metadata: appUserMetadataSchema,
 	name: z.string().optional().or(z.literal('')),
-	organizations: z.string().optional().or(z.literal('')),
+	organizations: z
+		.union([z.string(), z.array(z.any())])
+		.optional()
+		.transform(val => {
+			return typeof val === 'string' ? val : ''
+		}),
 	role: z.string().optional().or(z.literal('')),
 	verified: z.boolean().default(false),
 })
