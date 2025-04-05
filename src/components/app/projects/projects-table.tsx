@@ -64,14 +64,13 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 	])
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-	const [rowSelection, setRowSelection] = useState({})
 	const [searchQuery, setSearchQuery] = useState('')
 
 	// Initialize the table
 	const table = useReactTable({
 		columns: projectColumns,
 		data,
-		enableRowSelection: true,
+		enableRowSelection: false,
 		getCoreRowModel: getCoreRowModel(),
 		getFacetedRowModel: getFacetedRowModel(),
 		getFacetedUniqueValues: getFacetedUniqueValues(),
@@ -91,13 +90,11 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 		onColumnFiltersChange: setColumnFilters,
 		onColumnVisibilityChange: setColumnVisibility,
 		onGlobalFilterChange: setSearchQuery,
-		onRowSelectionChange: setRowSelection,
 		onSortingChange: setSorting,
 		state: {
 			columnFilters,
 			columnVisibility,
 			globalFilter: searchQuery,
-			rowSelection,
 			sorting,
 		},
 	})
@@ -111,7 +108,7 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 						<SearchIcon className='text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4' />
 						<Input
 							type='search'
-							placeholder='Search projects...'
+							placeholder='Rechercher un projet...'
 							className='w-full rounded-md pl-8'
 							value={searchQuery}
 							onChange={e => setSearchQuery(e.target.value)}
@@ -121,7 +118,7 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 				<div className='flex items-center space-x-2'>
 					<Button>
 						<Plus className='mr-2 h-4 w-4' />
-						Add Project
+						Ajouter un projet
 					</Button>
 				</div>
 			</div>
@@ -148,10 +145,7 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 					<TableBody>
 						{table.getRowModel().rows?.length ? (
 							table.getRowModel().rows.map(row => (
-								<TableRow
-									key={row.id}
-									data-state={row.getIsSelected() && 'selected'}
-								>
+								<TableRow key={row.id}>
 									{row.getVisibleCells().map(cell => (
 										<TableCell key={cell.id}>
 											{flexRender(
@@ -168,7 +162,7 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 									colSpan={projectColumns.length}
 									className='h-24 text-center'
 								>
-									No projects found.
+									Aucun projet trouvé.
 								</TableCell>
 							</TableRow>
 						)}
@@ -179,7 +173,7 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 			{/* Pagination */}
 			<div className='flex items-center justify-between'>
 				<div className='flex items-center gap-2'>
-					<Label htmlFor='perPage'>Rows per page</Label>
+					<Label htmlFor='perPage'>Lignes par page</Label>
 					<Select
 						value={`${table.getState().pagination.pageSize}`}
 						onValueChange={value => {
@@ -199,9 +193,9 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 					</Select>
 				</div>
 
-				<div className='flex items-center justify-end space-x-6 lg:space-x-8'>
-					<div className='flex w-[100px] items-center justify-center text-sm font-medium'>
-						Page {table.getState().pagination.pageIndex + 1} of{' '}
+				<div className='flex items-center justify-end space-x-6'>
+					<div className='flex flex-nowrap items-center justify-center text-sm font-medium'>
+						Page&nbsp;{table.getState().pagination.pageIndex + 1}&nbsp;sur&nbsp;
 						{table.getPageCount()}
 					</div>
 					<Pagination>
@@ -213,7 +207,7 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 									onClick={() => table.setPageIndex(0)}
 									disabled={!table.getCanPreviousPage()}
 								>
-									<span className='sr-only'>Go to first page</span>
+									<span className='sr-only'>Aller à la première page</span>
 									<ChevronFirstIcon className='h-4 w-4' />
 								</Button>
 							</PaginationItem>
@@ -224,7 +218,7 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 									onClick={() => table.previousPage()}
 									disabled={!table.getCanPreviousPage()}
 								>
-									<span className='sr-only'>Go to previous page</span>
+									<span className='sr-only'>Aller à la page précédente</span>
 									<ChevronLeftIcon className='h-4 w-4' />
 								</Button>
 							</PaginationItem>
@@ -235,7 +229,7 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 									onClick={() => table.nextPage()}
 									disabled={!table.getCanNextPage()}
 								>
-									<span className='sr-only'>Go to next page</span>
+									<span className='sr-only'>Aller à la page suivante</span>
 									<ChevronRightIcon className='h-4 w-4' />
 								</Button>
 							</PaginationItem>
@@ -246,7 +240,7 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 									onClick={() => table.setPageIndex(table.getPageCount() - 1)}
 									disabled={!table.getCanNextPage()}
 								>
-									<span className='sr-only'>Go to last page</span>
+									<span className='sr-only'>Aller à la dernière page</span>
 									<ChevronLastIcon className='h-4 w-4' />
 								</Button>
 							</PaginationItem>

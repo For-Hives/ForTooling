@@ -58,7 +58,7 @@ async function ProjectsContent() {
 // Main Projects page component
 export default function ProjectsPage() {
 	return (
-		<div className='container py-6'>
+		<div className='w-full py-6'>
 			<ProjectsHeader />
 			<Suspense fallback={<ProjectsTableSkeleton />}>
 				<ProjectsContent />

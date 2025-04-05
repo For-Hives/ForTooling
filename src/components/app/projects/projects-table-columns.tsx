@@ -4,7 +4,6 @@
 import { Project } from '@/app/actions/services/pocketbase/api_client/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -16,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { ColumnDef } from '@tanstack/react-table'
 import { format, isValid } from 'date-fns'
-import { EllipsisIcon, PencilIcon, TrashIcon } from 'lucide-react'
+import { EllipsisVerticalIcon, PencilIcon, TrashIcon } from 'lucide-react'
 
 /**
  * Determines if a project is active based on its dates
@@ -37,39 +36,43 @@ function isProjectActive(project: Project): boolean {
  * Format a date string to a readable format using date-fns
  */
 function formatDate(dateString: string | null | undefined): string {
-	if (!dateString) return 'Not set'
+	if (!dateString) return 'Non renseigné'
 
 	try {
+		// format in french
 		const date = new Date(dateString)
-		return isValid(date) ? format(date, 'MMM d, yyyy') : 'Invalid date'
+		return isValid(date) ? format(date, 'd MMMM yyyy') : 'Date invalide'
 	} catch {
-		return 'Invalid date'
+		return 'Date invalide'
 	}
 }
 
 export const projectColumns: ColumnDef<Project>[] = [
-	// Selection column
+	// Project status column (derived from dates)
 	{
-		cell: ({ row }) => (
-			<Checkbox
-				checked={row.getIsSelected()}
-				onCheckedChange={value => row.toggleSelected(!!value)}
-				aria-label='Select row'
-			/>
+		cell: ({ row }) => {
+			const active = isProjectActive(row.original)
+			return (
+				<div className='ml-2'>
+					<Badge
+						className={
+							active
+								? 'bg-green-500/20 text-green-700 hover:bg-green-500/20'
+								: 'bg-muted-foreground/20 text-muted-foreground hover:bg-muted-foreground/20'
+						}
+					>
+						{active ? 'Actif' : 'Inactif'}
+					</Badge>
+				</div>
+			)
+		},
+		header: () => (
+			<div className='ml-2 flex items-center justify-start'>
+				<p>Statut</p>
+			</div>
 		),
-		enableHiding: false,
-		enableSorting: false,
-		header: ({ table }) => (
-			<Checkbox
-				checked={
-					table.getIsAllPageRowsSelected() ||
-					(table.getIsSomePageRowsSelected() && 'indeterminate')
-				}
-				onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
-				aria-label='Select all'
-			/>
-		),
-		id: 'select',
+		id: 'status',
+		sortDescFirst: true,
 	},
 	// Project name column
 	{
@@ -77,7 +80,8 @@ export const projectColumns: ColumnDef<Project>[] = [
 		cell: ({ row }) => (
 			<div className='font-medium'>{row.getValue('name')}</div>
 		),
-		header: 'Project Name',
+		header: 'Nom du projet',
+		sortDescFirst: true,
 	},
 	// Project address column
 	{
@@ -87,29 +91,10 @@ export const projectColumns: ColumnDef<Project>[] = [
 			return address ? (
 				<div>{address}</div>
 			) : (
-				<div className='text-muted-foreground'>No address</div>
+				<div className='text-muted-foreground'>Pas d&apos;adresse</div>
 			)
 		},
-		header: 'Address',
-	},
-	// Project status column (derived from dates)
-	{
-		cell: ({ row }) => {
-			const active = isProjectActive(row.original)
-			return (
-				<Badge
-					className={
-						active
-							? 'bg-green-500/20 text-green-700 hover:bg-green-500/20'
-							: 'bg-muted-foreground/20 text-muted-foreground hover:bg-muted-foreground/20'
-					}
-				>
-					{active ? 'Active' : 'Inactive'}
-				</Badge>
-			)
-		},
-		header: 'Status',
-		id: 'status',
+		header: 'Adresse',
 	},
 	// Start date column
 	{
@@ -122,7 +107,7 @@ export const projectColumns: ColumnDef<Project>[] = [
 				</div>
 			)
 		},
-		header: 'Start Date',
+		header: 'Date de début',
 	},
 	// End date column
 	{
@@ -135,39 +120,46 @@ export const projectColumns: ColumnDef<Project>[] = [
 				</div>
 			)
 		},
-		header: 'End Date',
+		header: 'Date de fin',
 	},
 	// Actions column
 	{
 		cell: () => {
 			return (
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button variant='ghost' className='h-8 w-8 p-0'>
-							<span className='sr-only'>Open menu</span>
-							<EllipsisIcon className='h-4 w-4' />
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align='end'>
-						<DropdownMenuLabel>Actions</DropdownMenuLabel>
-						<DropdownMenuGroup>
-							<DropdownMenuItem>
-								<PencilIcon className='mr-2 h-4 w-4' />
-								<span>Edit Project</span>
+				<div className='flex items-center justify-end'>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button variant='ghost' className='h-8 w-8 p-0'>
+								<span className='sr-only'>Ouvrir le menu</span>
+								<EllipsisVerticalIcon className='h-4 w-4' />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align='end'>
+							<DropdownMenuLabel>Actions</DropdownMenuLabel>
+							<DropdownMenuGroup>
+								<DropdownMenuItem>
+									<PencilIcon className='mr-2 h-4 w-4' />
+									<span>Edit Project</span>
+								</DropdownMenuItem>
+								<DropdownMenuItem>
+									<span>View Assignments</span>
+								</DropdownMenuItem>
+							</DropdownMenuGroup>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem className='text-destructive focus:text-destructive'>
+								<TrashIcon className='mr-2 h-4 w-4' />
+								<span>Delete Project</span>
 							</DropdownMenuItem>
-							<DropdownMenuItem>
-								<span>View Assignments</span>
-							</DropdownMenuItem>
-						</DropdownMenuGroup>
-						<DropdownMenuSeparator />
-						<DropdownMenuItem className='text-destructive focus:text-destructive'>
-							<TrashIcon className='mr-2 h-4 w-4' />
-							<span>Delete Project</span>
-						</DropdownMenuItem>
-					</DropdownMenuContent>
-				</DropdownMenu>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				</div>
 			)
 		},
+		header: ({ table }) => (
+			<div className='mr-3 flex items-center justify-end'>
+				<p>Actions</p>
+			</div>
+		),
 		id: 'actions',
 	},
 ]
