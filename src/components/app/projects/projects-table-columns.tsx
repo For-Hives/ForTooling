@@ -13,14 +13,20 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ColumnDef } from '@tanstack/react-table'
+import { ColumnDef, Row } from '@tanstack/react-table'
 import { format, isValid } from 'date-fns'
-import { EllipsisVerticalIcon, PencilIcon, TrashIcon } from 'lucide-react'
+import {
+	ChevronDown,
+	ChevronUp,
+	EllipsisVerticalIcon,
+	PencilIcon,
+	TrashIcon,
+} from 'lucide-react'
 
 /**
  * Determines if a project is active based on its dates
  */
-function isProjectActive(project: Project): boolean {
+export function isProjectActive(project: Project): boolean {
 	const now = new Date()
 	const startDate = project.startDate ? new Date(project.startDate) : null
 	const endDate = project.endDate ? new Date(project.endDate) : null
@@ -47,6 +53,62 @@ function formatDate(dateString: string | null | undefined): string {
 	}
 }
 
+// Custom sorting function for status column
+const sortStatusFn = (rowA: Row<Project>, rowB: Row<Project>) => {
+	const statusA = isProjectActive(rowA.original) ? 1 : 0
+	const statusB = isProjectActive(rowB.original) ? 1 : 0
+	return statusA - statusB
+}
+
+// Custom sorting function for dates
+const sortDateFn = (
+	rowA: Row<Project>,
+	rowB: Row<Project>,
+	columnId: string
+) => {
+	const dateA = rowA.getValue(columnId)
+		? new Date(rowA.getValue(columnId))
+		: null
+	const dateB = rowB.getValue(columnId)
+		? new Date(rowB.getValue(columnId))
+		: null
+
+	// Handle null values - push them to the end
+	if (!dateA && !dateB) return 0
+	if (!dateA) return 1
+	if (!dateB) return -1
+
+	// Regular date comparison
+	return dateA.getTime() - dateB.getTime()
+}
+
+// Add custom filter function for the status column
+export const filterStatus = (row: Row<Project>, id: string, value: boolean) => {
+	const isActive = isProjectActive(row.original)
+	return value === isActive
+}
+
+// Add custom filter function for date range
+export const filterDateRange = (
+	row: Row<Project>,
+	id: string,
+	value: [string, string]
+) => {
+	// Parse the date strings to Date objects
+	const [start, end] = value
+	const startDate = new Date(start)
+	const endDate = new Date(end)
+
+	// Get the row's date value
+	const rowDate = row.getValue(id) ? new Date(row.getValue(id)) : null
+
+	// If no date in the row, it doesn't match
+	if (!rowDate) return false
+
+	// Check if date falls within range
+	return rowDate >= startDate && rowDate <= endDate
+}
+
 export const projectColumns: ColumnDef<Project>[] = [
 	// Project status column (derived from dates)
 	{
@@ -66,13 +128,27 @@ export const projectColumns: ColumnDef<Project>[] = [
 				</div>
 			)
 		},
-		header: () => (
+		enableHiding: true,
+		filterFn: filterStatus,
+		header: ({ column }) => (
 			<div className='ml-2 flex items-center justify-start'>
-				<p>Statut</p>
+				<Button
+					variant='ghost'
+					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+					className='p-0 hover:bg-transparent'
+				>
+					<span>Statut</span>
+					{column.getIsSorted() === 'asc' ? (
+						<ChevronUp className='ml-1 h-4 w-4' />
+					) : column.getIsSorted() === 'desc' ? (
+						<ChevronDown className='ml-1 h-4 w-4' />
+					) : null}
+				</Button>
 			</div>
 		),
 		id: 'status',
 		sortDescFirst: true,
+		sortingFn: sortStatusFn,
 	},
 	// Project name column
 	{
@@ -80,8 +156,22 @@ export const projectColumns: ColumnDef<Project>[] = [
 		cell: ({ row }) => (
 			<div className='font-medium'>{row.getValue('name')}</div>
 		),
-		header: 'Nom du projet',
-		sortDescFirst: true,
+		enableHiding: true,
+		header: ({ column }) => (
+			<Button
+				variant='ghost'
+				onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				className='p-0 hover:bg-transparent'
+			>
+				Nom du projet
+				{column.getIsSorted() === 'asc' ? (
+					<ChevronUp className='ml-1 h-4 w-4' />
+				) : column.getIsSorted() === 'desc' ? (
+					<ChevronDown className='ml-1 h-4 w-4' />
+				) : null}
+			</Button>
+		),
+		sortDescFirst: false,
 	},
 	// Project address column
 	{
@@ -94,7 +184,22 @@ export const projectColumns: ColumnDef<Project>[] = [
 				<div className='text-muted-foreground'>Pas d&apos;adresse</div>
 			)
 		},
-		header: 'Adresse',
+		enableHiding: true,
+		header: ({ column }) => (
+			<Button
+				variant='ghost'
+				onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				className='p-0 hover:bg-transparent'
+			>
+				Adresse
+				{column.getIsSorted() === 'asc' ? (
+					<ChevronUp className='ml-1 h-4 w-4' />
+				) : column.getIsSorted() === 'desc' ? (
+					<ChevronDown className='ml-1 h-4 w-4' />
+				) : null}
+			</Button>
+		),
+		sortDescFirst: false,
 	},
 	// Start date column
 	{
@@ -107,7 +212,23 @@ export const projectColumns: ColumnDef<Project>[] = [
 				</div>
 			)
 		},
-		header: 'Date de début',
+		enableHiding: true,
+		filterFn: filterDateRange,
+		header: ({ column }) => (
+			<Button
+				variant='ghost'
+				onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				className='p-0 hover:bg-transparent'
+			>
+				Date de début
+				{column.getIsSorted() === 'asc' ? (
+					<ChevronUp className='ml-1 h-4 w-4' />
+				) : column.getIsSorted() === 'desc' ? (
+					<ChevronDown className='ml-1 h-4 w-4' />
+				) : null}
+			</Button>
+		),
+		sortingFn: (rowA, rowB, columnId) => sortDateFn(rowA, rowB, columnId),
 	},
 	// End date column
 	{
@@ -120,7 +241,23 @@ export const projectColumns: ColumnDef<Project>[] = [
 				</div>
 			)
 		},
-		header: 'Date de fin',
+		enableHiding: true,
+		header: ({ column }) => (
+			<Button
+				variant='ghost'
+				onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				className='p-0 hover:bg-transparent'
+			>
+				Date de fin
+				{column.getIsSorted() === 'asc' ? (
+					<ChevronUp className='ml-1 h-4 w-4' />
+				) : column.getIsSorted() === 'desc' ? (
+					<ChevronDown className='ml-1 h-4 w-4' />
+				) : null}
+			</Button>
+		),
+		sortingFn: (rowA, rowB, columnId) => sortDateFn(rowA, rowB, columnId),
+		sortUndefined: 'last', // Move undefined/null values to end
 	},
 	// Actions column
 	{
@@ -155,7 +292,9 @@ export const projectColumns: ColumnDef<Project>[] = [
 				</div>
 			)
 		},
-		header: ({ table }) => (
+		enableHiding: true,
+		enableSorting: false,
+		header: () => (
 			<div className='mr-3 flex items-center justify-end'>
 				<p>Actions</p>
 			</div>
