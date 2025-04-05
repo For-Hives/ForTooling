@@ -1,5 +1,5 @@
 'use client'
-import { SignedIn } from '@clerk/nextjs'
+import { OrganizationSwitcher, SignedIn } from '@clerk/nextjs'
 import { Search } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 

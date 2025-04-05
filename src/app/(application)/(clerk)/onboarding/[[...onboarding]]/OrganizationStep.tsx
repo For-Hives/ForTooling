@@ -1,15 +1,19 @@
 import { Button } from '@/components/ui/button'
-import { Organization } from '@clerk/nextjs/server'
 import { Building, User, Info, CheckCircle2 } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+
+// Only require the properties we actually use
+interface OrganizationData {
+	imageUrl?: string
+}
 
 export function OrganizationStep({
 	hasOrganization,
 	organization,
 }: {
 	hasOrganization: boolean
-	organization: Organization
+	organization: OrganizationData
 }) {
 	const router = useRouter()
 
