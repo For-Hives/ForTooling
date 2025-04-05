@@ -129,6 +129,20 @@ const dateRangeFilter: FilterFn<Project> = (row, columnId, value) => {
 	return startInRange || endInRange || projectEnclosesFilter
 }
 
+// Determine if a project is active based on its dates
+const isProjectActive = (
+	startDate: string | undefined,
+	endDate: string | undefined
+): boolean => {
+	if (!startDate) return false
+
+	const now = new Date()
+	const start = new Date(startDate)
+	const end = endDate ? new Date(endDate) : null
+
+	return start <= now && (!end || end >= now)
+}
+
 export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 	// Table state
 	const [sorting, setSorting] = useState<SortingState>([
@@ -145,7 +159,7 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 	// Date range state
 	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
 
-	// Define columns with virtual column for date filtering
+	// Define columns with virtual columns for filtering
 	const columns: ColumnDef<Project>[] = [
 		// Selection column
 		{
@@ -186,6 +200,24 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 			filterFn: dateRangeFilter,
 			header: () => null,
 			id: 'dateFilter',
+			maxSize: 0,
+			meta: {
+				isVirtual: true,
+			},
+			minSize: 0,
+			size: 0,
+		},
+		// Virtual column for status filtering
+		{
+			accessorFn: row => {
+				return isProjectActive(row.startDate, row.endDate)
+			},
+			cell: () => null,
+			enableColumnFilter: true,
+			enableHiding: false,
+			filterFn: 'equals',
+			header: () => null,
+			id: 'statusFilter',
 			maxSize: 0,
 			meta: {
 				isVirtual: true,
@@ -265,14 +297,14 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 	// Handle status filter
 	const handleStatusFilterChange = (value: string) => {
 		if (value === 'all') {
-			table.getColumn('status')?.setFilterValue(undefined)
+			table.getColumn('statusFilter')?.setFilterValue(undefined)
 		} else {
-			table.getColumn('status')?.setFilterValue(value === 'active')
+			table.getColumn('statusFilter')?.setFilterValue(value === 'active')
 		}
 	}
 
 	// Get the current status filter value
-	const statusFilter = table.getColumn('status')?.getFilterValue()
+	const statusFilterValue = table.getColumn('statusFilter')?.getFilterValue()
 
 	// Check if filters are active
 	const hasActiveFilters =
@@ -300,9 +332,9 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 						onValueChange={handleStatusFilterChange}
 						defaultValue='all'
 						value={
-							statusFilter === undefined
+							statusFilterValue === undefined
 								? 'all'
-								: statusFilter === true
+								: statusFilterValue === true
 									? 'active'
 									: 'inactive'
 						}
@@ -440,16 +472,16 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 							)}
 
 							{/* Status filter tag */}
-							{statusFilter !== undefined && (
+							{statusFilterValue !== undefined && (
 								<Badge
 									variant='secondary'
 									className='flex items-center gap-1 px-3 py-1 text-sm'
 								>
-									Statut: {statusFilter ? 'Actifs' : 'Inactifs'}
+									Statut: {statusFilterValue ? 'Actifs' : 'Inactifs'}
 									<Button
 										variant='ghost'
 										onClick={() =>
-											table.getColumn('status')?.setFilterValue(undefined)
+											table.getColumn('statusFilter')?.setFilterValue(undefined)
 										}
 										className='ml-1 h-4 w-4 p-0 hover:bg-transparent'
 									>
