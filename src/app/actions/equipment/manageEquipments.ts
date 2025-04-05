@@ -1,13 +1,13 @@
 'use server'
 
+import { Equipment } from '@/app/actions/services/pocketbase/api_client/types'
+import { generateUniqueEquipmentCode as generateUniqueCode } from '@/app/actions/services/pocketbase/equipment_service'
 import {
 	createEquipment,
 	updateEquipment,
 	deleteEquipment,
-	generateUniqueCode,
-} from '@/app/actions/services/pocketbase/equipmentService'
-import { SecurityError } from '@/app/actions/services/pocketbase/securityUtils'
-import { Equipment } from '@/types/types_pocketbase'
+} from '@/app/actions/services/pocketbase/secured/equipment_service'
+import { SecurityError } from '@/app/actions/services/pocketbase/secured/security_types'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -35,8 +35,8 @@ export type EquipmentActionResult = {
 /**
  * Convert tags array to string for PocketBase storage
  */
-function convertTagsForStorage(tags?: string[]): string | null {
-	if (!tags || tags.length === 0) return null
+function convertTagsForStorage(tags?: string[]): string | undefined {
+	if (!tags || tags.length === 0) return undefined
 	return JSON.stringify(tags)
 }
 
@@ -55,11 +55,11 @@ export async function createEquipmentAction(
 		const qrNfcCode = await generateUniqueCode()
 
 		// Create the equipment with security checks built into the service
-		const newEquipment = await createEquipment(organizationId, {
-			acquisitionDate: validatedData.acquisitionDate || null,
+		const newEquipment = await createEquipment({
+			acquisitionDate: validatedData.acquisitionDate || undefined,
 			name: validatedData.name,
-			notes: validatedData.notes || null,
-			parentEquipmentId: validatedData.parentEquipment || null,
+			notes: validatedData.notes || undefined,
+			parentEquipment: validatedData.parentEquipment || undefined,
 			qrNfcCode,
 			tags: convertTagsForStorage(validatedData.tags),
 		})
@@ -94,7 +94,7 @@ export async function createEquipmentAction(
 		// Handle security errors
 		if (error instanceof SecurityError) {
 			return {
-				message: error.message,
+				message: (error as SecurityError).message,
 				success: false,
 			}
 		}
@@ -121,12 +121,15 @@ export async function updateEquipmentAction(
 		const validatedData = equipmentSchema.parse(formData)
 
 		// Update the equipment with security checks built into the service
-		const updatedEquipment = await updateEquipment(equipmentId, {
-			acquisitionDate: validatedData.acquisitionDate || null,
-			name: validatedData.name,
-			notes: validatedData.notes || null,
-			parentEquipmentId: validatedData.parentEquipment || null,
-			tags: convertTagsForStorage(validatedData.tags),
+		const updatedEquipment = await updateEquipment({
+			data: {
+				acquisitionDate: validatedData.acquisitionDate || undefined,
+				name: validatedData.name,
+				notes: validatedData.notes || undefined,
+				parentEquipment: validatedData.parentEquipment || undefined,
+				tags: convertTagsForStorage(validatedData.tags),
+			},
+			id: equipmentId,
 		})
 
 		// Revalidate relevant paths to refresh data
@@ -160,7 +163,7 @@ export async function updateEquipmentAction(
 		// Handle security errors
 		if (error instanceof SecurityError) {
 			return {
-				message: error.message,
+				message: (error as SecurityError).message,
 				success: false,
 			}
 		}
@@ -196,7 +199,7 @@ export async function deleteEquipmentAction(
 		// Handle security errors
 		if (error instanceof SecurityError) {
 			return {
-				message: error.message,
+				message: (error as SecurityError).message,
 				success: false,
 			}
 		}

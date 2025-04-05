@@ -6,38 +6,11 @@ import { findOrganizationByClerkId } from '@/app/actions/services/pocketbase/org
 import { auth } from '@clerk/nextjs/server'
 import { revalidatePath } from 'next/cache'
 
-/**
- * Security middleware error class
- */
-export class SecurityError extends Error {
-	statusCode: number
-
-	constructor(message: string, statusCode = 401) {
-		super(message)
-		this.name = 'SecurityError'
-		this.statusCode = statusCode
-	}
-}
-
-/**
- * Type for the security context provided to secured actions
- */
-export interface SecurityContext {
-	userId: string
-	orgId: string
-	orgRole: string
-	userPbId: string
-	orgPbId: string
-	isAdmin: boolean
-}
-
-/**
- * Type for a handler function that requires security context
- */
-export type SecuredHandler<TParams = unknown, TResult = unknown> = (
-	params: TParams,
-	context: SecurityContext
-) => Promise<TResult>
+import {
+	SecurityContext,
+	SecurityError,
+	SecuredHandler,
+} from './security_types'
 
 /**
  * Higher-order function that wraps server actions with security checks
@@ -46,7 +19,7 @@ export type SecuredHandler<TParams = unknown, TResult = unknown> = (
  * @param options - Security options
  * @returns A new handler function with security checks
  */
-export function withSecurity<TParams, TResult>(
+export async function withSecurity<TParams, TResult>(
 	handler: SecuredHandler<TParams, TResult>,
 	options: {
 		revalidatePaths?: string[]
@@ -86,10 +59,10 @@ export function withSecurity<TParams, TResult>(
 
 			// Create security context
 			const securityContext: SecurityContext = {
-				isAdmin: authData.orgRole === 'admin' || userRecord.isAdmin,
+				isAdmin: authData.orgRole === 'admin',
 				orgId: authData.orgId,
 				orgPbId: orgRecord.id,
-				orgRole: authData.orgRole || 'member',
+				orgRole: authData.orgRole || '',
 				userId: authData.userId,
 				userPbId: userRecord.id,
 			}
@@ -128,11 +101,11 @@ export function withSecurity<TParams, TResult>(
  * @param requireAdmin - Whether admin access is required
  * @returns True if the user has permission
  */
-export function checkResourcePermission(
+export async function checkResourcePermission(
 	resourceOrgId: string,
 	context: SecurityContext,
 	requireAdmin = false
-): boolean {
+): Promise<boolean> {
 	// Check if the resource belongs to the user's organization
 	if (resourceOrgId !== context.orgPbId) {
 		return false

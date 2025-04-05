@@ -5,7 +5,8 @@
  * These services enforce permissions and access controls
  */
 
-// Security middleware
+// Security types and middleware
+export * from '@/app/actions/services/pocketbase/secured/security_types'
 export * from '@/app/actions/services/pocketbase/secured/security_middleware'
 
 // Secured services

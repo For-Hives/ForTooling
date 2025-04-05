@@ -7,7 +7,8 @@ import type {
 } from 'canvas-confetti'
 import type { ReactNode } from 'react'
 
-import { Button, ButtonProps } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
+import { ButtonProps } from '@headlessui/react'
 import confetti from 'canvas-confetti'
 import React, {
 	createContext,
@@ -109,7 +110,7 @@ ConfettiComponent.displayName = 'Confetti'
 // Export as Confetti
 export const Confetti = ConfettiComponent
 
-interface ConfettiButtonProps extends ButtonProps {
+interface ConfettiButtonProps {
 	options?: ConfettiOptions &
 		ConfettiGlobalOptions & { canvas?: HTMLCanvasElement }
 	children?: React.ReactNode

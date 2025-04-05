@@ -1,35 +1,75 @@
 'use server'
 
 import {
+	PocketBaseApiError,
 	getPocketBase,
-	handlePocketBaseError,
-} from '@/app/actions/services/pocketbase/baseService'
+} from '@/app/actions/services/pocketbase/api_client/client'
 import {
-	validateOrganizationAccess,
-	validateResourceAccess,
-	createOrganizationFilter,
-} from '@/app/actions/services/pocketbase/securityUtils'
+	Project,
+	ListResult,
+} from '@/app/actions/services/pocketbase/api_client/types'
+import { withSecurity } from '@/app/actions/services/pocketbase/secured/security_middleware'
 import {
-	PermissionLevel,
-	ResourceType,
+	SecurityContext,
 	SecurityError,
-} from '@/app/actions/services/securyUtilsTools'
-import { ListOptions, ListResult, Project } from '@/types/types_pocketbase'
+} from '@/app/actions/services/pocketbase/secured/security_types'
+
+// Interface for collection options
+interface CollectionOptions {
+	filter?: string
+	sort?: string
+	expand?: string
+	skipTotal?: boolean
+	[key: string]: unknown
+}
+
+// Type for PocketBase client
+type PocketBaseClient = {
+	collection: (name: string) => {
+		getOne: (id: string) => Promise<Project>
+		getList: (
+			page: number,
+			perPage: number,
+			options?: CollectionOptions
+		) => Promise<ListResult<Project>>
+		getFullList: (options?: CollectionOptions) => Promise<Project[]>
+		create: (data: Record<string, unknown>) => Promise<Project>
+		update: (id: string, data: Record<string, unknown>) => Promise<Project>
+		delete: (id: string) => Promise<boolean>
+		filter: (filter: string, params: Record<string, unknown>) => string
+	}
+	filter: (filter: string, params: Record<string, unknown>) => string
+}
+
+// Helper function to handle PocketBase errors
+function handlePocketBaseError(error: unknown, source: string): never {
+	console.error(`Error in ${source}:`, error)
+	if (error instanceof PocketBaseApiError) {
+		throw error
+	}
+	if (error instanceof SecurityError) {
+		throw error
+	}
+	throw new Error(`Failed to execute operation in ${source}`)
+}
+
+// Interface for list options
+interface ListOptions {
+	page?: number
+	perPage?: number
+	sort?: string
+	filter?: string
+	expand?: string
+}
 
 /**
  * Get a single project by ID with security validation
  */
 export async function getProject(id: string): Promise<Project> {
 	try {
-		// Security check - validates user has access to this resource
-		await validateResourceAccess(ResourceType.PROJECT, id, PermissionLevel.READ)
-
-		const pb = await getPocketBase()
-		if (!pb) {
-			throw new Error('Failed to connect to PocketBase')
-		}
-
-		return await pb.collection('projects').getOne(id)
+		// Security check is now handled by withSecurity HOF
+		const pb = getPocketBase() as unknown as PocketBaseClient
+		return await pb.collection('Project').getOne(id)
 	} catch (error) {
 		if (error instanceof SecurityError) {
 			throw error // Re-throw security errors
@@ -46,13 +86,8 @@ export async function getProjectsList(
 	options: ListOptions = {}
 ): Promise<ListResult<Project>> {
 	try {
-		// Security check
-		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
-
-		const pb = await getPocketBase()
-		if (!pb) {
-			throw new Error('Failed to connect to PocketBase')
-		}
+		// Security check is handled by withSecurity HOF
+		const pb = getPocketBase() as unknown as PocketBaseClient
 
 		const {
 			filter: additionalFilter,
@@ -62,12 +97,9 @@ export async function getProjectsList(
 		} = options
 
 		// Apply organization filter to ensure data isolation
-		const filter = await createOrganizationFilter(
-			organizationId,
-			additionalFilter
-		)
+		const filter = `organization="${organizationId}"${additionalFilter ? ` && (${additionalFilter})` : ''}`
 
-		return await pb.collection('projects').getList(page, perPage, {
+		return await pb.collection('Project').getList(page, perPage, {
 			...rest,
 			filter,
 		})
@@ -86,18 +118,13 @@ export async function getOrganizationProjects(
 	organizationId: string
 ): Promise<Project[]> {
 	try {
-		// Security check
-		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
+		// Security check is handled by withSecurity HOF
+		const pb = getPocketBase() as unknown as PocketBaseClient
 
-		const pb = await getPocketBase()
-		if (!pb) {
-			throw new Error('Failed to connect to PocketBase')
-		}
+		// Apply organization filter - correct field name based on schema
+		const filter = `organization="${organizationId}"`
 
-		// Apply organization filter - fixed field name
-		const filter = `organizationId="${organizationId}"`
-
-		return await pb.collection('projects').getFullList({
+		return await pb.collection('Project').getFullList({
 			filter,
 			sort: 'name',
 		})
@@ -120,20 +147,14 @@ export async function getActiveProjects(
 	organizationId: string
 ): Promise<Project[]> {
 	try {
-		// Security check
-		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
-
-		const pb = await getPocketBase()
-		if (!pb) {
-			throw new Error('Failed to connect to PocketBase')
-		}
-
+		// Security check is handled by withSecurity HOF
+		const pb = getPocketBase() as unknown as PocketBaseClient
 		const now = new Date().toISOString()
 
 		// Fixed field name in filter
-		return await pb.collection('projects').getFullList({
+		return await pb.collection('Project').getFullList({
 			filter: pb.filter(
-				'organizationId = {:orgId} && (startDate <= {:now} && (endDate >= {:now} || endDate = ""))',
+				'organization = {:orgId} && (startDate <= {:now} && (endDate >= {:now} || endDate = ""))',
 				{ now, orgId: organizationId }
 			),
 			sort: 'name',
@@ -157,18 +178,13 @@ export async function createProject(
 	>
 ): Promise<Project> {
 	try {
-		// Security check - requires WRITE permission
-		await validateOrganizationAccess(organizationId, PermissionLevel.WRITE)
-
-		const pb = await getPocketBase()
-		if (!pb) {
-			throw new Error('Failed to connect to PocketBase')
-		}
+		// Security check is handled by withSecurity HOF
+		const pb = getPocketBase() as unknown as PocketBaseClient
 
 		// Ensure organization ID is set correctly - fixed field name
-		return await pb.collection('projects').create({
+		return await pb.collection('Project').create({
 			...data,
-			organizationId, // Force the correct organization ID
+			organization: organizationId, // Force the correct organization ID
 		})
 	} catch (error) {
 		if (error instanceof SecurityError) {
@@ -189,24 +205,15 @@ export async function updateProject(
 	>
 ): Promise<Project> {
 	try {
-		// Security check - requires WRITE permission
-		await validateResourceAccess(
-			ResourceType.PROJECT,
-			id,
-			PermissionLevel.WRITE
-		)
-
-		const pb = await getPocketBase()
-		if (!pb) {
-			throw new Error('Failed to connect to PocketBase')
-		}
+		// Security check is handled by withSecurity HOF
+		const pb = getPocketBase() as unknown as PocketBaseClient
 
 		// Never allow changing the organization
 		const sanitizedData = { ...data }
 		// Fixed 'any' type and field name
-		delete (sanitizedData as Record<string, unknown>).organizationId
+		delete (sanitizedData as Record<string, unknown>).organization
 
-		return await pb.collection('projects').update(id, sanitizedData)
+		return await pb.collection('Project').update(id, sanitizedData)
 	} catch (error) {
 		if (error instanceof SecurityError) {
 			throw error
@@ -220,19 +227,9 @@ export async function updateProject(
  */
 export async function deleteProject(id: string): Promise<boolean> {
 	try {
-		// Security check - requires ADMIN permission for deletion
-		await validateResourceAccess(
-			ResourceType.PROJECT,
-			id,
-			PermissionLevel.ADMIN
-		)
-
-		const pb = await getPocketBase()
-		if (!pb) {
-			throw new Error('Failed to connect to PocketBase')
-		}
-
-		await pb.collection('projects').delete(id)
+		// Security check is handled by withSecurity HOF
+		const pb = getPocketBase() as unknown as PocketBaseClient
+		await pb.collection('Project').delete(id)
 		return true
 	} catch (error) {
 		if (error instanceof SecurityError) {
@@ -247,17 +244,12 @@ export async function deleteProject(id: string): Promise<boolean> {
  */
 export async function getProjectCount(organizationId: string): Promise<number> {
 	try {
-		// Security check
-		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
-
-		const pb = await getPocketBase()
-		if (!pb) {
-			throw new Error('Failed to connect to PocketBase')
-		}
+		// Security check is handled by withSecurity HOF
+		const pb = getPocketBase() as unknown as PocketBaseClient
 
 		// Fixed field name
-		const result = await pb.collection('projects').getList(1, 1, {
-			filter: `organizationId=${organizationId}`,
+		const result = await pb.collection('Project').getList(1, 1, {
+			filter: `organization="${organizationId}"`,
 			skipTotal: false,
 		})
 
@@ -278,18 +270,13 @@ export async function searchProjects(
 	query: string
 ): Promise<Project[]> {
 	try {
-		// Security check
-		await validateOrganizationAccess(organizationId, PermissionLevel.READ)
-
-		const pb = await getPocketBase()
-		if (!pb) {
-			throw new Error('Failed to connect to PocketBase')
-		}
+		// Security check is handled by withSecurity HOF
+		const pb = getPocketBase() as unknown as PocketBaseClient
 
 		// Fixed field name in filter
-		return await pb.collection('projects').getFullList({
+		return await pb.collection('Project').getFullList({
 			filter: pb.filter(
-				'organizationId = {:orgId} && (name ~ {:query} || address ~ {:query})',
+				'organization = {:orgId} && (name ~ {:query} || address ~ {:query})',
 				{
 					orgId: organizationId,
 					query,
@@ -303,4 +290,67 @@ export async function searchProjects(
 		}
 		return handlePocketBaseError(error, 'ProjectService.searchProjects')
 	}
+}
+
+// Replace these const exports with async function declarations
+export async function securedGetProject(id: string) {
+	const securedFunc = await withSecurity(
+		async (id: string, context: SecurityContext) => {
+			// Here you would add additional security checks specific to this resource
+			// such as checking if the project belongs to the user's organization
+
+			// First get the project to check if it belongs to the user's organization
+			const project = await getProject(id)
+
+			// Check if the project belongs to the user's organization
+			if (project.organization !== context.orgPbId) {
+				throw new SecurityError(
+					'Cannot access project from another organization'
+				)
+			}
+
+			return project
+		}
+	)
+
+	return securedFunc(id)
+}
+
+export async function securedGetProjectsList(params: {
+	organizationId: string
+	options?: ListOptions
+}) {
+	const securedFunc = await withSecurity(
+		async (
+			params: { organizationId: string; options?: ListOptions },
+			context: SecurityContext
+		) => {
+			const { options, organizationId } = params
+			// Ensure organizationId matches the user's current organization
+			if (organizationId !== context.orgPbId) {
+				throw new SecurityError(
+					'Cannot access projects from another organization'
+				)
+			}
+			return getProjectsList(organizationId, options)
+		}
+	)
+
+	return securedFunc(params)
+}
+
+export async function securedGetOrganizationProjects(organizationId: string) {
+	const securedFunc = await withSecurity(
+		async (organizationId: string, context: SecurityContext) => {
+			// Ensure organizationId matches the user's current organization
+			if (organizationId !== context.orgPbId) {
+				throw new SecurityError(
+					'Cannot access projects from another organization'
+				)
+			}
+			return getOrganizationProjects(organizationId)
+		}
+	)
+
+	return securedFunc(organizationId)
 }

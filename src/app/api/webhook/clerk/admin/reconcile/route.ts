@@ -15,7 +15,7 @@ import { NextRequest, NextResponse } from 'next/server'
  */
 export async function POST(req: NextRequest) {
 	// Security checks - either admin authentication or API key
-	const isAuthenticated = await checkAuthentication(req)
+	const isAuthenticated = await checkAuthentication()
 
 	if (!isAuthenticated) {
 		return new NextResponse('Unauthorized', { status: 401 })
