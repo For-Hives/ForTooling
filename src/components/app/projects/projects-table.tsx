@@ -4,8 +4,8 @@ import { Project } from '@/app/actions/services/pocketbase/api_client/types'
 import { projectColumns } from '@/components/app/projects/projects-table-columns'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Calendar as CalendarComponent } from '@/components/ui/calendar'
 import { Checkbox } from '@/components/ui/checkbox'
+import { DatePickerWithRange } from '@/components/ui/date-picker-with-range'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -48,7 +48,6 @@ import {
 	VisibilityState,
 } from '@tanstack/react-table'
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 import {
 	ChevronLeftIcon,
 	ChevronRightIcon,
@@ -57,17 +56,38 @@ import {
 	ChevronFirstIcon,
 	ChevronLastIcon,
 	SlidersHorizontal,
-	Calendar,
+	Trash2,
 	X,
 } from 'lucide-react'
 import { useState } from 'react'
+import { DateRange } from 'react-day-picker'
 
 interface ProjectsTableProps {
 	data: Project[]
 	pageCount?: number
+	onDeleteProjects?: (projects: Project[]) => Promise<void>
 }
 
-export function ProjectsTable({ data }: ProjectsTableProps) {
+const getColumnDisplayName = (columnId: string): string => {
+	switch (columnId) {
+		case 'name':
+			return 'Nom du projet'
+		case 'status':
+			return 'Statut'
+		case 'address':
+			return 'Adresse'
+		case 'startDate':
+			return 'Date de début'
+		case 'endDate':
+			return 'Date de fin'
+		case 'actions':
+			return 'Actions'
+		default:
+			return columnId
+	}
+}
+
+export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 	// Table state
 	const [sorting, setSorting] = useState<SortingState>([
 		{
@@ -78,18 +98,45 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
 	const [searchQuery, setSearchQuery] = useState('')
+	const [rowSelection, setRowSelection] = useState({})
 
 	// Date range state
-	const [startDateRange, setStartDateRange] = useState<Date | undefined>(
-		undefined
-	)
-	const [endDateRange, setEndDateRange] = useState<Date | undefined>(undefined)
+	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
 
 	// Initialize the table
 	const table = useReactTable({
-		columns: projectColumns,
+		columns: [
+			// Selection column
+			{
+				cell: ({ row }) => (
+					<Checkbox
+						checked={row.getIsSelected()}
+						onCheckedChange={value => {
+							row.toggleSelected(!!value)
+						}}
+						aria-label='Sélectionner la ligne'
+					/>
+				),
+				enableHiding: false,
+				enableSorting: false,
+				header: ({ table }) => (
+					<Checkbox
+						checked={
+							table.getIsAllPageRowsSelected() ||
+							(table.getIsSomePageRowsSelected() && 'indeterminate')
+						}
+						onCheckedChange={value => {
+							table.toggleAllPageRowsSelected(!!value)
+						}}
+						aria-label='Sélectionner toutes les lignes'
+					/>
+				),
+				id: 'select',
+			},
+			...projectColumns,
+		],
 		data,
-		enableRowSelection: false,
+		enableRowSelection: true,
 		getCoreRowModel: getCoreRowModel(),
 		getFacetedRowModel: getFacetedRowModel(),
 		getFacetedUniqueValues: getFacetedUniqueValues(),
@@ -109,36 +156,45 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 		onColumnFiltersChange: setColumnFilters,
 		onColumnVisibilityChange: setColumnVisibility,
 		onGlobalFilterChange: setSearchQuery,
+		onRowSelectionChange: setRowSelection,
 		onSortingChange: setSorting,
 		state: {
 			columnFilters,
 			columnVisibility,
 			globalFilter: searchQuery,
+			rowSelection,
 			sorting,
 		},
 	})
 
-	// Apply date range filter
-	const applyDateFilter = () => {
-		// If both dates are set, filter by date range
-		if (startDateRange && endDateRange) {
-			table
-				.getColumn('startDate')
-				?.setFilterValue([
-					startDateRange.toISOString(),
-					endDateRange.toISOString(),
-				])
-		} else {
-			// Clear filter if dates are not set
-			table.getColumn('startDate')?.setFilterValue(undefined)
-		}
+	// Calculate selected rows
+	const selectedRows = table.getFilteredSelectedRowModel().rows
+
+	// Delete selected projects
+	const handleDeleteSelected = async () => {
+		if (!onDeleteProjects || selectedRows.length === 0) return
+
+		// Extract the Project objects from the selected rows
+		const projectsToDelete = selectedRows.map(row => row.original)
+
+		// Call the delete function passed from the parent
+		await onDeleteProjects(projectsToDelete)
+
+		// Clear selection after delete
+		table.resetRowSelection()
 	}
 
-	// Reset date filter
-	const resetDateFilter = () => {
-		setStartDateRange(undefined)
-		setEndDateRange(undefined)
-		table.getColumn('startDate')?.setFilterValue(undefined)
+	// Apply date range filter
+	const handleDateRangeChange = (range: DateRange | undefined) => {
+		setDateRange(range)
+
+		if (range?.from && range?.to) {
+			table
+				.getColumn('startDate')
+				?.setFilterValue([range.from.toISOString(), range.to.toISOString()])
+		} else {
+			table.getColumn('startDate')?.setFilterValue(undefined)
+		}
 	}
 
 	// Handle status filter
@@ -146,32 +202,31 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 		if (value === 'all') {
 			table.getColumn('status')?.setFilterValue(undefined)
 		} else {
-			table
-				.getColumn('status')
-				?.setFilterValue(value === 'active' ? true : false)
+			table.getColumn('status')?.setFilterValue(value === 'active')
 		}
 	}
 
 	return (
-		<div className='space-y-4'>
-			{/* Table header with filters and actions */}
-			<div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
-				<div className='flex flex-1 flex-col gap-4 md:flex-row md:items-center md:space-x-2'>
-					<div className='relative w-full md:w-80'>
-						<SearchIcon className='text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4' />
+		<div className='space-y-6'>
+			{/* Toolbar with search, delete selected and add project */}
+			<div className='flex gap-6 sm:flex-row sm:items-center sm:justify-between'>
+				<div className='flex gap-3'>
+					{/* Search bar */}
+					<div className='relative w-full'>
+						<SearchIcon className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
 						<Input
 							type='search'
 							placeholder='Rechercher un projet...'
-							className='w-full rounded-md pl-8'
+							className='h-10 w-full min-w-[220px] rounded-md bg-white pr-4 pl-10'
 							value={searchQuery}
 							onChange={e => setSearchQuery(e.target.value)}
 						/>
 					</div>
 
-					{/* Status Filter */}
+					{/* Status filter */}
 					<Select onValueChange={handleStatusFilterChange} defaultValue='all'>
-						<SelectTrigger className='w-full md:w-[180px]'>
-							<SelectValue placeholder='Filtrer par statut' />
+						<SelectTrigger className='h-10 bg-white'>
+							<SelectValue placeholder='Statut' />
 						</SelectTrigger>
 						<SelectContent>
 							<SelectItem value='all'>Tous les statuts</SelectItem>
@@ -180,194 +235,101 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 						</SelectContent>
 					</Select>
 
-					{/* Date Range Filter */}
-					<Popover>
-						<PopoverTrigger asChild>
-							<Button
-								variant='outline'
-								className='w-full justify-start text-left font-normal md:w-[240px]'
-							>
-								<Calendar className='mr-2 h-4 w-4' />
-								{startDateRange && endDateRange ? (
-									<span>
-										{format(startDateRange, 'dd/MM/yyyy')} -{' '}
-										{format(endDateRange, 'dd/MM/yyyy')}
-									</span>
-								) : (
-									<span>Filtrer par date</span>
-								)}
-							</Button>
-						</PopoverTrigger>
-						<PopoverContent className='w-full p-0' align='start'>
-							<div className='p-4 pb-0'>
-								<div className='space-y-2'>
-									<h4 className='text-sm font-medium'>Période de début</h4>
-									<CalendarComponent
-										mode='single'
-										selected={startDateRange}
-										onSelect={setStartDateRange}
-										initialFocus
-										locale={fr}
-									/>
-								</div>
-								<div className='space-y-2 pt-4'>
-									<h4 className='text-sm font-medium'>Période de fin</h4>
-									<CalendarComponent
-										mode='single'
-										selected={endDateRange}
-										onSelect={setEndDateRange}
-										initialFocus
-										locale={fr}
-										disabled={date =>
-											startDateRange ? date < startDateRange : false
-										}
-									/>
-								</div>
-								<div className='flex items-center gap-2 pt-4 pb-4'>
-									<Button
-										variant='secondary'
-										className='w-full'
-										onClick={applyDateFilter}
-										disabled={!startDateRange || !endDateRange}
-									>
-										Appliquer
-									</Button>
+					<DatePickerWithRange onChange={handleDateRangeChange} />
+
+					{/* Filters bar */}
+					<div className='flex flex-wrap items-center justify-start gap-4'>
+						{/* Column controls */}
+						<div>
+							{/* Column Visibility */}
+							<Popover>
+								<PopoverTrigger asChild>
 									<Button
 										variant='outline'
-										className='w-full'
-										onClick={resetDateFilter}
-										disabled={!startDateRange && !endDateRange}
+										size='default'
+										className='h-10 bg-white'
 									>
-										Réinitialiser
+										<SlidersHorizontal className='mr-2 h-4 w-4' />
+										Colonnes affichées
 									</Button>
-								</div>
-							</div>
-						</PopoverContent>
-					</Popover>
+								</PopoverTrigger>
+								<PopoverContent className='w-[220px] p-0' align='end'>
+									<div className='p-4'>
+										<div className='flex items-center justify-between'>
+											<Label className='text-xs font-medium'>Visibilité</Label>
+											<Button
+												onClick={() => setColumnVisibility({})}
+												variant='ghost'
+												className='h-8 px-2 text-xs'
+											>
+												Tout afficher
+											</Button>
+										</div>
+										<Separator className='my-2' />
+										<div className='space-y-3 py-2'>
+											{table
+												.getAllColumns()
+												.filter(column => column.getCanHide())
+												.map(column => {
+													return (
+														<div key={column.id} className='flex items-center'>
+															<Checkbox
+																checked={column.getIsVisible()}
+																onCheckedChange={value => {
+																	column.toggleVisibility(!!value)
+																}}
+																id={`column-${column.id}`}
+															/>
+															<Label
+																htmlFor={`column-${column.id}`}
+																className='ml-2 text-sm'
+															>
+																{getColumnDisplayName(column.id)}
+															</Label>
+														</div>
+													)
+												})}
+										</div>
+									</div>
+								</PopoverContent>
+							</Popover>
+						</div>
+					</div>
 				</div>
 
-				<div className='flex items-center gap-2'>
-					{/* Column Visibility */}
-					<Popover>
-						<PopoverTrigger asChild>
-							<Button variant='outline' size='sm' className='h-8'>
-								<SlidersHorizontal className='mr-2 h-4 w-4' />
-								Colonnes
-							</Button>
-						</PopoverTrigger>
-						<PopoverContent className='w-[200px] p-0' align='end'>
-							<div className='p-2'>
-								<div className='flex items-center justify-between p-1'>
-									<Label className='text-xs font-medium'>Visibilité</Label>
-									<Button
-										onClick={() => setColumnVisibility({})}
-										variant='ghost'
-										className='h-8 px-2 text-xs'
-									>
-										Tout afficher
-									</Button>
-								</div>
-								<Separator className='my-1' />
-								<div className='space-y-2 py-2'>
-									{table
-										.getAllColumns()
-										.filter(column => column.getCanHide())
-										.map(column => {
-											return (
-												<div key={column.id} className='flex items-center px-1'>
-													<Checkbox
-														checked={column.getIsVisible()}
-														onCheckedChange={value => {
-															column.toggleVisibility(!!value)
-														}}
-														id={`column-${column.id}`}
-													/>
-													<Label
-														htmlFor={`column-${column.id}`}
-														className='ml-2 text-xs'
-													>
-														{column.id === 'name'
-															? 'Nom du projet'
-															: column.id === 'status'
-																? 'Statut'
-																: column.id === 'address'
-																	? 'Adresse'
-																	: column.id === 'startDate'
-																		? 'Date de début'
-																		: column.id === 'endDate'
-																			? 'Date de fin'
-																			: column.id === 'actions'
-																				? 'Actions'
-																				: column.id}
-													</Label>
-												</div>
-											)
-										})}
-								</div>
-							</div>
-						</PopoverContent>
-					</Popover>
+				{/* Main actions */}
+				<div className='flex items-center gap-3'>
+					{/* Delete selected button */}
+					{selectedRows.length > 0 && (
+						<Button
+							variant='destructive'
+							size='default'
+							onClick={handleDeleteSelected}
+							className='h-10'
+						>
+							<Trash2 className='mr-2 h-4 w-4' />
+							Supprimer ({selectedRows.length})
+						</Button>
+					)}
 
-					<Button>
+					<Button className='h-10'>
 						<Plus className='mr-2 h-4 w-4' />
 						Ajouter un projet
 					</Button>
 				</div>
 			</div>
 
-			{/* Display active filters */}
-			{(columnFilters.length > 0 || startDateRange || endDateRange) && (
-				<div className='flex flex-wrap gap-2'>
-					<div className='text-muted-foreground mr-2 flex items-center text-sm'>
-						Filtres actifs:
-					</div>
-					{columnFilters.map(filter => {
-						if (filter.id === 'status') {
-							return (
-								<Badge
-									key={filter.id}
-									variant='outline'
-									className='flex items-center gap-1'
-								>
-									Statut: {filter.value ? 'Actifs' : 'Inactifs'}
-									<Button
-										variant='ghost'
-										onClick={() =>
-											table.getColumn('status')?.setFilterValue(undefined)
-										}
-										className='h-4 w-4 p-0 hover:bg-transparent'
-									>
-										<X className='h-3 w-3' />
-									</Button>
-								</Badge>
-							)
-						}
-						return null
-					})}
-					{startDateRange && endDateRange && (
-						<Badge variant='outline' className='flex items-center gap-1'>
-							Dates: {format(startDateRange, 'dd/MM/yyyy')} -{' '}
-							{format(endDateRange, 'dd/MM/yyyy')}
-							<Button
-								variant='ghost'
-								onClick={resetDateFilter}
-								className='h-4 w-4 p-0 hover:bg-transparent'
-							>
-								<X className='h-3 w-3' />
-							</Button>
-						</Badge>
-					)}
-				</div>
-			)}
-
 			{/* Table */}
-			<div className='rounded-md border'>
+			<div className='rounded-b-sm border border-slate-100 bg-white'>
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map(headerGroup => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map(header => (
-									<TableHead key={header.id} className='whitespace-nowrap'>
+									<TableHead
+										key={header.id}
+										className='bg-gray-50 px-4 py-3 whitespace-nowrap'
+									>
 										{header.isPlaceholder
 											? null
 											: flexRender(
@@ -382,9 +344,13 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 					<TableBody>
 						{table.getRowModel().rows?.length ? (
 							table.getRowModel().rows.map(row => (
-								<TableRow key={row.id}>
+								<TableRow
+									key={row.id}
+									data-state={row.getIsSelected() && 'selected'}
+									className='border-b transition-colors hover:bg-gray-50'
+								>
 									{row.getVisibleCells().map(cell => (
-										<TableCell key={cell.id}>
+										<TableCell key={cell.id} className='px-4 py-3'>
 											{flexRender(
 												cell.column.columnDef.cell,
 												cell.getContext()
@@ -396,7 +362,7 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 						) : (
 							<TableRow>
 								<TableCell
-									colSpan={projectColumns.length}
+									colSpan={table.getAllColumns().length}
 									className='h-24 text-center'
 								>
 									Aucun projet trouvé.
@@ -408,16 +374,18 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 			</div>
 
 			{/* Pagination */}
-			<div className='flex items-center justify-between'>
+			<div className='flex flex-col items-center justify-between gap-4 sm:flex-row'>
 				<div className='flex items-center gap-2'>
-					<Label htmlFor='perPage'>Lignes par page</Label>
+					<Label htmlFor='perPage' className='text-sm'>
+						Lignes par page
+					</Label>
 					<Select
 						value={`${table.getState().pagination.pageSize}`}
 						onValueChange={value => {
 							table.setPageSize(Number(value))
 						}}
 					>
-						<SelectTrigger id='perPage' className='h-8 w-[70px]'>
+						<SelectTrigger id='perPage' className='h-10 w-[70px] bg-white'>
 							<SelectValue placeholder={table.getState().pagination.pageSize} />
 						</SelectTrigger>
 						<SelectContent side='top'>
@@ -430,8 +398,8 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 					</Select>
 				</div>
 
-				<div className='flex items-center justify-end space-x-6'>
-					<div className='flex flex-nowrap items-center justify-center text-sm font-medium'>
+				<div className='flex items-center gap-6'>
+					<div className='text-muted-foreground flex text-sm'>
 						Page&nbsp;{table.getState().pagination.pageIndex + 1}&nbsp;sur&nbsp;
 						{table.getPageCount()}
 					</div>
@@ -440,7 +408,7 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 							<PaginationItem>
 								<Button
 									variant='outline'
-									className='hidden h-8 w-8 p-0 lg:flex'
+									className='h-10 w-10 bg-white p-0'
 									onClick={() => table.setPageIndex(0)}
 									disabled={!table.getCanPreviousPage()}
 								>
@@ -451,7 +419,7 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 							<PaginationItem>
 								<Button
 									variant='outline'
-									className='h-8 w-8 p-0'
+									className='h-10 w-10 bg-white p-0'
 									onClick={() => table.previousPage()}
 									disabled={!table.getCanPreviousPage()}
 								>
@@ -462,7 +430,7 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 							<PaginationItem>
 								<Button
 									variant='outline'
-									className='h-8 w-8 p-0'
+									className='h-10 w-10 bg-white p-0'
 									onClick={() => table.nextPage()}
 									disabled={!table.getCanNextPage()}
 								>
@@ -473,7 +441,7 @@ export function ProjectsTable({ data }: ProjectsTableProps) {
 							<PaginationItem>
 								<Button
 									variant='outline'
-									className='hidden h-8 w-8 p-0 lg:flex'
+									className='h-10 w-10 bg-white p-0'
 									onClick={() => table.setPageIndex(table.getPageCount() - 1)}
 									disabled={!table.getCanNextPage()}
 								>

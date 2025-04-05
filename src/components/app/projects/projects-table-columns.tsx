@@ -1,304 +1,197 @@
 'use client'
 
-// Import the Project interface
 import { Project } from '@/app/actions/services/pocketbase/api_client/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
-	DropdownMenuGroup,
 	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ColumnDef, Row } from '@tanstack/react-table'
-import { format, isValid } from 'date-fns'
-import {
-	ChevronDown,
-	ChevronUp,
-	EllipsisVerticalIcon,
-	PencilIcon,
-	TrashIcon,
-} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { ColumnDef } from '@tanstack/react-table'
+import { format } from 'date-fns'
+import { fr } from 'date-fns/locale'
+import { ArrowDownIcon, ArrowUpIcon, MoreHorizontal } from 'lucide-react'
 
-/**
- * Determines if a project is active based on its dates
- */
-export function isProjectActive(project: Project): boolean {
-	const now = new Date()
-	const startDate = project.startDate ? new Date(project.startDate) : null
-	const endDate = project.endDate ? new Date(project.endDate) : null
-
-	if (!startDate) return false
-	if (startDate > now) return false
-	if (endDate && endDate < now) return false
-
-	return true
-}
-
-/**
- * Format a date string to a readable format using date-fns
- */
-function formatDate(dateString: string | null | undefined): string {
-	if (!dateString) return 'Non renseigné'
-
-	try {
-		// format in french
-		const date = new Date(dateString)
-		return isValid(date) ? format(date, 'd MMMM yyyy') : 'Date invalide'
-	} catch {
-		return 'Date invalide'
+// Helper function to get sort icon
+const getSortIcon = (sortState: false | 'asc' | 'desc') => {
+	if (sortState === 'asc') {
+		return <ArrowUpIcon className='ml-2 h-4 w-4' />
 	}
-}
-
-// Custom sorting function for status column
-const sortStatusFn = (rowA: Row<Project>, rowB: Row<Project>) => {
-	const statusA = isProjectActive(rowA.original) ? 1 : 0
-	const statusB = isProjectActive(rowB.original) ? 1 : 0
-	return statusA - statusB
-}
-
-// Custom sorting function for dates
-const sortDateFn = (
-	rowA: Row<Project>,
-	rowB: Row<Project>,
-	columnId: string
-) => {
-	const dateA = rowA.getValue(columnId)
-		? new Date(rowA.getValue(columnId))
-		: null
-	const dateB = rowB.getValue(columnId)
-		? new Date(rowB.getValue(columnId))
-		: null
-
-	// Handle null values - push them to the end
-	if (!dateA && !dateB) return 0
-	if (!dateA) return 1
-	if (!dateB) return -1
-
-	// Regular date comparison
-	return dateA.getTime() - dateB.getTime()
-}
-
-// Add custom filter function for the status column
-export const filterStatus = (row: Row<Project>, id: string, value: boolean) => {
-	const isActive = isProjectActive(row.original)
-	return value === isActive
-}
-
-// Add custom filter function for date range
-export const filterDateRange = (
-	row: Row<Project>,
-	id: string,
-	value: [string, string]
-) => {
-	// Parse the date strings to Date objects
-	const [start, end] = value
-	const startDate = new Date(start)
-	const endDate = new Date(end)
-
-	// Get the row's date value
-	const rowDate = row.getValue(id) ? new Date(row.getValue(id)) : null
-
-	// If no date in the row, it doesn't match
-	if (!rowDate) return false
-
-	// Check if date falls within range
-	return rowDate >= startDate && rowDate <= endDate
+	if (sortState === 'desc') {
+		return <ArrowDownIcon className='ml-2 h-4 w-4' />
+	}
+	return null
 }
 
 export const projectColumns: ColumnDef<Project>[] = [
-	// Project status column (derived from dates)
-	{
-		cell: ({ row }) => {
-			const active = isProjectActive(row.original)
-			return (
-				<div className='ml-2'>
-					<Badge
-						className={
-							active
-								? 'bg-green-500/20 text-green-700 hover:bg-green-500/20'
-								: 'bg-muted-foreground/20 text-muted-foreground hover:bg-muted-foreground/20'
-						}
-					>
-						{active ? 'Actif' : 'Inactif'}
-					</Badge>
-				</div>
-			)
-		},
-		enableHiding: true,
-		filterFn: filterStatus,
-		header: ({ column }) => (
-			<div className='ml-2 flex items-center justify-start'>
-				<Button
-					variant='ghost'
-					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-					className='p-0 hover:bg-transparent'
-				>
-					<span>Statut</span>
-					{column.getIsSorted() === 'asc' ? (
-						<ChevronUp className='ml-1 h-4 w-4' />
-					) : column.getIsSorted() === 'desc' ? (
-						<ChevronDown className='ml-1 h-4 w-4' />
-					) : null}
-				</Button>
-			</div>
-		),
-		id: 'status',
-		sortDescFirst: true,
-		sortingFn: sortStatusFn,
-	},
-	// Project name column
 	{
 		accessorKey: 'name',
-		cell: ({ row }) => (
-			<div className='font-medium'>{row.getValue('name')}</div>
-		),
-		enableHiding: true,
-		header: ({ column }) => (
-			<Button
-				variant='ghost'
-				onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-				className='p-0 hover:bg-transparent'
-			>
-				Nom du projet
-				{column.getIsSorted() === 'asc' ? (
-					<ChevronUp className='ml-1 h-4 w-4' />
-				) : column.getIsSorted() === 'desc' ? (
-					<ChevronDown className='ml-1 h-4 w-4' />
-				) : null}
-			</Button>
-		),
-		sortDescFirst: false,
+		cell: ({ row }) => {
+			const value = row.getValue('name')
+			if (!value || typeof value !== 'string') return <span>-</span>
+			return <span className='font-medium'>{value}</span>
+		},
+		enableSorting: true,
+		header: ({ column }) => {
+			return (
+				<button
+					className='hover:text-primary flex cursor-pointer items-center'
+					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				>
+					Nom du projet
+					{getSortIcon(column.getIsSorted())}
+				</button>
+			)
+		},
 	},
-	// Project address column
+	{
+		accessorKey: 'status',
+		cell: ({ row }) => {
+			const startDate = row.getValue('startDate')
+			const endDate = row.getValue('endDate')
+			const now = new Date()
+			const start = startDate ? new Date(startDate as string) : null
+			const end = endDate ? new Date(endDate as string) : null
+			const isActive = start && start <= now && (!end || end >= now)
+
+			return (
+				<Badge
+					variant={isActive ? 'default' : 'secondary'}
+					className={cn(
+						'px-2 py-1 font-medium whitespace-nowrap',
+						isActive
+							? 'bg-green-100 text-green-800 hover:bg-green-100'
+							: 'bg-gray-100 text-gray-600 hover:bg-gray-100'
+					)}
+				>
+					{isActive ? 'Actif' : 'Inactif'}
+				</Badge>
+			)
+		},
+		enableSorting: true,
+		header: ({ column }) => {
+			return (
+				<button
+					className='hover:text-primary flex cursor-pointer items-center'
+					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				>
+					Statut
+					{getSortIcon(column.getIsSorted())}
+				</button>
+			)
+		},
+	},
 	{
 		accessorKey: 'address',
 		cell: ({ row }) => {
-			const address = row.getValue('address') as string
-			return address ? (
-				<div>{address}</div>
-			) : (
-				<div className='text-muted-foreground'>Pas d&apos;adresse</div>
+			const value = row.getValue('address')
+			if (!value || typeof value !== 'string') return <span>-</span>
+			return <span>{value}</span>
+		},
+		enableSorting: true,
+		header: ({ column }) => {
+			return (
+				<button
+					className='hover:text-primary flex cursor-pointer items-center'
+					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				>
+					Adresse
+					{getSortIcon(column.getIsSorted())}
+				</button>
 			)
 		},
-		enableHiding: true,
-		header: ({ column }) => (
-			<Button
-				variant='ghost'
-				onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-				className='p-0 hover:bg-transparent'
-			>
-				Adresse
-				{column.getIsSorted() === 'asc' ? (
-					<ChevronUp className='ml-1 h-4 w-4' />
-				) : column.getIsSorted() === 'desc' ? (
-					<ChevronDown className='ml-1 h-4 w-4' />
-				) : null}
-			</Button>
-		),
-		sortDescFirst: false,
 	},
-	// Start date column
 	{
 		accessorKey: 'startDate',
 		cell: ({ row }) => {
-			const startDate = row.getValue('startDate') as string
+			const value = row.getValue('startDate')
+			if (!value || typeof value !== 'string') return <span>-</span>
+			const date = new Date(value)
 			return (
-				<div className={!startDate ? 'text-muted-foreground' : ''}>
-					{formatDate(startDate)}
-				</div>
+				<span className='whitespace-nowrap'>
+					{format(date, 'dd MMM yyyy', { locale: fr })}
+				</span>
 			)
 		},
-		enableHiding: true,
-		filterFn: filterDateRange,
-		header: ({ column }) => (
-			<Button
-				variant='ghost'
-				onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-				className='p-0 hover:bg-transparent'
-			>
-				Date de début
-				{column.getIsSorted() === 'asc' ? (
-					<ChevronUp className='ml-1 h-4 w-4' />
-				) : column.getIsSorted() === 'desc' ? (
-					<ChevronDown className='ml-1 h-4 w-4' />
-				) : null}
-			</Button>
-		),
-		sortingFn: (rowA, rowB, columnId) => sortDateFn(rowA, rowB, columnId),
+		enableSorting: true,
+		header: ({ column }) => {
+			return (
+				<button
+					className='hover:text-primary flex cursor-pointer items-center'
+					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				>
+					Date de début
+					{getSortIcon(column.getIsSorted())}
+				</button>
+			)
+		},
 	},
-	// End date column
 	{
 		accessorKey: 'endDate',
 		cell: ({ row }) => {
-			const endDate = row.getValue('endDate') as string
+			const value = row.getValue('endDate')
+			if (!value || typeof value !== 'string') return <span>-</span>
+			const date = new Date(value)
 			return (
-				<div className={!endDate ? 'text-muted-foreground' : ''}>
-					{formatDate(endDate)}
-				</div>
+				<span className='whitespace-nowrap'>
+					{format(date, 'dd MMM yyyy', { locale: fr })}
+				</span>
 			)
 		},
-		enableHiding: true,
-		header: ({ column }) => (
-			<Button
-				variant='ghost'
-				onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-				className='p-0 hover:bg-transparent'
-			>
-				Date de fin
-				{column.getIsSorted() === 'asc' ? (
-					<ChevronUp className='ml-1 h-4 w-4' />
-				) : column.getIsSorted() === 'desc' ? (
-					<ChevronDown className='ml-1 h-4 w-4' />
-				) : null}
-			</Button>
-		),
-		sortingFn: (rowA, rowB, columnId) => sortDateFn(rowA, rowB, columnId),
-		sortUndefined: 'last', // Move undefined/null values to end
-	},
-	// Actions column
-	{
-		cell: () => {
+		enableSorting: true,
+		header: ({ column }) => {
 			return (
-				<div className='flex items-center justify-end'>
+				<button
+					className='hover:text-primary flex cursor-pointer items-center'
+					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				>
+					Date de fin
+					{getSortIcon(column.getIsSorted())}
+				</button>
+			)
+		},
+	},
+	{
+		cell: ({ row }) => {
+			const project = row.original
+
+			return (
+				<div className='flex justify-end'>
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Button variant='ghost' className='h-8 w-8 p-0'>
 								<span className='sr-only'>Ouvrir le menu</span>
-								<EllipsisVerticalIcon className='h-4 w-4' />
+								<MoreHorizontal className='h-4 w-4' />
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align='end'>
-							<DropdownMenuLabel>Actions</DropdownMenuLabel>
-							<DropdownMenuGroup>
-								<DropdownMenuItem>
-									<PencilIcon className='mr-2 h-4 w-4' />
-									<span>Edit Project</span>
-								</DropdownMenuItem>
-								<DropdownMenuItem>
-									<span>View Assignments</span>
-								</DropdownMenuItem>
-							</DropdownMenuGroup>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem className='text-destructive focus:text-destructive'>
-								<TrashIcon className='mr-2 h-4 w-4' />
-								<span>Delete Project</span>
+							<DropdownMenuItem
+								className='cursor-pointer'
+								onClick={() => console.info('Voir', project.id)}
+							>
+								Voir le détail
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								className='cursor-pointer'
+								onClick={() => console.info('Éditer', project.id)}
+							>
+								Modifier
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								className='cursor-pointer text-red-600'
+								onClick={() => console.info('Supprimer', project.id)}
+							>
+								Supprimer
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>
 			)
 		},
-		enableHiding: true,
-		enableSorting: false,
-		header: () => (
-			<div className='mr-3 flex items-center justify-end'>
-				<p>Actions</p>
-			</div>
-		),
+		header: () => <div className='text-right'>Actions</div>,
 		id: 'actions',
 	},
 ]
