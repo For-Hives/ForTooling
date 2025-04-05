@@ -35,6 +35,7 @@ import {
 	TableRow,
 } from '@/components/ui/table'
 import {
+	ColumnDef,
 	ColumnFiltersState,
 	flexRender,
 	getCoreRowModel,
@@ -46,8 +47,10 @@ import {
 	SortingState,
 	useReactTable,
 	VisibilityState,
+	FilterFn,
 } from '@tanstack/react-table'
 import { format } from 'date-fns'
+import { fr } from 'date-fns/locale'
 import {
 	ChevronLeftIcon,
 	ChevronRightIcon,
@@ -87,6 +90,45 @@ const getColumnDisplayName = (columnId: string): string => {
 	}
 }
 
+// Custom filter function for date range filtering
+const dateRangeFilter: FilterFn<Project> = (row, columnId, value) => {
+	// Check if value is an array of date strings
+	if (!Array.isArray(value) || value.length !== 2) return true
+
+	// Get project dates
+	const startDateStr = row.getValue('startDate') as string | undefined
+	const endDateStr = row.getValue('endDate') as string | undefined
+
+	// If no start date, don't filter this project
+	if (!startDateStr) return false
+
+	// Convert to Date objects
+	const projectStart = new Date(startDateStr)
+	const projectEnd = endDateStr ? new Date(endDateStr) : null
+
+	// Get filter dates
+	const [filterStartStr, filterEndStr] = value as [string, string]
+	const filterStart = new Date(filterStartStr)
+	const filterEnd = new Date(filterEndStr)
+
+	// A project matches the filter if:
+	// 1. Its start date is within the filter period
+	const startInRange = projectStart >= filterStart && projectStart <= filterEnd
+
+	// 2. Its end date is within the filter period
+	const endInRange = projectEnd
+		? projectEnd >= filterStart && projectEnd <= filterEnd
+		: false
+
+	// 3. The project encompasses the entire filter period (starts before and ends after)
+	const projectEnclosesFilter =
+		projectStart <= filterStart &&
+		(projectEnd === null || projectEnd >= filterEnd)
+
+	// Return true if any condition is true
+	return startInRange || endInRange || projectEnclosesFilter
+}
+
 export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 	// Table state
 	const [sorting, setSorting] = useState<SortingState>([
@@ -103,38 +145,60 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 	// Date range state
 	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
 
+	// Define columns with virtual column for date filtering
+	const columns: ColumnDef<Project>[] = [
+		// Selection column
+		{
+			cell: ({ row }) => (
+				<Checkbox
+					checked={row.getIsSelected()}
+					onCheckedChange={value => {
+						row.toggleSelected(!!value)
+					}}
+					aria-label='Sélectionner la ligne'
+				/>
+			),
+			enableHiding: false,
+			enableSorting: false,
+			header: ({ table }) => (
+				<Checkbox
+					checked={
+						table.getIsAllPageRowsSelected() ||
+						(table.getIsSomePageRowsSelected() && 'indeterminate')
+					}
+					onCheckedChange={value => {
+						table.toggleAllPageRowsSelected(!!value)
+					}}
+					aria-label='Sélectionner toutes les lignes'
+				/>
+			),
+			id: 'select',
+		},
+		// Virtual column for date range filtering
+		{
+			accessorFn: row => ({
+				endDate: row.endDate,
+				startDate: row.startDate,
+			}),
+			cell: () => null,
+			enableColumnFilter: true,
+			enableHiding: false,
+			filterFn: dateRangeFilter,
+			header: () => null,
+			id: 'dateFilter',
+			maxSize: 0,
+			meta: {
+				isVirtual: true,
+			},
+			minSize: 0,
+			size: 0,
+		},
+		...projectColumns,
+	]
+
 	// Initialize the table
 	const table = useReactTable({
-		columns: [
-			// Selection column
-			{
-				cell: ({ row }) => (
-					<Checkbox
-						checked={row.getIsSelected()}
-						onCheckedChange={value => {
-							row.toggleSelected(!!value)
-						}}
-						aria-label='Sélectionner la ligne'
-					/>
-				),
-				enableHiding: false,
-				enableSorting: false,
-				header: ({ table }) => (
-					<Checkbox
-						checked={
-							table.getIsAllPageRowsSelected() ||
-							(table.getIsSomePageRowsSelected() && 'indeterminate')
-						}
-						onCheckedChange={value => {
-							table.toggleAllPageRowsSelected(!!value)
-						}}
-						aria-label='Sélectionner toutes les lignes'
-					/>
-				),
-				id: 'select',
-			},
-			...projectColumns,
-		],
+		columns,
 		data,
 		enableRowSelection: true,
 		getCoreRowModel: getCoreRowModel(),
@@ -189,11 +253,12 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 		setDateRange(range)
 
 		if (range?.from && range?.to) {
+			// Use our virtual column for date filtering
 			table
-				.getColumn('startDate')
+				.getColumn('dateFilter')
 				?.setFilterValue([range.from.toISOString(), range.to.toISOString()])
 		} else {
-			table.getColumn('startDate')?.setFilterValue(undefined)
+			table.getColumn('dateFilter')?.setFilterValue(undefined)
 		}
 	}
 
@@ -205,6 +270,13 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 			table.getColumn('status')?.setFilterValue(value === 'active')
 		}
 	}
+
+	// Get the current status filter value
+	const statusFilter = table.getColumn('status')?.getFilterValue()
+
+	// Check if filters are active
+	const hasActiveFilters =
+		columnFilters.length > 0 || dateRange?.from || searchQuery
 
 	return (
 		<div className='space-y-6'>
@@ -224,7 +296,17 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 					</div>
 
 					{/* Status filter */}
-					<Select onValueChange={handleStatusFilterChange} defaultValue='all'>
+					<Select
+						onValueChange={handleStatusFilterChange}
+						defaultValue='all'
+						value={
+							statusFilter === undefined
+								? 'all'
+								: statusFilter === true
+									? 'active'
+									: 'inactive'
+						}
+					>
 						<SelectTrigger className='h-10 bg-white'>
 							<SelectValue placeholder='Statut' />
 						</SelectTrigger>
@@ -235,7 +317,10 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 						</SelectContent>
 					</Select>
 
-					<DatePickerWithRange onChange={handleDateRangeChange} />
+					<DatePickerWithRange
+						onChange={handleDateRangeChange}
+						defaultValue={dateRange}
+					/>
 
 					{/* Filters bar */}
 					<div className='flex flex-wrap items-center justify-start gap-4'>
@@ -319,8 +404,84 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 				</div>
 			</div>
 
+			{/* Indicators for active filters and selection */}
+			{(selectedRows.length > 0 || hasActiveFilters) && (
+				<div className='flex flex-wrap items-center gap-2 rounded-md bg-gray-50 p-3'>
+					{/* Selection count */}
+					{selectedRows.length > 0 && (
+						<div className='mr-3 flex items-center rounded-md bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700'>
+							{selectedRows.length} projet{selectedRows.length > 1 ? 's' : ''}{' '}
+							sélectionné{selectedRows.length > 1 ? 's' : ''}
+						</div>
+					)}
+
+					{/* Filter tags */}
+					{hasActiveFilters && (
+						<div className='flex flex-wrap items-center gap-2'>
+							<div className='text-muted-foreground mr-1 text-sm'>
+								Filtres actifs:
+							</div>
+
+							{/* Search filter tag */}
+							{searchQuery && (
+								<Badge
+									variant='secondary'
+									className='flex items-center gap-1 px-3 py-1 text-sm'
+								>
+									Recherche: {searchQuery}
+									<Button
+										variant='ghost'
+										onClick={() => setSearchQuery('')}
+										className='ml-1 h-4 w-4 p-0 hover:bg-transparent'
+									>
+										<X className='h-3 w-3' />
+									</Button>
+								</Badge>
+							)}
+
+							{/* Status filter tag */}
+							{statusFilter !== undefined && (
+								<Badge
+									variant='secondary'
+									className='flex items-center gap-1 px-3 py-1 text-sm'
+								>
+									Statut: {statusFilter ? 'Actifs' : 'Inactifs'}
+									<Button
+										variant='ghost'
+										onClick={() =>
+											table.getColumn('status')?.setFilterValue(undefined)
+										}
+										className='ml-1 h-4 w-4 p-0 hover:bg-transparent'
+									>
+										<X className='h-3 w-3' />
+									</Button>
+								</Badge>
+							)}
+
+							{/* Date range filter tag */}
+							{dateRange?.from && dateRange?.to && (
+								<Badge
+									variant='secondary'
+									className='flex items-center gap-1 px-3 py-1 text-sm'
+								>
+									Dates: {format(dateRange.from, 'dd/MM/yyyy', { locale: fr })}{' '}
+									- {format(dateRange.to, 'dd/MM/yyyy', { locale: fr })}
+									<Button
+										variant='ghost'
+										onClick={() => handleDateRangeChange(undefined)}
+										className='ml-1 h-4 w-4 p-0 hover:bg-transparent'
+									>
+										<X className='h-3 w-3' />
+									</Button>
+								</Badge>
+							)}
+						</div>
+					)}
+				</div>
+			)}
+
 			{/* Table */}
-			<div className='rounded-b-sm border border-slate-100 bg-white'>
+			<div className='rounded-md border border-slate-100 bg-white'>
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map(headerGroup => (
