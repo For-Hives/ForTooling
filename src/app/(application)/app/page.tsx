@@ -8,6 +8,9 @@ import {
 	Building,
 	Scan,
 	ClipboardList,
+	Settings,
+	Map,
+	History,
 } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -26,6 +29,7 @@ export default async function Dashboard() {
 			bgColor: 'bg-blue-100',
 			color: 'text-blue-600',
 			description: 'Gérer et suivre tous les équipements et outils',
+			disabled: true,
 			href: '/app/equipments',
 			icon: Wrench,
 			spotlightColor:
@@ -36,6 +40,7 @@ export default async function Dashboard() {
 			bgColor: 'bg-amber-100',
 			color: 'text-amber-600',
 			description: 'Gérer les projets, chantiers et emplacements',
+			disabled: false,
 			href: '/app/projects',
 			icon: Construction,
 			spotlightColor:
@@ -46,7 +51,8 @@ export default async function Dashboard() {
 			bgColor: 'bg-green-100',
 			color: 'text-green-600',
 			description: 'Gérer les utilisateurs et permissions',
-			href: '/app/users',
+			disabled: false,
+			href: '/organization-profile/organization-members',
 			icon: User,
 			spotlightColor:
 				'rgba(34, 197, 94, 0.25)' as `rgba(${number}, ${number}, ${number}, ${number})`,
@@ -55,7 +61,8 @@ export default async function Dashboard() {
 		{
 			bgColor: 'bg-purple-100',
 			color: 'text-purple-600',
-			description: 'Scanner et localiser des équipements',
+			description: 'Scanner, QR code, NFC, assigner un équipement rapidement',
+			disabled: true,
 			href: '/app/scan',
 			icon: Scan,
 			spotlightColor:
@@ -63,9 +70,11 @@ export default async function Dashboard() {
 			title: 'Scanner',
 		},
 		{
+			// todo: reactivate this one
 			bgColor: 'bg-red-100',
 			color: 'text-red-600',
 			description: 'Rapports et inventaire complet',
+			disabled: true,
 			href: '/app/inventory',
 			icon: ClipboardList,
 			spotlightColor:
@@ -76,11 +85,46 @@ export default async function Dashboard() {
 			bgColor: 'bg-indigo-100',
 			color: 'text-indigo-600',
 			description: 'Paramètres et configuration',
+			disabled: false,
 			href: '/organizations',
 			icon: Building,
 			spotlightColor:
 				'rgba(99, 102, 241, 0.25)' as `rgba(${number}, ${number}, ${number}, ${number})`,
 			title: 'Organisation',
+		},
+		{
+			bgColor: 'bg-gray-100',
+			color: 'text-gray-600',
+			description: 'Localiser des équipements',
+			disabled: true,
+			href: '/app/localization',
+			icon: Map,
+			spotlightColor:
+				'rgba(99, 102, 241, 0.25)' as `rgba(${number}, ${number}, ${number}, ${number})`,
+			title: 'Localisation',
+		},
+		// historique
+		{
+			bgColor: 'bg-gray-100',
+			color: 'text-gray-600',
+			description: 'Historique des équipements',
+			disabled: true,
+			href: '/app/history',
+			icon: History,
+			spotlightColor:
+				'rgba(99, 102, 241, 0.25)' as `rgba(${number}, ${number}, ${number}, ${number})`,
+			title: 'Historique',
+		},
+		{
+			bgColor: 'bg-gray-100',
+			color: 'text-gray-600',
+			description: 'Paramètres et configuration',
+			disabled: true,
+			href: '/app/settings',
+			icon: Settings,
+			spotlightColor:
+				'rgba(99, 102, 241, 0.25)' as `rgba(${number}, ${number}, ${number}, ${number})`,
+			title: 'Paramètres',
 		},
 	]
 
@@ -91,7 +135,11 @@ export default async function Dashboard() {
 			</h2>
 			<div className='grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'>
 				{quickLinks.map(link => (
-					<Link href={link.href} key={link.title} className='group block'>
+					<Link
+						href={link.disabled ? '#' : link.href}
+						key={link.title}
+						className={`group block ${link.disabled ? 'cursor-not-allowed opacity-50' : ''}`}
+					>
 						<SpotlightCard
 							className='h-full bg-white transition-all hover:shadow-md'
 							spotlightColor={link.spotlightColor}
