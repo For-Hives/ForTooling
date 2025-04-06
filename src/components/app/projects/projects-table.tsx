@@ -2,7 +2,6 @@
 
 import { Project } from '@/app/actions/services/pocketbase/api_client/types'
 import { projectColumns } from '@/components/app/projects/projects-table-columns'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DatePickerWithRange } from '@/components/ui/date-picker-with-range'
@@ -49,8 +48,6 @@ import {
 	VisibilityState,
 	FilterFn,
 } from '@tanstack/react-table'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 import {
 	ChevronLeftIcon,
 	ChevronRightIcon,
@@ -60,7 +57,6 @@ import {
 	ChevronLastIcon,
 	SlidersHorizontal,
 	Trash2,
-	X,
 } from 'lucide-react'
 import { useState } from 'react'
 import { DateRange } from 'react-day-picker'
@@ -187,6 +183,9 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 				/>
 			),
 			id: 'select',
+			maxSize: 20,
+			minSize: 0,
+			size: 20,
 		},
 		// Virtual column for date range filtering
 		{
@@ -305,10 +304,6 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 
 	// Get the current status filter value
 	const statusFilterValue = table.getColumn('statusFilter')?.getFilterValue()
-
-	// Check if filters are active
-	const hasActiveFilters =
-		columnFilters.length > 0 || dateRange?.from || searchQuery
 
 	return (
 		<div className='space-y-6'>
@@ -435,82 +430,6 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 					</Button>
 				</div>
 			</div>
-
-			{/* Indicators for active filters and selection */}
-			{(selectedRows.length > 0 || hasActiveFilters) && (
-				<div className='flex flex-wrap items-center gap-2 rounded-md bg-gray-50 p-3'>
-					{/* Selection count */}
-					{selectedRows.length > 0 && (
-						<div className='mr-3 flex items-center rounded-md bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700'>
-							{selectedRows.length} projet{selectedRows.length > 1 ? 's' : ''}{' '}
-							sélectionné{selectedRows.length > 1 ? 's' : ''}
-						</div>
-					)}
-
-					{/* Filter tags */}
-					{hasActiveFilters && (
-						<div className='flex flex-wrap items-center gap-2'>
-							<div className='text-muted-foreground mr-1 text-sm'>
-								Filtres actifs:
-							</div>
-
-							{/* Search filter tag */}
-							{searchQuery && (
-								<Badge
-									variant='secondary'
-									className='flex items-center gap-1 px-3 py-1 text-sm'
-								>
-									Recherche: {searchQuery}
-									<Button
-										variant='ghost'
-										onClick={() => setSearchQuery('')}
-										className='ml-1 h-4 w-4 p-0 hover:bg-transparent'
-									>
-										<X className='h-3 w-3' />
-									</Button>
-								</Badge>
-							)}
-
-							{/* Status filter tag */}
-							{statusFilterValue !== undefined && (
-								<Badge
-									variant='secondary'
-									className='flex items-center gap-1 px-3 py-1 text-sm'
-								>
-									Statut: {statusFilterValue ? 'Actifs' : 'Inactifs'}
-									<Button
-										variant='ghost'
-										onClick={() =>
-											table.getColumn('statusFilter')?.setFilterValue(undefined)
-										}
-										className='ml-1 h-4 w-4 p-0 hover:bg-transparent'
-									>
-										<X className='h-3 w-3' />
-									</Button>
-								</Badge>
-							)}
-
-							{/* Date range filter tag */}
-							{dateRange?.from && dateRange?.to && (
-								<Badge
-									variant='secondary'
-									className='flex items-center gap-1 px-3 py-1 text-sm'
-								>
-									Dates: {format(dateRange.from, 'dd/MM/yyyy', { locale: fr })}{' '}
-									- {format(dateRange.to, 'dd/MM/yyyy', { locale: fr })}
-									<Button
-										variant='ghost'
-										onClick={() => handleDateRangeChange(undefined)}
-										className='ml-1 h-4 w-4 p-0 hover:bg-transparent'
-									>
-										<X className='h-3 w-3' />
-									</Button>
-								</Badge>
-							)}
-						</div>
-					)}
-				</div>
-			)}
 
 			{/* Table */}
 			<div className='rounded-md border border-slate-100 bg-white'>
