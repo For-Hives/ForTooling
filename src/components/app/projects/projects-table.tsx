@@ -79,6 +79,10 @@ const getColumnDisplayName = (columnId: string): string => {
 			return 'Date de début'
 		case 'endDate':
 			return 'Date de fin'
+		case 'notes':
+			return 'Notes'
+		case 'toolCount':
+			return 'Équipements'
 		case 'actions':
 			return 'Actions'
 		default:
@@ -183,9 +187,9 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 				/>
 			),
 			id: 'select',
-			maxSize: 20,
-			minSize: 0,
-			size: 20,
+			maxSize: 50,
+			minSize: 35,
+			size: 40,
 		},
 		// Virtual column for date range filtering
 		{
@@ -195,7 +199,7 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 			}),
 			cell: () => null,
 			enableColumnFilter: true,
-			enableHiding: false,
+			enableHiding: true,
 			filterFn: dateRangeFilter,
 			header: () => null,
 			id: 'dateFilter',
@@ -213,7 +217,7 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 			},
 			cell: () => null,
 			enableColumnFilter: true,
-			enableHiding: false,
+			enableHiding: true,
 			filterFn: 'equals',
 			header: () => null,
 			id: 'statusFilter',
@@ -438,17 +442,21 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 						{table.getHeaderGroups().map(headerGroup => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map(header => (
-									<TableHead
-										key={header.id}
-										className='bg-gray-50 px-4 py-3 whitespace-nowrap'
-									>
-										{header.isPlaceholder
-											? null
-											: flexRender(
-													header.column.columnDef.header,
-													header.getContext()
-												)}
-									</TableHead>
+									<>
+										{!header.column.getCanHide() && (
+											<TableHead
+												key={header.id}
+												className={`bg-gray-50 px-4 py-3 whitespace-nowrap`}
+											>
+												{header.isPlaceholder
+													? null
+													: flexRender(
+															header.column.columnDef.header,
+															header.getContext()
+														)}
+											</TableHead>
+										)}
+									</>
 								))}
 							</TableRow>
 						))}
@@ -462,12 +470,16 @@ export function ProjectsTable({ data, onDeleteProjects }: ProjectsTableProps) {
 									className='border-b transition-colors hover:bg-gray-50'
 								>
 									{row.getVisibleCells().map(cell => (
-										<TableCell key={cell.id} className='px-4 py-3'>
-											{flexRender(
-												cell.column.columnDef.cell,
-												cell.getContext()
+										<>
+											{!cell.column.getCanHide() && (
+												<TableCell key={cell.id} className='px-4 py-3'>
+													{flexRender(
+														cell.column.columnDef.cell,
+														cell.getContext()
+													)}
+												</TableCell>
 											)}
-										</TableCell>
+										</>
 									))}
 								</TableRow>
 							))

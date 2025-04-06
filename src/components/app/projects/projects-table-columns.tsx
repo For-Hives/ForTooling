@@ -34,6 +34,7 @@ export const projectColumns: ColumnDef<Project>[] = [
 			if (!value || typeof value !== 'string') return <span>-</span>
 			return <span className='font-medium'>{value}</span>
 		},
+		enableHiding: false,
 		enableSorting: true,
 		header: ({ column }) => {
 			return (
@@ -46,6 +47,9 @@ export const projectColumns: ColumnDef<Project>[] = [
 				</button>
 			)
 		},
+		maxSize: 300,
+		minSize: 150,
+		size: 200,
 	},
 	{
 		accessorKey: 'status',
@@ -71,6 +75,7 @@ export const projectColumns: ColumnDef<Project>[] = [
 				</Badge>
 			)
 		},
+		enableHiding: false,
 		enableSorting: true,
 		header: ({ column }) => {
 			return (
@@ -83,6 +88,9 @@ export const projectColumns: ColumnDef<Project>[] = [
 				</button>
 			)
 		},
+		maxSize: 120,
+		minSize: 80,
+		size: 100,
 	},
 	{
 		accessorKey: 'address',
@@ -91,6 +99,7 @@ export const projectColumns: ColumnDef<Project>[] = [
 			if (!value || typeof value !== 'string') return <span>-</span>
 			return <span>{value}</span>
 		},
+		enableHiding: false,
 		enableSorting: true,
 		header: ({ column }) => {
 			return (
@@ -103,6 +112,9 @@ export const projectColumns: ColumnDef<Project>[] = [
 				</button>
 			)
 		},
+		maxSize: 300,
+		minSize: 150,
+		size: 200,
 	},
 	{
 		accessorKey: 'startDate',
@@ -116,6 +128,7 @@ export const projectColumns: ColumnDef<Project>[] = [
 				</span>
 			)
 		},
+		enableHiding: false,
 		enableSorting: true,
 		header: ({ column }) => {
 			return (
@@ -128,6 +141,9 @@ export const projectColumns: ColumnDef<Project>[] = [
 				</button>
 			)
 		},
+		maxSize: 180,
+		minSize: 120,
+		size: 140,
 	},
 	{
 		accessorKey: 'endDate',
@@ -141,6 +157,7 @@ export const projectColumns: ColumnDef<Project>[] = [
 				</span>
 			)
 		},
+		enableHiding: false,
 		enableSorting: true,
 		header: ({ column }) => {
 			return (
@@ -153,6 +170,79 @@ export const projectColumns: ColumnDef<Project>[] = [
 				</button>
 			)
 		},
+		maxSize: 180,
+		minSize: 120,
+		size: 140,
+	},
+	{
+		accessorKey: 'notes',
+		cell: ({ row }) => {
+			const value = row.getValue('notes') as string | undefined
+			if (!value)
+				return <span className='text-muted-foreground italic'>Aucune note</span>
+
+			// Tronquer le texte s'il est trop long
+			const maxLength = 60
+			const displayText =
+				value.length > maxLength ? `${value.substring(0, maxLength)}...` : value
+
+			return (
+				<div className='max-w-md overflow-hidden text-ellipsis'>
+					{displayText}
+				</div>
+			)
+		},
+		enableHiding: false,
+		enableSorting: true,
+		header: ({ column }) => {
+			return (
+				<button
+					className='hover:text-primary flex cursor-pointer items-center'
+					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				>
+					Notes
+					{getSortIcon(column.getIsSorted())}
+				</button>
+			)
+		},
+		maxSize: 400,
+		minSize: 150,
+		size: 250,
+	},
+	{
+		accessorKey: 'toolCount',
+		cell: ({ row }) => {
+			// todo, this value is actually mocked
+			const projectId = row.original.id || ''
+			const stableRandomSeed = projectId
+				.split('')
+				.reduce((a, b) => a + b.charCodeAt(0), 0)
+			const toolCount = (stableRandomSeed % 10) + 1 // Génère un nombre entre 1 et 10
+
+			return (
+				<div className='text-center'>
+					<Badge variant='outline' className='px-2 py-1 font-medium'>
+						{toolCount}
+					</Badge>
+				</div>
+			)
+		},
+		enableHiding: false,
+		enableSorting: true,
+		header: ({ column }) => {
+			return (
+				<button
+					className='hover:text-primary flex cursor-pointer items-center'
+					onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+				>
+					Équipements
+					{getSortIcon(column.getIsSorted())}
+				</button>
+			)
+		},
+		maxSize: 150,
+		minSize: 80,
+		size: 120,
 	},
 	{
 		cell: ({ row }) => {
@@ -191,7 +281,11 @@ export const projectColumns: ColumnDef<Project>[] = [
 				</div>
 			)
 		},
+		enableHiding: false,
 		header: () => <div className='text-right'>Actions</div>,
 		id: 'actions',
+		maxSize: 100,
+		minSize: 60,
+		size: 80,
 	},
 ]
