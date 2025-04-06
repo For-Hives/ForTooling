@@ -85,7 +85,6 @@ export type CollectionName = (typeof Collections)[keyof typeof Collections]
  */
 export function validateWithZod<T>(schema: z.ZodType<T>, data: unknown): T {
 	try {
-		console.info('data', data)
 		return schema.parse(data)
 	} catch (error) {
 		if (error instanceof z.ZodError) {

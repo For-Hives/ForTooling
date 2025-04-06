@@ -145,15 +145,9 @@ export class OrganizationAppUserService extends BaseService<
 			)
 
 			if (existing) {
-				console.info(
-					`Updating existing organization mapping for user ${appUserId} in org ${organizationId}`
-				)
 				return this.update(existing.id, { role }, { validateOutput: false })
 			}
 
-			console.info(
-				`Creating new organization mapping for user ${appUserId} in org ${organizationId}`
-			)
 			return this.create(
 				{
 					appUser: appUserId,
@@ -181,9 +175,6 @@ export class OrganizationAppUserService extends BaseService<
 				)
 
 				if (retryExisting) {
-					console.info(
-						`Found existing mapping on retry for user ${appUserId} in org ${organizationId}`
-					)
 					return this.update(
 						retryExisting.id,
 						{ role },

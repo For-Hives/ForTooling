@@ -95,7 +95,6 @@ export class AppUserService extends BaseService<
 			const existing = await this.findByClerkId(clerkId)
 
 			if (existing) {
-				console.info(`Updating existing user with clerkId: ${clerkId}`)
 				// When updating, ensure we don't overwrite organizations field with an empty string
 				// if the user already has organizations
 				const updateData = {
@@ -106,7 +105,6 @@ export class AppUserService extends BaseService<
 				return this.update(existing.id, updateData, { validateOutput: false })
 			}
 
-			console.info(`Creating new user with clerkId: ${clerkId}`)
 			// For new users, make sure organizations is a string
 			const createData = {
 				...data,

@@ -27,8 +27,6 @@ interface WebhookProcessingResult {
 export async function processWebhookEvent(
 	event: WebhookEvent
 ): Promise<WebhookProcessingResult> {
-	console.info(`Processing webhook event: ${event.type}`)
-
 	// Validate event data
 	if (!event || !event.data || !event.type) {
 		console.error('Invalid webhook event received')
@@ -119,9 +117,6 @@ export async function processWebhookEvent(
 					const userId = membershipData.public_user_data.user_id
 					const orgId = membershipData.organization.id
 
-					console.info(
-						`Attempting to sync user ${userId} and org ${orgId} before linking`
-					)
 					const clerk = await clerkClient()
 
 					try {

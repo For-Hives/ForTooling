@@ -47,8 +47,6 @@ export interface ClerkMembershipData {
  */
 export async function syncUserToPocketBase(clerkUser: User): Promise<AppUser> {
 	try {
-		console.info('Syncing user with clerkId:', clerkUser.id)
-
 		if (!clerkUser.id) {
 			throw new Error('Clerk user ID is required for syncing')
 		}
@@ -124,10 +122,6 @@ export async function syncOrganizationToPocketBase(
 			throw new Error('Clerk organization ID is required for syncing')
 		}
 
-		console.info(
-			`Attempting to sync organization with clerkId: ${organization.id}`
-		)
-
 		// Map Clerk data to our format
 		const orgData = {
 			address: (organization.publicMetadata?.address as string) || '',
@@ -178,10 +172,6 @@ export async function linkUserToOrganizationFromClerk(
 			throw new Error('Missing required IDs in membership data')
 		}
 
-		console.info(
-			`Linking user ${userId} to organization ${orgId} with role ${role}`
-		)
-
 		// Get the services
 		const appUserService = getAppUserService()
 		const organizationService = getOrganizationService()
@@ -194,10 +184,6 @@ export async function linkUserToOrganizationFromClerk(
 			console.error('User or organization not found in PocketBase')
 			return null
 		}
-
-		console.info(
-			`Found user ${user.id} and organization ${org.id} in PocketBase`
-		)
 
 		// Create or update the relation in the junction table
 		await createOrUpdateOrganizationUserMapping(user.id, org.id, role)

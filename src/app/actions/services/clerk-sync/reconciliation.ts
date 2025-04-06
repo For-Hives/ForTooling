@@ -16,11 +16,6 @@ import { clerkClient } from '@clerk/nextjs/server'
  * Could be triggered by a cron job or scheduled task
  */
 export async function runFullReconciliation() {
-	console.info(
-		'Starting full Clerk-PocketBase reconciliation:',
-		new Date().toISOString()
-	)
-
 	try {
 		const startTime = Date.now()
 
@@ -34,12 +29,7 @@ export async function runFullReconciliation() {
 		const clerkUsers = clerkUsersResponse.data
 		const clerkOrganizations = clerkOrganizationsResponse.data
 
-		console.info(
-			`Found ${clerkUsers.length} users and ${clerkOrganizations.length} organizations in Clerk`
-		)
-
 		// Sync all organizations first
-		console.info('Syncing organizations...')
 		const orgResults = await Promise.allSettled(
 			clerkOrganizations.map((org: Organization) =>
 				syncOrganizationToPocketBase(org)
@@ -49,12 +39,8 @@ export async function runFullReconciliation() {
 		const successfulOrgs = orgResults.filter(
 			(result: PromiseSettledResult<unknown>) => result.status === 'fulfilled'
 		).length
-		console.info(
-			`Successfully synced ${successfulOrgs}/${clerkOrganizations.length} organizations`
-		)
 
 		// Sync all users
-		console.info('Syncing users...')
 		const userResults = await Promise.allSettled(
 			clerkUsers.map((user: User) => syncUserToPocketBase(user))
 		)
@@ -62,12 +48,8 @@ export async function runFullReconciliation() {
 		const successfulUsers = userResults.filter(
 			(result: PromiseSettledResult<unknown>) => result.status === 'fulfilled'
 		).length
-		console.info(
-			`Successfully synced ${successfulUsers}/${clerkUsers.length} users`
-		)
 
 		// Sync organization memberships
-		console.info('Syncing organization memberships...')
 		let membershipCount = 0
 
 		for (const org of clerkOrganizations) {
@@ -112,13 +94,8 @@ export async function runFullReconciliation() {
 			}
 		}
 
-		console.info(
-			`Successfully synced ${membershipCount} organization memberships`
-		)
-
 		// Done
 		const totalTime = (Date.now() - startTime) / 1000
-		console.info(`Reconciliation completed in ${totalTime.toFixed(2)} seconds`)
 
 		return {
 			memberships: membershipCount,
@@ -148,8 +125,6 @@ export async function runFullReconciliation() {
  */
 export async function reconcileSpecificUser(clerkUserId: string) {
 	try {
-		console.info(`Starting reconciliation for user ${clerkUserId}`)
-
 		// Get user data from Clerk
 		const clerkClientInstance = await clerkClient()
 		const clerkUser = await clerkClientInstance.users.getUser(clerkUserId)
@@ -205,8 +180,6 @@ export async function reconcileSpecificUser(clerkUserId: string) {
  */
 export async function reconcileSpecificOrganization(clerkOrgId: string) {
 	try {
-		console.info(`Starting reconciliation for organization ${clerkOrgId}`)
-
 		// Get organization data from Clerk
 		const clerkClientInstance = await clerkClient()
 		const clerkOrg = await clerkClientInstance.organizations.getOrganization({

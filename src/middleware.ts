@@ -42,7 +42,6 @@ export default clerkMiddleware(async (auth, req) => {
 	try {
 		// Get auth data
 		const authAwaited = await auth()
-		console.log('authAwaited', authAwaited)
 		// Handle protected routes - redirect to sign-in if not authenticated
 		if (isProtectedRoute(req) && !authAwaited.userId) {
 			return NextResponse.redirect(new URL('/sign-in', req.url))
@@ -61,8 +60,6 @@ export default clerkMiddleware(async (auth, req) => {
 		// Only proceed with sync if we have both userId and orgId
 		if (isProtectedRoute(req) && authAwaited.userId && authAwaited.orgId) {
 			try {
-				console.log('Ensuring user and org sync')
-				console.log(authAwaited.userId, authAwaited.orgId)
 				await ensureUserAndOrgSync(authAwaited.userId, authAwaited.orgId)
 			} catch (syncError) {
 				console.error('Sync error in middleware:', syncError)

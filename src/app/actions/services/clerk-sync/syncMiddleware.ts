@@ -30,7 +30,6 @@ export async function ensureUserSync(clerkUserId: string): Promise<AppUser> {
 	}
 
 	// User not found, sync from Clerk
-	console.info(`User ${clerkUserId} not found in PocketBase, syncing...`)
 	const clerk = await clerkClient()
 	const clerkUser = await clerk.users.getUser(clerkUserId)
 
@@ -49,8 +48,6 @@ export async function ensureOrgSync(clerkOrgId: string): Promise<Organization> {
 		return existingOrg
 	}
 
-	// Organization not found, sync from Clerk
-	console.info(`Organization ${clerkOrgId} not found in PocketBase, syncing...`)
 	const clerk = await clerkClient()
 	const clerkOrg = await clerk.organizations.getOrganization({
 		organizationId: clerkOrgId,
@@ -190,9 +187,6 @@ async function verifyAllOrganizationMemberships(
 			// If the roles don't match, update the PocketBase role
 			const clerkRole = clerkMembership.role?.replace('org:', '') || 'member'
 			if (pbMapping.role !== clerkRole) {
-				console.info(
-					`Updating role for user ${appUser.clerkId} in org ${clerkOrgId} from ${pbMapping.role} to ${clerkRole}`
-				)
 				await orgAppUserService.createOrUpdate(
 					pbMapping.appUser,
 					pbOrgId,
@@ -212,9 +206,6 @@ async function verifyAllOrganizationMemberships(
 			// Find the user in PocketBase
 			const pbUser = await appUserService.findByClerkId(clerkUserId)
 			if (!pbUser) {
-				console.info(
-					`User ${clerkUserId} not found in PocketBase, will be synced on next access`
-				)
 				continue
 			}
 
@@ -227,9 +218,6 @@ async function verifyAllOrganizationMemberships(
 			// If no mapping exists in PocketBase but exists in Clerk, create it
 			if (!pbMapping) {
 				const role = clerkMembership.role?.replace('org:', '') || 'member'
-				console.info(
-					`Creating missing mapping for user ${clerkUserId} in org ${clerkOrgId}`
-				)
 				await orgAppUserService.createOrUpdate(pbUser.id, pbOrgId, role)
 			}
 		}

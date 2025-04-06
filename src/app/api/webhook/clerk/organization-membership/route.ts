@@ -7,8 +7,6 @@ import { NextRequest, NextResponse } from 'next/server'
  * Handles webhook events from Clerk related to organization memberships
  */
 export async function POST(req: NextRequest) {
-	console.info('Received Clerk organization membership webhook request')
-
 	try {
 		// Get the Svix headers for verification
 		const svixId = req.headers.get('svix-id')
@@ -40,7 +38,6 @@ export async function POST(req: NextRequest) {
 
 		// Use the parsed payload from the verification
 		const body = verificationResult.payload as WebhookEvent
-		console.info('Webhook verified successfully:', { type: body.type })
 
 		// Process the webhook using our central handler
 		const result = await processWebhookEvent(body)
