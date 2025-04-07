@@ -51,10 +51,15 @@ Cette plateforme SaaS de gestion d'équipements avec tracking NFC/QR combine les
   - Isolation multi-tenant intégrée
 - **Zod** - Validation de schémas pour les données d'entrée
 - **Tan stack form** - Gestion de formulaires avec validation côté client
+- **Webhook** - En local on va utiliser ngrok, en prod on va utiliser les endpoints classiques 
+
 
 ### Backend
 
-- **Pockebase** - Backend as a service
+- **PocketBase** - Backend as a service
+  - Services modulaires (baseService, equipmentService, etc.)
+  - Gestion d'authentification et permissions
+  - Stockage de données structurées
 
 ### Sécurité API
 
@@ -102,17 +107,12 @@ Cette plateforme SaaS de gestion d'équipements avec tracking NFC/QR combine les
 - **Glitchtip** - Suivi des erreurs (compatible avec l'API Sentry)
 - **Umami** - Analytics respectueux de la vie privée
 
-### Sauvegarde & Restauration
-
-- **pgbackrest** - Solution de backup robuste pour PostgreSQL
-- **pg_dump automatisé** - Sauvegardes programmées
-
 ## 6. Architecture multi-tenant
 
 - Architecture à schéma unique avec discrimination par tenant_id
 - Isolation des données par organisation au niveau des Server Actions
 - Middleware de protection centralisé pour les vérifications d'accès
-- Optimisation des requêtes grâce aux index sur tenant_id
+- Optimisation des requêtes avec PocketBase
 
 ## 7. Intégration NFC/QR
 
@@ -131,26 +131,68 @@ Cette plateforme SaaS de gestion d'équipements avec tracking NFC/QR combine les
 ## 9. Documentation
 
 - **Swagger/OpenAPI** - Documentation d'API auto-générée
-- **Docusaurus** - Documentation utilisateur et technique
 
-## 10. Structure du projet
-
+## 10. Structure du projet 
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── (auth)/             # Routes authentifiées
-│   ├── (marketing)/        # Routes publiques (landing)
-│   └── api/                # Routes API REST si nécessaire
-├── components/             # Composants React partagés
-│   ├── ui/                 # Composants UI de base (shadcn)
-│   └── [feature]/          # Composants spécifiques aux fonctionnalités
-├── lib/                    # Code utilitaire partagé
-├── server/                 # Code serveur
-│   ├── actions/            # Next.js Server Actions protégées
-│   │   └── middleware.ts   # Wrapper de protection HOF
-│   ├── db/                 # Prisma et utilitaires DB
-│   └── services/           # Logique métier
-├── stores/                 # Stores Zustand
-├── styles/                 # Styles globaux Tailwind
-└── types/                  # Types TypeScript partagés
+├── app/ # Next.js App Router
+│ ├── (application)/ # Application sécurisée
+│ │ ├── (clerk)/ # Routes authentifiées par Clerk
+│ │ └── app/ # Fonctionnalités principales de l'application
+│ ├── (marketing)/ # Routes publiques (landing)
+│ └── actions/ # Server Actions sécurisées
+│ ├── equipment/ # Actions pour la gestion des équipements
+│ └── services/ # Services d'accès aux données
+│ └── pocketbase/ # Services PocketBase modulaires
+├── components/ # Composants React partagés
+│ ├── app/ # Composants spécifiques à l'application
+│ ├── magicui/ # Composants UI avancés (animations, effets)
+│ └── ui/ # Composants UI de base (shadcn)
+├── hooks/ # Hooks React personnalisés
+├── lib/ # Code utilitaire partagé
+├── stores/ # Stores Zustand
+└── types/ # Types TypeScript partagés
 ```
+
+
+## 11. Schéma d'Architecture Globale
+
+```mermaid
+flowchart TB
+    subgraph Client["Client (Browser/Mobile)"]
+        UI["Next.js UI"]
+        ZustandStore["Zustand Store"]
+        TanStackForm["Tan Stack Form"]
+        NFC["NFC/QR Scanner"]
+    end
+
+    subgraph ServerSide["Server Side (Next.js)"]
+        ServerActions["Server Actions"]
+        Middleware["Protection Middleware"]
+        ClerkAuth["Clerk Auth"]
+    end
+
+    subgraph Services["External Services"]
+        PocketBase["PocketBase"]
+        Stripe["Stripe Payments"]
+        CloudflareR2["Cloudflare R2"]
+        Algolia["Algolia Search"]
+        Resend["Resend Email"]
+        Twilio["Twilio SMS"]
+    end
+
+    UI <--> ZustandStore
+    UI <--> TanStackForm
+    UI <--> NFC
+    TanStackForm --> ServerActions
+    UI <--> ServerActions
+    ServerActions <--> Middleware
+    Middleware <--> ClerkAuth
+    ServerActions <--> PocketBase
+    ServerActions <--> Stripe
+    ServerActions <--> CloudflareR2
+    ServerActions <--> Algolia
+    ServerActions <--> Resend
+    ServerActions <--> Twilio
+```
+

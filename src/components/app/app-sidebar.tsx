@@ -13,6 +13,7 @@ import {
 	TooltipTrigger,
 } from '@/components/ui/tooltip'
 import {
+	OrganizationSwitcher,
 	RedirectToSignIn,
 	SignedIn,
 	SignedOut,
@@ -29,6 +30,18 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+
+const DotIcon = () => {
+	return (
+		<svg
+			xmlns='http://www.w3.org/2000/svg'
+			viewBox='0 0 512 512'
+			fill='currentColor'
+		>
+			<path d='M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512z' />
+		</svg>
+	)
+}
 
 export function AppSidebar() {
 	const pathname = usePathname()
@@ -162,25 +175,6 @@ export function AppSidebar() {
 								<TooltipTrigger asChild>
 									<SidebarMenuButton
 										asChild
-										isActive={pathname?.startsWith('/app/organization')}
-										className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:border-white/20 hover:bg-white hover:text-[#0f2942]'
-									>
-										<Link
-											href='/organizations'
-											className='flex h-full items-center justify-center'
-										>
-											<Building className='h-8 w-8' />
-										</Link>
-									</SidebarMenuButton>
-								</TooltipTrigger>
-								<TooltipContent side='right'>Organisation</TooltipContent>
-							</Tooltip>
-						</SidebarMenuItem>
-						<SidebarMenuItem className='mx-0 my-2 px-2'>
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<SidebarMenuButton
-										asChild
 										className='h-16 w-full justify-center rounded-lg border border-transparent py-4 text-white/70 transition-all duration-200 hover:text-[#0f2942]'
 									>
 										<div className='flex h-full items-center justify-center'>
@@ -196,6 +190,29 @@ export function AppSidebar() {
 									</SidebarMenuButton>
 								</TooltipTrigger>
 								<TooltipContent side='right'>Profil</TooltipContent>
+							</Tooltip>
+						</SidebarMenuItem>
+						<SidebarMenuItem className='mx-0 my-2 px-2'>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<SidebarMenuButton asChild>
+										<SignedIn>
+											<div className='mr-6'>
+												<OrganizationSwitcher
+													hidePersonal
+													hideSlug
+													appearance={{
+														elements: {
+															organizationPreviewTextContainer__organizationSwitcherTrigger:
+																'!hidden',
+															organizationSwitcherTrigger: '!text-white',
+														},
+													}}
+												></OrganizationSwitcher>
+											</div>
+										</SignedIn>
+									</SidebarMenuButton>
+								</TooltipTrigger>
 							</Tooltip>
 						</SidebarMenuItem>
 					</SidebarMenu>
