@@ -15,7 +15,7 @@
 	},
 	"dependencies": {
 		"@clerk/nextjs": "6.33.2",
-		"@eslint/js": "9.36.0",
+		"@eslint/js": "9.37.0",
 		"@headlessui/react": "2.2.9",
 		"@heroicons/react": "2.2.0",
 		"@radix-ui/react-avatar": "1.1.10",
@@ -53,7 +53,7 @@
 		"@types/react-dom": "19.2.0",
 		"@typescript-eslint/eslint-plugin": "8.45.0",
 		"@typescript-eslint/parser": "8.45.0",
-		"eslint": "9.36.0",
+		"eslint": "9.37.0",
 		"eslint-config-next": "15.5.4",
 		"eslint-config-prettier": "10.1.8",
 		"eslint-plugin-perfectionist": "4.15.0",
