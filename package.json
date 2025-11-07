@@ -14,7 +14,7 @@
 		"prepare": "husky install"
 	},
 	"dependencies": {
-		"@clerk/nextjs": "6.34.4",
+		"@clerk/nextjs": "6.34.5",
 		"@eslint/js": "9.39.1",
 		"@headlessui/react": "2.2.9",
 		"@heroicons/react": "2.2.0",
