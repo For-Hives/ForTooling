@@ -46,7 +46,7 @@
 	},
 	"devDependencies": {
 		"@eslint/eslintrc": "3.3.3",
-		"@next/eslint-plugin-next": "15.5.6",
+		"@next/eslint-plugin-next": "15.5.7",
 		"@tailwindcss/postcss": "4.1.17",
 		"@types/node": "22.19.1",
 		"@types/react": "19.2.7",
@@ -54,7 +54,7 @@
 		"@typescript-eslint/eslint-plugin": "8.48.1",
 		"@typescript-eslint/parser": "8.48.1",
 		"eslint": "9.39.1",
-		"eslint-config-next": "15.5.6",
+		"eslint-config-next": "15.5.7",
 		"eslint-config-prettier": "10.1.8",
 		"eslint-plugin-perfectionist": "4.15.1",
 		"eslint-plugin-prettier": "5.5.4",
