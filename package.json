@@ -47,7 +47,7 @@
 	"devDependencies": {
 		"@eslint/eslintrc": "3.3.3",
 		"@next/eslint-plugin-next": "15.5.12",
-		"@tailwindcss/postcss": "4.1.18",
+		"@tailwindcss/postcss": "4.2.0",
 		"@types/node": "22.19.11",
 		"@types/react": "19.2.14",
 		"@types/react-dom": "19.2.3",
@@ -62,7 +62,7 @@
 		"husky": "9.1.7",
 		"prettier": "3.8.1",
 		"prettier-plugin-tailwindcss": "0.6.11",
-		"tailwindcss": "4.1.18",
+		"tailwindcss": "4.2.0",
 		"tailwindcss-animate": "1.0.7",
 		"typescript": "5.9.3",
 		"typescript-eslint": "8.56.0"
